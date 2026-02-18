@@ -1,0 +1,800 @@
+{
+  "project": "BarrioRed",
+  "version": "1.0.0-mvp",
+  "description": "Multi-tenant community platform (PWA) for local business visibility in Pereira, Colombia",
+  "stack": {
+    "frontend": "Next.js 16 (App Router), TypeScript, Tailwind CSS, shadcn/ui",
+    "backend": "Next.js API Routes, Supabase (PostgreSQL/PostGIS, Auth, Storage, RLS)",
+    "maps": "Leaflet + react-leaflet",
+    "validation": "Zod",
+    "pwa": "@ducanh2912/next-pwa"
+  },
+  "modules": [
+    {
+      "id": "multi-tenancy",
+      "name": "Multi-Tenant Community System",
+      "description": "Each community (barrio) operates as an isolated tenant with its own slug, branding, and data",
+      "features": [
+        {
+          "id": "mt-001",
+          "name": "Community Resolution via URL",
+          "description": "First URL path segment resolves to a community slug (e.g., /parqueindustrial)",
+          "route": "/[community]/*",
+          "type": "middleware",
+          "files": ["middleware.ts"]
+        },
+        {
+          "id": "mt-002",
+          "name": "Community Provider Context",
+          "description": "React context that provides community data (id, name, slug, colors) to all child components",
+          "type": "client-component",
+          "files": ["components/community/community-provider.tsx"]
+        },
+        {
+          "id": "mt-003",
+          "name": "Community-Scoped Layout",
+          "description": "Layout that fetches community data, validates existence, and wraps pages with TopBar and BottomNav",
+          "route": "/[community]",
+          "type": "server-component",
+          "files": ["app/[community]/layout.tsx"]
+        },
+        {
+          "id": "mt-004",
+          "name": "Row Level Security Isolation",
+          "description": "All database queries are scoped to community_id via RLS policies, ensuring data isolation between communities",
+          "type": "database",
+          "files": ["supabase/migrations/002_rls_policies.sql"]
+        }
+      ]
+    },
+    {
+      "id": "landing",
+      "name": "Landing Page",
+      "description": "Public entry point listing all active communities",
+      "features": [
+        {
+          "id": "lp-001",
+          "name": "Community Listing",
+          "description": "Displays all active communities as clickable cards with name, municipality, and description",
+          "route": "/",
+          "type": "server-component",
+          "files": ["app/page.tsx"]
+        },
+        {
+          "id": "lp-002",
+          "name": "Empty State",
+          "description": "Shows a message when no communities are available yet",
+          "route": "/",
+          "type": "ui",
+          "files": ["app/page.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "community-home",
+      "name": "Community Homepage",
+      "description": "Main landing page for a specific community showing hero, categories, and recent businesses",
+      "features": [
+        {
+          "id": "ch-001",
+          "name": "Hero Banner",
+          "description": "Gradient banner showing community name, business count, and a search bar",
+          "route": "/[community]",
+          "type": "server-component",
+          "files": ["components/home/hero-banner.tsx"]
+        },
+        {
+          "id": "ch-002",
+          "name": "Category Grid",
+          "description": "Grid of category cards with Lucide icons, linking to filtered directory views",
+          "route": "/[community]",
+          "type": "server-component",
+          "files": ["components/home/category-grid.tsx"]
+        },
+        {
+          "id": "ch-003",
+          "name": "Featured Businesses",
+          "description": "Grid of the 6 most recently approved businesses displayed as BusinessCard components",
+          "route": "/[community]",
+          "type": "server-component",
+          "files": ["components/home/featured-businesses.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "directory",
+      "name": "Business Directory",
+      "description": "Browsable and searchable listing of all approved businesses in a community",
+      "features": [
+        {
+          "id": "dir-001",
+          "name": "Directory Listing",
+          "description": "Paginated grid of BusinessCard components showing all approved businesses (limit 20)",
+          "route": "/[community]/directory",
+          "type": "server-component",
+          "files": ["app/[community]/directory/page.tsx"]
+        },
+        {
+          "id": "dir-002",
+          "name": "Full-Text Search",
+          "description": "Search businesses by name and description using PostgreSQL full-text search (Spanish language) via RPC",
+          "route": "/[community]/directory?q=query",
+          "type": "server-component",
+          "files": ["app/[community]/directory/page.tsx", "supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "dir-003",
+          "name": "Category Filtering",
+          "description": "Filter businesses by category with category badges as navigation and a dedicated category page",
+          "route": "/[community]/directory/[category]",
+          "type": "server-component",
+          "files": ["app/[community]/directory/[category]/page.tsx"]
+        },
+        {
+          "id": "dir-004",
+          "name": "Business Card Component",
+          "description": "Reusable card showing business photo, name, category badge, address, description, and WhatsApp CTA button",
+          "type": "server-component",
+          "files": ["components/directory/business-card.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "business-profile",
+      "name": "Business Profile Page",
+      "description": "Full detail page for a single business with all information, photos, map, and WhatsApp contact",
+      "features": [
+        {
+          "id": "bp-001",
+          "name": "Business Header",
+          "description": "Hero image, business name, verified badge, and category badge",
+          "route": "/[community]/business/[slug]",
+          "type": "server-component",
+          "files": ["components/business/business-header.tsx"]
+        },
+        {
+          "id": "bp-002",
+          "name": "Business Info Section",
+          "description": "Description, address, phone, email, website, and operating hours displayed with icons",
+          "route": "/[community]/business/[slug]",
+          "type": "server-component",
+          "files": ["components/business/business-info.tsx"]
+        },
+        {
+          "id": "bp-003",
+          "name": "Photo Gallery",
+          "description": "Horizontal scrollable thumbnail strip for navigating between multiple business photos (up to 5)",
+          "route": "/[community]/business/[slug]",
+          "type": "client-component",
+          "files": ["components/business/photo-gallery.tsx"]
+        },
+        {
+          "id": "bp-004",
+          "name": "Location Map",
+          "description": "Leaflet map showing business location with a marker, lazy-loaded via dynamic import (no SSR)",
+          "route": "/[community]/business/[slug]",
+          "type": "client-component",
+          "files": ["components/business/location-map.tsx"]
+        },
+        {
+          "id": "bp-005",
+          "name": "Floating WhatsApp Button",
+          "description": "Fixed-position green WhatsApp CTA button that opens wa.me with a pre-filled message",
+          "route": "/[community]/business/[slug]",
+          "type": "client-component",
+          "files": ["components/shared/whatsapp-button.tsx"]
+        },
+        {
+          "id": "bp-006",
+          "name": "SEO Metadata",
+          "description": "Dynamic page title and description generated from business name and description",
+          "route": "/[community]/business/[slug]",
+          "type": "metadata",
+          "files": ["app/[community]/business/[slug]/page.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "map",
+      "name": "Interactive Map Page",
+      "description": "Full-page Leaflet map showing all approved businesses in a community as markers",
+      "features": [
+        {
+          "id": "map-001",
+          "name": "Map View with Markers",
+          "description": "Full-height Leaflet map centered on Pereira with markers for all businesses that have GPS coordinates",
+          "route": "/[community]/map",
+          "type": "client-component",
+          "files": ["app/[community]/map/page.tsx", "components/map/map-view.tsx"]
+        },
+        {
+          "id": "map-002",
+          "name": "Marker Popups",
+          "description": "Clickable markers showing business name, category, address, link to profile, and WhatsApp button",
+          "route": "/[community]/map",
+          "type": "client-component",
+          "files": ["components/map/map-view.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "name": "Authentication System",
+      "description": "User authentication with email/password and WhatsApp OTP via Supabase Auth",
+      "features": [
+        {
+          "id": "auth-001",
+          "name": "Email/Password Login",
+          "description": "Standard email and password sign-in using Supabase Auth signInWithPassword",
+          "route": "/auth/login",
+          "type": "client-component",
+          "files": ["components/auth/login-form.tsx", "app/auth/login/page.tsx"]
+        },
+        {
+          "id": "auth-002",
+          "name": "WhatsApp OTP Login",
+          "description": "Two-step OTP login: send code via GetOTP.co WhatsApp channel, then verify and create/find user session",
+          "route": "/auth/login",
+          "type": "client-component",
+          "api_routes": ["/api/auth/whatsapp-otp/send", "/api/auth/whatsapp-otp/verify"],
+          "files": ["components/auth/login-form.tsx", "app/api/auth/whatsapp-otp/send/route.ts", "app/api/auth/whatsapp-otp/verify/route.ts"]
+        },
+        {
+          "id": "auth-003",
+          "name": "User Signup",
+          "description": "Registration form with full name, email, phone, password, and community selection. Auto-creates profile and sets role to merchant",
+          "route": "/auth/signup",
+          "type": "client-component",
+          "files": ["components/auth/signup-form.tsx", "app/auth/signup/page.tsx"]
+        },
+        {
+          "id": "auth-004",
+          "name": "Auth Callback",
+          "description": "OAuth/magic link callback handler that exchanges code for session and redirects",
+          "route": "/auth/callback",
+          "type": "api-route",
+          "files": ["app/auth/callback/route.ts"]
+        },
+        {
+          "id": "auth-005",
+          "name": "Auth Guard Middleware",
+          "description": "Middleware redirects unauthenticated users from /dashboard and /admin to login with returnUrl",
+          "type": "middleware",
+          "files": ["middleware.ts"]
+        },
+        {
+          "id": "auth-006",
+          "name": "Admin Guard Middleware",
+          "description": "Middleware checks profile role for /admin routes, redirects non-admins to home",
+          "type": "middleware",
+          "files": ["middleware.ts"]
+        },
+        {
+          "id": "auth-007",
+          "name": "Auto Profile Creation",
+          "description": "Database trigger automatically creates a profiles row when a new auth.users row is inserted",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        }
+      ]
+    },
+    {
+      "id": "registration",
+      "name": "Business Registration",
+      "description": "Multi-step wizard for merchants to register their business in a community",
+      "features": [
+        {
+          "id": "reg-001",
+          "name": "Multi-Step Form Wizard",
+          "description": "5-step registration flow with progress bar: Basic Info, Contact, Location, Photos, Confirmation",
+          "route": "/[community]/register",
+          "type": "client-component",
+          "files": ["components/registration/register-business-form.tsx", "app/[community]/register/page.tsx"]
+        },
+        {
+          "id": "reg-002",
+          "name": "Step 1: Basic Info",
+          "description": "Business name, category selection (dropdown loaded from DB), and description",
+          "type": "client-component",
+          "files": ["components/registration/step-basic-info.tsx"]
+        },
+        {
+          "id": "reg-003",
+          "name": "Step 2: Contact",
+          "description": "WhatsApp (required), phone, email, and website fields",
+          "type": "client-component",
+          "files": ["components/registration/step-contact.tsx"]
+        },
+        {
+          "id": "reg-004",
+          "name": "Step 3: Location",
+          "description": "Street address input and interactive Leaflet map with click-to-place marker for GPS coordinates",
+          "type": "client-component",
+          "files": ["components/registration/step-location.tsx", "components/registration/location-picker.tsx"]
+        },
+        {
+          "id": "reg-005",
+          "name": "Step 4: Photos",
+          "description": "Upload up to 5 photos via /api/upload to Supabase Storage with preview grid and removal",
+          "type": "client-component",
+          "files": ["components/registration/step-photos.tsx"]
+        },
+        {
+          "id": "reg-006",
+          "name": "Step 5: Confirmation",
+          "description": "Summary card showing all entered data with a note about admin review before publishing",
+          "type": "client-component",
+          "files": ["components/registration/step-confirmation.tsx"]
+        },
+        {
+          "id": "reg-007",
+          "name": "Business Creation API",
+          "description": "POST /api/businesses validates with Zod, creates business with status=pending, generates slug, sets PostGIS point, promotes user to merchant role",
+          "route": "/api/businesses",
+          "type": "api-route",
+          "files": ["app/api/businesses/route.ts"]
+        }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "name": "Merchant Dashboard",
+      "description": "Authenticated panel for merchants to manage their registered businesses",
+      "features": [
+        {
+          "id": "dash-001",
+          "name": "Dashboard Layout",
+          "description": "Protected layout with auth check, header with back navigation, and content area",
+          "route": "/dashboard",
+          "type": "server-component",
+          "files": ["app/dashboard/layout.tsx"]
+        },
+        {
+          "id": "dash-002",
+          "name": "My Businesses List",
+          "description": "List of all businesses owned by the authenticated user with status badges (pending/approved/rejected) and edit links",
+          "route": "/dashboard",
+          "type": "server-component",
+          "files": ["app/dashboard/page.tsx"]
+        },
+        {
+          "id": "dash-003",
+          "name": "Edit Business Form",
+          "description": "Pre-filled form to update business name, description, address, contact info via PATCH /api/businesses/[id]",
+          "route": "/dashboard/business/[id]/edit",
+          "type": "client-component",
+          "files": ["app/dashboard/business/[id]/edit/page.tsx", "components/dashboard/edit-business-form.tsx"]
+        },
+        {
+          "id": "dash-004",
+          "name": "Business Update API",
+          "description": "PATCH /api/businesses/[id] validates with Zod, updates business fields including PostGIS location if coordinates change",
+          "route": "/api/businesses/[id]",
+          "type": "api-route",
+          "files": ["app/api/businesses/[id]/route.ts"]
+        },
+        {
+          "id": "dash-005",
+          "name": "Register New Business Link",
+          "description": "Quick link from dashboard to the registration form in the merchant's community",
+          "route": "/dashboard",
+          "type": "ui",
+          "files": ["app/dashboard/page.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "name": "Admin Panel",
+      "description": "Administrative panel for community admins to approve businesses and manage categories",
+      "features": [
+        {
+          "id": "admin-001",
+          "name": "Admin Layout with Role Guard",
+          "description": "Protected layout that checks auth and admin role, redirects unauthorized users. Navigation between businesses and categories",
+          "route": "/admin",
+          "type": "server-component",
+          "files": ["app/admin/layout.tsx"]
+        },
+        {
+          "id": "admin-002",
+          "name": "Business Queue",
+          "description": "Lists all businesses in the admin's community separated by pending (with review button) and approved sections",
+          "route": "/admin/businesses",
+          "type": "server-component",
+          "files": ["app/admin/businesses/page.tsx"]
+        },
+        {
+          "id": "admin-003",
+          "name": "Business Review Page",
+          "description": "Detailed view of a business showing all fields, photos, owner info, with Approve and Reject action buttons",
+          "route": "/admin/businesses/[id]",
+          "type": "client-component",
+          "files": ["app/admin/businesses/[id]/page.tsx"]
+        },
+        {
+          "id": "admin-004",
+          "name": "Approve Business API",
+          "description": "POST /api/businesses/[id]/approve sets status=approved and is_verified=true. Requires admin role",
+          "route": "/api/businesses/[id]/approve",
+          "type": "api-route",
+          "files": ["app/api/businesses/[id]/approve/route.ts"]
+        },
+        {
+          "id": "admin-005",
+          "name": "Reject Business API",
+          "description": "POST /api/businesses/[id]/reject sets status=rejected. Requires admin role",
+          "route": "/api/businesses/[id]/reject",
+          "type": "api-route",
+          "files": ["app/api/businesses/[id]/reject/route.ts"]
+        },
+        {
+          "id": "admin-006",
+          "name": "Category Management",
+          "description": "CRUD interface for categories with name, slug (auto-generated), and Lucide icon name. Dialog-based create/edit, inline delete",
+          "route": "/admin/categories",
+          "type": "client-component",
+          "files": ["app/admin/categories/page.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "file-upload",
+      "name": "Image Upload",
+      "description": "Server-side image upload to Supabase Storage with validation",
+      "features": [
+        {
+          "id": "upload-001",
+          "name": "Upload API",
+          "description": "POST /api/upload accepts multipart form data, validates file type (JPG/PNG/WebP) and size (max 5MB), uploads to business-images bucket under user's folder, returns public URL",
+          "route": "/api/upload",
+          "type": "api-route",
+          "files": ["app/api/upload/route.ts"]
+        },
+        {
+          "id": "upload-002",
+          "name": "Storage Bucket Policies",
+          "description": "Public read access, authenticated upload, owner-only update/delete based on folder path matching user ID",
+          "type": "database",
+          "files": ["supabase/migrations/003_storage.sql"]
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "name": "Search",
+      "description": "Business search functionality across the platform",
+      "features": [
+        {
+          "id": "search-001",
+          "name": "Search Bar Component",
+          "description": "Reusable search input that navigates to /[community]/directory?q=query on submit",
+          "type": "client-component",
+          "files": ["components/shared/search-bar.tsx"]
+        },
+        {
+          "id": "search-002",
+          "name": "Full-Text Search (Spanish)",
+          "description": "PostgreSQL GIN index with Spanish dictionary on business name and description. search_businesses() RPC function",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "search-003",
+          "name": "Nearby Businesses Function",
+          "description": "PostGIS-based nearby_businesses() function finding businesses within a radius in kilometers using ST_DWithin",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        }
+      ]
+    },
+    {
+      "id": "navigation",
+      "name": "Navigation & Layout",
+      "description": "App-wide navigation components for mobile and desktop",
+      "features": [
+        {
+          "id": "nav-001",
+          "name": "Top Bar",
+          "description": "Sticky header with community-branded logo, search bar (hidden on mobile, shown on desktop), and user icon linking to login",
+          "type": "client-component",
+          "files": ["components/layout/top-bar.tsx"]
+        },
+        {
+          "id": "nav-002",
+          "name": "Bottom Navigation",
+          "description": "Fixed bottom tab bar (mobile only) with 4 tabs: Inicio, Directorio, Mapa, Registrar. Active state highlighting",
+          "type": "client-component",
+          "files": ["components/layout/bottom-nav.tsx"]
+        },
+        {
+          "id": "nav-003",
+          "name": "Mobile Search",
+          "description": "Search bar shown below the top bar on mobile viewports (sm:hidden)",
+          "type": "ui",
+          "files": ["components/layout/top-bar.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "pwa",
+      "name": "Progressive Web App",
+      "description": "PWA support for installability and offline-ready experience",
+      "features": [
+        {
+          "id": "pwa-001",
+          "name": "Web App Manifest",
+          "description": "manifest.json with app name, colors, display:standalone, and icons (192x192, 512x512)",
+          "type": "config",
+          "files": ["public/manifest.json"]
+        },
+        {
+          "id": "pwa-002",
+          "name": "Service Worker",
+          "description": "Auto-generated service worker via @ducanh2912/next-pwa (disabled in development)",
+          "type": "config",
+          "files": ["next.config.ts"]
+        },
+        {
+          "id": "pwa-003",
+          "name": "App Icons",
+          "description": "PWA icons at 192x192 and 512x512 pixels for install prompts and home screen",
+          "type": "asset",
+          "files": ["public/icons/icon-192.png", "public/icons/icon-512.png"]
+        }
+      ]
+    },
+    {
+      "id": "seo",
+      "name": "SEO",
+      "description": "Search engine optimization with dynamic metadata, sitemap, and robots.txt",
+      "features": [
+        {
+          "id": "seo-001",
+          "name": "Dynamic Sitemap",
+          "description": "Auto-generated sitemap.xml listing the home page, all active communities, and all approved businesses with last modified dates",
+          "route": "/sitemap.xml",
+          "type": "server-component",
+          "files": ["app/sitemap.ts"]
+        },
+        {
+          "id": "seo-002",
+          "name": "Robots.txt",
+          "description": "Allows all crawlers on public routes, disallows /dashboard, /admin, /api, /auth. Links to sitemap",
+          "route": "/robots.txt",
+          "type": "server-component",
+          "files": ["app/robots.ts"]
+        },
+        {
+          "id": "seo-003",
+          "name": "Dynamic Page Metadata",
+          "description": "generateMetadata on community layout, directory, category, and business profile pages for title and description",
+          "type": "metadata",
+          "files": ["app/[community]/layout.tsx", "app/[community]/directory/page.tsx", "app/[community]/directory/[category]/page.tsx", "app/[community]/business/[slug]/page.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "database",
+      "name": "Database Schema & Infrastructure",
+      "description": "PostgreSQL schema with PostGIS, RLS, triggers, and functions",
+      "features": [
+        {
+          "id": "db-001",
+          "name": "Communities Table",
+          "description": "Multi-tenant root table with id, name, slug, municipality, department, description, logo_url, primary_color, is_active",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "db-002",
+          "name": "Categories Table",
+          "description": "Global categories with id, name, slug, icon (Lucide name), parent_id (self-referential), sort_order",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "db-003",
+          "name": "Profiles Table",
+          "description": "Extends auth.users with community_id, full_name, phone, role (neighbor/merchant/admin), avatar_url",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "db-004",
+          "name": "Businesses Table",
+          "description": "Core table with community_id, owner_id, category_id, name, slug, description, address, PostGIS location, contact info, hours (JSONB), photos array, status (pending/approved/rejected), verification flag",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "db-005",
+          "name": "Database Indexes",
+          "description": "B-tree indexes on community_id, category_id, status. GIST index on PostGIS location. GIN index for Spanish full-text search",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "db-006",
+          "name": "Auto-Update Trigger",
+          "description": "Trigger that automatically sets updated_at to now() on every businesses row update",
+          "type": "database",
+          "files": ["supabase/migrations/001_initial_schema.sql"]
+        },
+        {
+          "id": "db-007",
+          "name": "Seed Data",
+          "description": "Pilot community (Parque Industrial, Pereira) and 10 initial categories (Restaurantes, Tiendas, Belleza, etc.)",
+          "type": "database",
+          "files": ["supabase/seed.sql"]
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security & RLS Policies",
+      "description": "Row Level Security policies ensuring multi-tenant data isolation and role-based access",
+      "features": [
+        {
+          "id": "sec-001",
+          "name": "Communities RLS",
+          "description": "Public read access for active communities only",
+          "type": "database",
+          "files": ["supabase/migrations/002_rls_policies.sql"]
+        },
+        {
+          "id": "sec-002",
+          "name": "Categories RLS",
+          "description": "Public read, admin-only insert/update/delete",
+          "type": "database",
+          "files": ["supabase/migrations/002_rls_policies.sql"]
+        },
+        {
+          "id": "sec-003",
+          "name": "Profiles RLS",
+          "description": "Users can read/update own profile. Admins can read/update profiles in their community",
+          "type": "database",
+          "files": ["supabase/migrations/002_rls_policies.sql"]
+        },
+        {
+          "id": "sec-004",
+          "name": "Businesses RLS",
+          "description": "Public read for approved+active businesses. Owners see all own businesses. Admins see all in their community. Owners can insert in their community and update own. Admins can update/delete in their community",
+          "type": "database",
+          "files": ["supabase/migrations/002_rls_policies.sql"]
+        },
+        {
+          "id": "sec-005",
+          "name": "Storage RLS",
+          "description": "Public read on business-images bucket. Authenticated upload. Owner-only update/delete based on folder path",
+          "type": "database",
+          "files": ["supabase/migrations/003_storage.sql"]
+        }
+      ]
+    },
+    {
+      "id": "validation",
+      "name": "Input Validation",
+      "description": "Zod schemas for all user inputs across the application",
+      "features": [
+        {
+          "id": "val-001",
+          "name": "Business Validation",
+          "description": "createBusinessSchema and updateBusinessSchema with Colombian phone regex, coordinate ranges, URL validation, max 5 photos",
+          "type": "validation",
+          "files": ["lib/validations/business.ts"]
+        },
+        {
+          "id": "val-002",
+          "name": "Auth Validation",
+          "description": "loginSchema, signupSchema, whatsappOtpSendSchema, whatsappOtpVerifySchema with email, password, phone, and OTP validation",
+          "type": "validation",
+          "files": ["lib/validations/auth.ts"]
+        }
+      ]
+    },
+    {
+      "id": "utilities",
+      "name": "Shared Utilities",
+      "description": "Helper functions and Supabase client configuration",
+      "features": [
+        {
+          "id": "util-001",
+          "name": "cn() Class Merger",
+          "description": "Tailwind class merging utility using clsx and tailwind-merge",
+          "type": "utility",
+          "files": ["lib/utils.ts"]
+        },
+        {
+          "id": "util-002",
+          "name": "slugify()",
+          "description": "Text to URL slug converter with NFD normalization for Spanish characters",
+          "type": "utility",
+          "files": ["lib/utils.ts"]
+        },
+        {
+          "id": "util-003",
+          "name": "whatsappUrl()",
+          "description": "Generates wa.me URLs with optional pre-filled message",
+          "type": "utility",
+          "files": ["lib/utils.ts"]
+        },
+        {
+          "id": "util-004",
+          "name": "Supabase Browser Client",
+          "description": "createBrowserClient with Database type generics for client-side Supabase access",
+          "type": "utility",
+          "files": ["lib/supabase/client.ts"]
+        },
+        {
+          "id": "util-005",
+          "name": "Supabase Server Client",
+          "description": "createServerClient with cookie handling for Server Components and API Routes",
+          "type": "utility",
+          "files": ["lib/supabase/server.ts"]
+        },
+        {
+          "id": "util-006",
+          "name": "Supabase Middleware Client",
+          "description": "Session update helper for Next.js middleware with cookie forwarding",
+          "type": "utility",
+          "files": ["lib/supabase/middleware.ts"]
+        },
+        {
+          "id": "util-007",
+          "name": "Database TypeScript Types",
+          "description": "Auto-generated TypeScript types matching the Supabase schema for type-safe queries",
+          "type": "utility",
+          "files": ["lib/types/database.ts"]
+        },
+        {
+          "id": "util-008",
+          "name": "Shared Types",
+          "description": "CommunityData, BusinessStatus, and UserRole type definitions",
+          "type": "utility",
+          "files": ["lib/types/index.ts"]
+        }
+      ]
+    }
+  ],
+  "routes_summary": {
+    "public_pages": [
+      { "route": "/", "description": "Landing page with community listing" },
+      { "route": "/[community]", "description": "Community homepage" },
+      { "route": "/[community]/directory", "description": "Business directory with search" },
+      { "route": "/[community]/directory/[category]", "description": "Category-filtered directory" },
+      { "route": "/[community]/business/[slug]", "description": "Business profile page" },
+      { "route": "/[community]/map", "description": "Interactive map" },
+      { "route": "/auth/login", "description": "Login page" },
+      { "route": "/auth/signup", "description": "Signup page" }
+    ],
+    "protected_pages": [
+      { "route": "/[community]/register", "description": "Business registration form" },
+      { "route": "/dashboard", "description": "Merchant dashboard" },
+      { "route": "/dashboard/business/[id]/edit", "description": "Edit business" },
+      { "route": "/admin/businesses", "description": "Admin business queue" },
+      { "route": "/admin/businesses/[id]", "description": "Admin business review" },
+      { "route": "/admin/categories", "description": "Admin category management" }
+    ],
+    "api_routes": [
+      { "route": "POST /api/businesses", "description": "Create business" },
+      { "route": "PATCH /api/businesses/[id]", "description": "Update business" },
+      { "route": "POST /api/businesses/[id]/approve", "description": "Approve business (admin)" },
+      { "route": "POST /api/businesses/[id]/reject", "description": "Reject business (admin)" },
+      { "route": "POST /api/upload", "description": "Upload image" },
+      { "route": "POST /api/auth/whatsapp-otp/send", "description": "Send WhatsApp OTP" },
+      { "route": "POST /api/auth/whatsapp-otp/verify", "description": "Verify WhatsApp OTP" }
+    ],
+    "generated_routes": [
+      { "route": "/sitemap.xml", "description": "Dynamic sitemap" },
+      { "route": "/robots.txt", "description": "Robots directives" },
+      { "route": "/auth/callback", "description": "Auth code exchange" }
+    ]
+  },
+  "user_roles": {
+    "neighbor": "Default role. Can browse directory, view businesses, use map",
+    "merchant": "Can register businesses, manage own businesses via dashboard",
+    "admin": "Can approve/reject businesses, manage categories, view all community businesses"
+  },
+  "total_features": 68
+}
