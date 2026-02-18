@@ -46,26 +46,39 @@ export default async function DirectoryPage({
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">
-        {q ? `Resultados para "${q}"` : 'Directorio'}
-      </h1>
+    <div className="container mx-auto max-w-5xl px-4 py-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <h1 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter italic text-shadow-md">
+          {q ? (
+            <>Resultados para <span className="text-primary underline">"{q}"</span></>
+          ) : (
+            <>Directorio <span className="text-primary italic">Local</span></>
+          )}
+        </h1>
+      </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-3 mb-12">
         <Link href={`/${slug}/directory`}>
-          <Badge variant={!q ? 'default' : 'secondary'}>Todos</Badge>
+          <Badge variant={!q ? 'default' : 'outline'} className="text-sm px-6 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            Todos
+          </Badge>
         </Link>
         {categories?.map((cat) => (
           <Link key={cat.id} href={`/${slug}/directory/${cat.slug}`}>
-            <Badge variant="secondary">{cat.name}</Badge>
+            <Badge variant="secondary" className="text-sm px-6 py-2">
+              {cat.name}
+            </Badge>
           </Link>
         ))}
       </div>
 
       {businesses.length === 0 ? (
-        <p className="text-gray-500 text-center py-12">No se encontraron negocios.</p>
+        <div className="text-center py-20 border-4 border-dashed border-black bg-white/50">
+          <p className="text-2xl font-black uppercase italic tracking-tighter text-black/40">No se encontraron negocios</p>
+          <p className="font-bold text-black/60 mt-2">Intenta con otra búsqueda o categoría.</p>
+        </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {businesses.map((biz: any) => (
             <BusinessCard key={biz.id} business={biz} communitySlug={slug} />
           ))}

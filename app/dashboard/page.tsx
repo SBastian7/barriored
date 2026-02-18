@@ -3,9 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus, Edit } from 'lucide-react'
+import { Plus, Edit, Zap } from 'lucide-react'
 
-const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
+const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'accent' }> = {
   pending: { label: 'Pendiente', variant: 'secondary' },
   approved: { label: 'Aprobado', variant: 'default' },
   rejected: { label: 'Rechazado', variant: 'destructive' },
@@ -27,37 +27,49 @@ export default async function DashboardPage() {
   const communitySlug = (profile?.communities as any)?.slug
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Mis negocios</h1>
+    <div className="container mx-auto max-w-5xl px-4 py-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <h1 className="text-5xl md:text-6xl font-heading font-black uppercase tracking-tighter italic text-shadow-md">
+          Panel de <span className="text-primary italic">Control</span>
+        </h1>
         {communitySlug && (
           <Link href={`/${communitySlug}/register`}>
-            <Button><Plus className="h-4 w-4 mr-2" /> Registrar negocio</Button>
+            <Button className="h-12 px-8 text-lg py-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all font-black uppercase"><Plus className="h-6 w-6 mr-2" /> Registrar Negocio</Button>
           </Link>
         )}
       </div>
 
+      <h2 className="text-2xl font-black uppercase tracking-tight italic mb-6 underline decoration-primary decoration-4 underline-offset-4">
+        Mis Negocios
+      </h2>
+
       {(!businesses || businesses.length === 0) ? (
-        <Card>
-          <CardContent className="py-12 text-center text-gray-500">
-            No tienes negocios registrados aun.
-          </CardContent>
-        </Card>
+        <div className="text-center py-20 border-4 border-dashed border-black bg-white/50">
+          <p className="text-2xl font-black uppercase italic tracking-tighter text-black/40">No tienes negocios registrados</p>
+          <p className="font-bold text-black/60 mt-2">¡Comienza digitalizando tu barrio ahora!</p>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-6">
           {businesses.map((biz) => {
             const s = STATUS_LABELS[biz.status] ?? STATUS_LABELS.pending
             return (
-              <Card key={biz.id}>
-                <CardHeader className="flex flex-row items-center justify-between py-4">
-                  <div>
-                    <CardTitle className="text-lg">{biz.name}</CardTitle>
-                    <p className="text-sm text-gray-500">{(biz.categories as any)?.name}</p>
+              <Card key={biz.id} className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-white overflow-hidden group rounded-none">
+                <CardHeader className="flex flex-row items-center justify-between p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-muted border-2 border-black p-3 group-hover:bg-primary transition-colors text-black group-hover:text-white">
+                      <Zap className="h-6 w-6 fill-current" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-3xl font-heading font-black uppercase italic tracking-tighter leading-none mb-1 group-hover:text-primary transition-colors">{biz.name}</CardTitle>
+                      <p className="text-xs font-black uppercase tracking-widest text-black/50 italic">{(biz.categories as any)?.name}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={s.variant}>{s.label}</Badge>
+                  <div className="flex items-center gap-4">
+                    <Badge variant={s.variant as any} className="text-[10px] px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">{s.label}</Badge>
                     <Link href={`/dashboard/business/${biz.id}/edit`}>
-                      <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
+                      <Button variant="outline" size="icon" className="h-12 w-12 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-secondary transition-all rounded-none">
+                        <Edit className="h-6 w-6" />
+                      </Button>
                     </Link>
                   </div>
                 </CardHeader>
