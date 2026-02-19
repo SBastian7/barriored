@@ -5,6 +5,7 @@ import { BusinessInfo } from '@/components/business/business-info'
 import { PhotoGallery } from '@/components/business/photo-gallery'
 import { LocationMap } from '@/components/business/location-map'
 import { WhatsAppButton } from '@/components/shared/whatsapp-button'
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; slug: string }> }) {
   const { community: commSlug, slug } = await params
@@ -27,7 +28,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const supabase = await createClient()
 
   const { data: community } = await supabase
-    .from('communities').select('id').eq('slug', commSlug).single()
+    .from('communities').select('id, name').eq('slug', commSlug).single()
 
   if (!community) notFound()
 
@@ -48,7 +49,15 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const lng = location?.coordinates?.[0]
 
   return (
-    <div className="max-w-2xl mx-auto pb-24">
+    <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
+      <Breadcrumbs
+        items={[
+          { label: community.name, href: `/${commSlug}` },
+          { label: 'Directorio', href: `/${commSlug}/directory` },
+          { label: business.categories?.name ?? 'Negocio', href: business.categories ? `/${commSlug}/directory/${business.categories.slug}` : undefined },
+          { label: business.name, active: true }
+        ]}
+      />
       <BusinessHeader
         name={business.name}
         categoryName={business.categories?.name ?? ''}

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BusinessCard } from '@/components/directory/business-card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string }> }) {
   const { community: slug } = await params
@@ -20,7 +21,7 @@ export default async function DirectoryPage({
   const supabase = await createClient()
 
   const { data: community } = await supabase
-    .from('communities').select('id').eq('slug', slug).single()
+    .from('communities').select('id, name').eq('slug', slug).single()
 
   if (!community) return null
 
@@ -46,7 +47,13 @@ export default async function DirectoryPage({
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-12">
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      <Breadcrumbs
+        items={[
+          { label: community.name, href: `/${slug}` },
+          { label: 'Directorio', active: true }
+        ]}
+      />
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <h1 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter italic text-shadow-md">
           {q ? (

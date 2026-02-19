@@ -11,6 +11,7 @@ import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 export default function AdminBusinessReviewPage() {
   const { id } = useParams<{ id: string }>()
@@ -43,18 +44,22 @@ export default function AdminBusinessReviewPage() {
   if (!business) return <p>Cargando...</p>
 
   return (
-    <div>
-      <Link href="/admin/businesses">
-        <Button variant="ghost" size="sm" className="mb-4"><ArrowLeft className="h-4 w-4 mr-1" /> Volver</Button>
-      </Link>
+    <div className="space-y-8">
+      <Breadcrumbs
+        items={[
+          { label: 'Administración', href: '/admin/businesses' },
+          { label: 'Negocios', href: '/admin/businesses' },
+          { label: `Revisar: ${business.name}`, active: true }
+        ]}
+      />
 
-      <Card>
-        <CardHeader>
+      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none overflow-hidden">
+        <CardHeader className="border-b-4 border-black bg-muted">
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>{business.name}</CardTitle>
-              <p className="text-sm text-gray-500 mt-1">
-                {business.categories?.name} | Registrado por: {business.profiles?.full_name}
+              <CardTitle className="text-4xl font-heading font-black uppercase italic tracking-tighter">{business.name}</CardTitle>
+              <p className="text-xs font-black uppercase tracking-widest text-black/50 italic mt-2">
+                {business.categories?.name} — Registrado por: <span className="text-black">{business.profiles?.full_name}</span>
               </p>
             </div>
             <Badge variant="secondary">{business.status}</Badge>
@@ -78,12 +83,12 @@ export default function AdminBusinessReviewPage() {
           )}
 
           {business.status === 'pending' && (
-            <div className="flex gap-3 pt-4">
-              <Button onClick={() => handleAction('approve')} disabled={loading} className="bg-green-600 hover:bg-green-700">
-                <CheckCircle className="h-4 w-4 mr-2" /> Aprobar
+            <div className="flex gap-4 pt-6 mt-6 border-t-2 border-dashed border-black">
+              <Button onClick={() => handleAction('approve')} disabled={loading} className="bg-green-500 hover:bg-green-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-black uppercase italic h-12 px-8">
+                <CheckCircle className="h-5 w-5 mr-2" /> Aprobar Negocio
               </Button>
-              <Button variant="destructive" onClick={() => handleAction('reject')} disabled={loading}>
-                <XCircle className="h-4 w-4 mr-2" /> Rechazar
+              <Button variant="destructive" onClick={() => handleAction('reject')} disabled={loading} className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black uppercase italic h-12 px-8">
+                <XCircle className="h-5 w-5 mr-2" /> Rechazar
               </Button>
             </div>
           )}

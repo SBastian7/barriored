@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Eye } from 'lucide-react'
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 export default async function AdminBusinessesPage() {
   const supabase = await createClient()
@@ -12,15 +13,20 @@ export default async function AdminBusinessesPage() {
 
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('id, name, status, created_at, categories(name), profiles(full_name)')
+    .select('id, name, status, created_at, categories(name), profiles!businesses_owner_id_profiles_fkey(full_name)')
     .eq('community_id', profile!.community_id!)
     .order('created_at', { ascending: false })
 
   const pending = businesses?.filter((b) => b.status === 'pending') ?? []
   const approved = businesses?.filter((b) => b.status === 'approved') ?? []
-
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
+      <Breadcrumbs
+        items={[
+          { label: 'Administración', href: '/admin/businesses' },
+          { label: 'Negocios', active: true }
+        ]}
+      />
       <div className="flex items-end justify-between border-b-4 border-black pb-4">
         <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
           Gestión de <span className="text-primary italic">Negocios</span>

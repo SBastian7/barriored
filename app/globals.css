@@ -120,6 +120,13 @@
     @apply border-border outline-ring/50;
   }
 
+  a,
+  button,
+  [role="button"],
+  select {
+    cursor: pointer;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
   }

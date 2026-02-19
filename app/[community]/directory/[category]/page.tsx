@@ -2,8 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BusinessCard } from '@/components/directory/business-card'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; category: string }> }) {
   const { category: catSlug } = await params
@@ -17,7 +16,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
   const supabase = await createClient()
 
   const [communityRes, categoryRes] = await Promise.all([
-    supabase.from('communities').select('id').eq('slug', slug).single(),
+    supabase.from('communities').select('id, name').eq('slug', slug).single(),
     supabase.from('categories').select('id, name').eq('slug', catSlug).single(),
   ])
 
@@ -33,13 +32,17 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
     .limit(20)
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6">
-      <Link href={`/${slug}/directory`}>
-        <Button variant="ghost" size="sm" className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-1" /> Directorio
-        </Button>
-      </Link>
-      <h1 className="text-2xl font-bold mb-6">{categoryRes.data.name}</h1>
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      <Breadcrumbs
+        items={[
+          { label: communityRes.data.name, href: `/${slug}` },
+          { label: 'Directorio', href: `/${slug}/directory` },
+          { label: categoryRes.data.name, active: true }
+        ]}
+      />
+      <h1 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter italic text-shadow-md mb-12">
+        {categoryRes.data.name}
+      </h1>
 
       {(!businesses || businesses.length === 0) ? (
         <p className="text-gray-500 text-center py-12">No hay negocios en esta categoria.</p>

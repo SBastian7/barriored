@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, Zap } from 'lucide-react'
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'accent' }> = {
   pending: { label: 'Pendiente', variant: 'secondary' },
@@ -27,7 +28,8 @@ export default async function DashboardPage() {
   const communitySlug = (profile?.communities as any)?.slug
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-12">
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      <Breadcrumbs items={[{ label: 'Panel de Control', active: true }]} />
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <h1 className="text-5xl md:text-6xl font-heading font-black uppercase tracking-tighter italic text-shadow-md">
           Panel de <span className="text-primary italic">Control</span>

@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import * as Icons from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 type Category = { id: string; name: string; slug: string; icon: string | null }
 
@@ -9,9 +11,16 @@ export function CategoryGrid({ categories, communitySlug }: { categories: Catego
   return (
     <section className="py-12 px-4 bg-muted/30">
       <div className="container mx-auto max-w-5xl">
-        <h2 className="text-3xl font-heading font-black uppercase italic mb-8 tracking-tight">
-          Explora por <span className="text-accent underline decoration-4 underline-offset-4">Categorías</span>
-        </h2>
+        <div className="flex items-end justify-between mb-8">
+          <h2 className="text-3xl font-heading font-black uppercase italic tracking-tight">
+            Explora por <span className="text-accent underline decoration-4 underline-offset-4">Categorías</span>
+          </h2>
+          <Link href={`/${communitySlug}/directory`}>
+            <Button variant="ghost" className="font-black uppercase text-[11px] tracking-widest gap-1">
+              Ver todos <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
           {categories.map((cat) => {
             const IconComponent = (cat.icon && (Icons as unknown as Record<string, LucideIcon>)[cat.icon]) || Icons.Store

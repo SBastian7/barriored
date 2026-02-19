@@ -19,6 +19,7 @@ export interface Database {
           description: string | null
           logo_url: string | null
           primary_color: string
+          cover_image_url: string | null
           is_active: boolean
           created_at: string
         }
@@ -31,6 +32,7 @@ export interface Database {
           description?: string | null
           logo_url?: string | null
           primary_color?: string
+          cover_image_url?: string | null
           is_active?: boolean
           created_at?: string
         }
@@ -43,6 +45,7 @@ export interface Database {
           description?: string | null
           logo_url?: string | null
           primary_color?: string
+          cover_image_url?: string | null
           is_active?: boolean
           created_at?: string
         }

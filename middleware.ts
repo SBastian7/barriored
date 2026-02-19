@@ -1,14 +1,36 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_ROUTES = ['/auth', '/api', '/_next', '/favicon.ico', '/manifest.json', '/sw.js']
+const PUBLIC_ROUTES = ['/api', '/_next', '/favicon.ico', '/manifest.json', '/sw.js']
 const PROTECTED_ROUTES = ['/dashboard', '/admin']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip public/static routes
-  if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
+  // Handle Auth routes (Login/Signup)
+  if (pathname.startsWith('/auth')) {
+    const { supabase, response } = await createMiddlewareClient(request)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      // If user is already logged in, redirect to their community or home
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('community_id, communities(slug)')
+        .eq('id', user.id)
+        .single()
+
+      const communitySlug = (profile?.communities as any)?.slug
+      if (communitySlug) {
+        return NextResponse.redirect(new URL(`/${communitySlug}`, request.url))
+      }
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+    return response
+  }
+
+  // Skip other public/static routes
+  if (['/api', '/_next', '/favicon.ico', '/manifest.json', '/sw.js'].some((route) => pathname.startsWith(route))) {
     return updateSession(request)
   }
 

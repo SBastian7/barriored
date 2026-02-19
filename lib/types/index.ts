@@ -7,6 +7,7 @@ export type CommunityData = {
   description: string | null
   logo_url: string | null
   primary_color: string
+  cover_image_url: string | null
 }
 
 export type BusinessStatus = 'pending' | 'approved' | 'rejected'
