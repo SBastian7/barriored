@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Store, Tag } from 'lucide-react'
+import { ArrowLeft, Store, Tag, Users, AlertTriangle, Siren } from 'lucide-react'
 
 export const metadata = { title: 'Admin | BarrioRed' }
 
@@ -30,6 +30,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/categories">
             <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-secondary/10 transition-colors">
               <Tag className="h-4 w-4 mr-1" /> Categorías
+            </Button>
+          </Link>
+          <Link href="/admin/community">
+            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-accent/10 transition-colors">
+              <Users className="h-4 w-4 mr-1" /> Comunidad
+            </Button>
+          </Link>
+          <Link href="/admin/alerts">
+            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-red-100 transition-colors">
+              <AlertTriangle className="h-4 w-4 mr-1" /> Alertas
+            </Button>
+          </Link>
+          <Link href="/admin/services">
+            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-emerald-100 transition-colors">
+              <Siren className="h-4 w-4 mr-1" /> Servicios
             </Button>
           </Link>
         </nav>

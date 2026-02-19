@@ -126,20 +126,21 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [ ] Reviews and ratings system
 - [ ] Payment integration (Nequi/manual transfer initially, then Wompi/MercadoPago)
 
-### Phase 3: Community (Red Vecinal)
-- [ ] `/{community}/community` - Neighborhood announcement board
-- [ ] Community alerts (water cuts, construction, security)
-- [ ] Local events calendar
-- [ ] Local job postings
-- [ ] Public services and emergency directory
+### Phase 3: Community (Red Vecinal - COMPLETE)
+- [x] `/{community}/community` - Neighborhood announcement board
+- [x] Community alerts (water cuts, construction, security)
+- [x] Local events calendar
+- [x] Local job postings
+- [x] Public services and emergency directory
+- [x] Admin/Moderator panel for community content
 
-### Phase 4: Marketplace (Clasificados)
+### Phase 4: Marketplace (Clasificados - NEXT)
 - [ ] `/{community}/marketplace` - Buy/sell classifieds between neighbors
 - [ ] Featured classified listings (paid)
 
-### Phase 5: Services Info
-- [ ] `/{community}/services` - Emergency contacts, transport, government procedures
-- [ ] Curated directory of public services
+### Phase 5: Services Info (COMPLETE)
+- [x] `/{community}/services` - Emergency contacts, transport, government procedures
+- [x] Curated directory of public services
 
 ## Navigation Structure
 
