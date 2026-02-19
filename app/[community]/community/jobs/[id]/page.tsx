@@ -36,25 +36,28 @@ export default async function JobDetailPage({
         .from('community_posts')
         .select('*, profiles(full_name, avatar_url)')
         .eq('id', id)
+        .eq('community_id', community.id)
         .single()
 
     if (!postRes || postRes.status !== 'approved' || postRes.type !== 'job') return notFound()
 
     const post = postRes as any as CommunityPost
-    const metadata = post.metadata as JobMetadata
+    const metadata = (post.metadata ?? {}) as Partial<JobMetadata>
 
     const contactIcons = {
         whatsapp: MessageSquare,
         phone: Phone,
         email: Mail
     }
-    const ContactIcon = contactIcons[metadata.contact_method] || MessageSquare
+    const ContactIcon = (metadata.contact_method && contactIcons[metadata.contact_method]) || MessageSquare
 
+    // Sanitize contact hrefs to prevent injection
+    const contactValue = metadata.contact_value ?? ''
     const contactHref = metadata.contact_method === 'whatsapp'
-        ? `https://wa.me/${metadata.contact_value.replace(/\D/g, '')}`
+        ? `https://wa.me/${contactValue.replace(/\D/g, '')}`
         : metadata.contact_method === 'email'
-            ? `mailto:${metadata.contact_value}`
-            : `tel:${metadata.contact_value}`
+            ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactValue) ? `mailto:${contactValue}` : '#')
+            : (/^[\d\s+\-()]+$/.test(contactValue) ? `tel:${contactValue}` : '#')
 
     return (
         <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
@@ -76,10 +79,15 @@ export default async function JobDetailPage({
                                 <Pin className="h-3.5 w-3.5 mr-2" /> Destacado
                             </Badge>
                         )}
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-black/40 ml-auto">
+                        <a
+                            href={`https://wa.me/?text=${encodeURIComponent(`${post.title} - Empleo en BarrioRed`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-black/40 ml-auto hover:text-black transition-colors"
+                        >
                             <Share2 className="h-3.5 w-3.5" />
                             Compartir Vacante
-                        </div>
+                        </a>
                     </div>
 
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-black uppercase italic tracking-tighter leading-[0.9] text-black">
@@ -130,6 +138,7 @@ export default async function JobDetailPage({
                     <div className="space-y-6">
                         <Card className="border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none bg-secondary/10">
                             <CardContent className="p-6 space-y-8">
+                                {metadata.category && (
                                 <div className="space-y-4">
                                     <h3 className="font-heading font-black uppercase italic text-xl border-b-2 border-black pb-2">Detalles</h3>
                                     <div className="space-y-4">
@@ -153,7 +162,9 @@ export default async function JobDetailPage({
                                         )}
                                     </div>
                                 </div>
+                                )}
 
+                                {metadata.contact_method && (
                                 <div className="space-y-4">
                                     <h3 className="font-heading font-black uppercase italic text-xl border-b-2 border-black pb-2">Postularse</h3>
                                     <a href={contactHref} target="_blank" rel="noopener noreferrer" className="block">
@@ -166,6 +177,7 @@ export default async function JobDetailPage({
                                         Al contactar di que lo viste en BarrioRed
                                     </p>
                                 </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

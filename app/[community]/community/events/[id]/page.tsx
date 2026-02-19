@@ -35,12 +35,13 @@ export default async function EventDetailPage({
         .from('community_posts')
         .select('*, profiles(full_name, avatar_url)')
         .eq('id', id)
+        .eq('community_id', community.id)
         .single()
 
     if (!postRes || postRes.status !== 'approved' || postRes.type !== 'event') return notFound()
 
     const post = postRes as any as CommunityPost
-    const metadata = post.metadata as EventMetadata
+    const metadata = (post.metadata ?? {}) as Partial<EventMetadata>
 
     return (
         <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
@@ -62,10 +63,15 @@ export default async function EventDetailPage({
                                 <Pin className="h-3.5 w-3.5 mr-2" /> Destacado
                             </Badge>
                         )}
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-black/40 ml-auto">
+                        <a
+                            href={`https://wa.me/?text=${encodeURIComponent(`${post.title} - Evento en BarrioRed`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-black/40 ml-auto hover:text-black transition-colors"
+                        >
                             <Share2 className="h-3.5 w-3.5" />
                             Compartir Evento
-                        </div>
+                        </a>
                     </div>
 
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-black uppercase italic tracking-tighter leading-[0.9] text-black">
@@ -116,6 +122,7 @@ export default async function EventDetailPage({
                     <div className="space-y-6">
                         <Card className="border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none bg-accent/10">
                             <CardContent className="p-6 space-y-6">
+                                {metadata.date && (
                                 <div className="space-y-4">
                                     <h3 className="font-heading font-black uppercase italic text-xl border-b-2 border-black pb-2">Cuándo</h3>
                                     <div className="space-y-2">
@@ -138,7 +145,9 @@ export default async function EventDetailPage({
                                         </div>
                                     </div>
                                 </div>
+                                )}
 
+                                {metadata.location && (
                                 <div className="space-y-4">
                                     <h3 className="font-heading font-black uppercase italic text-xl border-b-2 border-black pb-2">Dónde</h3>
                                     <div className="flex items-start gap-3">
@@ -150,6 +159,7 @@ export default async function EventDetailPage({
                                         </span>
                                     </div>
                                 </div>
+                                )}
 
                                 <Card className="border-2 border-black bg-white rounded-none">
                                     <CardContent className="p-4 text-[10px] font-black uppercase tracking-widest text-black/50 text-center italic">

@@ -33,7 +33,19 @@ export default async function EventsPage({ params }: { params: Promise<{ communi
         .eq('type', 'event')
         .order('created_at', { ascending: false })
 
-    const posts = (postsRes ?? []) as any as CommunityPost[]
+    const now = new Date().toISOString()
+    const allPosts = (postsRes ?? []) as any as CommunityPost[]
+    // Show upcoming/current events first, then recent past events
+    const posts = allPosts.sort((a, b) => {
+        const dateA = (a.metadata as any)?.date ?? ''
+        const dateB = (b.metadata as any)?.date ?? ''
+        const aIsFuture = dateA >= now
+        const bIsFuture = dateB >= now
+        if (aIsFuture && !bIsFuture) return -1
+        if (!aIsFuture && bIsFuture) return 1
+        // Both future: soonest first; both past: most recent first
+        return aIsFuture ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA)
+    })
 
     return (
         <div className="container mx-auto max-w-5xl px-4 py-8 pb-24">

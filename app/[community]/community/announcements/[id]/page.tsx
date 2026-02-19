@@ -35,6 +35,7 @@ export default async function AnnouncementDetailPage({
         .from('community_posts')
         .select('*, profiles(full_name, avatar_url)')
         .eq('id', id)
+        .eq('community_id', community.id)
         .single()
 
     if (!postRes || postRes.status !== 'approved' || postRes.type !== 'announcement') return notFound()
@@ -109,12 +110,19 @@ export default async function AnnouncementDetailPage({
                             <p className="text-sm text-black/60">Esta publicación ha sido verificada por los moderadores de BarrioRed para garantizar la seguridad de la comunidad.</p>
                         </CardContent>
                     </Card>
-                    <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-secondary/5">
-                        <CardContent className="p-6">
-                            <h3 className="font-heading font-black uppercase italic text-lg mb-2">Compartir</h3>
-                            <p className="text-sm text-black/60">Ayuda a tus vecinos compartiendo este anuncio en tus grupos de WhatsApp o redes sociales.</p>
-                        </CardContent>
-                    </Card>
+                    <a
+                        href={`https://wa.me/?text=${encodeURIComponent(`${post.title} - Anuncio en BarrioRed`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                    >
+                        <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-secondary/5 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
+                            <CardContent className="p-6">
+                                <h3 className="font-heading font-black uppercase italic text-lg mb-2">Compartir por WhatsApp</h3>
+                                <p className="text-sm text-black/60">Ayuda a tus vecinos compartiendo este anuncio en tus grupos de WhatsApp.</p>
+                            </CardContent>
+                        </Card>
+                    </a>
                 </div>
             </article>
         </div>

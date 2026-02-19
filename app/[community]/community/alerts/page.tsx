@@ -3,7 +3,9 @@ import { AlertCard } from '@/components/community/alert-card'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { AlertTriangle, Info } from 'lucide-react'
 import { notFound } from 'next/navigation'
-import type { CommunityAlert } from '@/lib/types'
+import type { CommunityAlert, AlertSeverity } from '@/lib/types'
+
+const SEVERITY_ORDER: Record<AlertSeverity, number> = { critical: 0, warning: 1, info: 2 }
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string }> }) {
     const { community: slug } = await params
@@ -28,12 +30,11 @@ export default async function AlertsPage({ params }: { params: Promise<{ communi
         .select('*')
         .eq('community_id', community.id)
         .order('is_active', { ascending: false })
-        .order('severity', { ascending: true })
         .order('created_at', { ascending: false })
 
     const alerts = (alertsRes ?? []) as any as CommunityAlert[]
 
-    const activeAlerts = alerts.filter(a => a.is_active)
+    const activeAlerts = alerts.filter(a => a.is_active).sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
     const pastAlerts = alerts.filter(a => !a.is_active)
 
     return (

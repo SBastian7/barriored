@@ -7,10 +7,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const communityId = searchParams.get('community_id')
     const type = searchParams.get('type')
-    const limit = parseInt(searchParams.get('limit') ?? '20')
+    const rawLimit = parseInt(searchParams.get('limit') ?? '20', 10)
+    const limit = Number.isNaN(rawLimit) ? 20 : Math.min(Math.max(rawLimit, 1), 100)
 
     if (!communityId) {
         return NextResponse.json({ error: 'community_id requerido' }, { status: 400 })
+    }
+
+    const VALID_TYPES = ['announcement', 'event', 'job'] as const
+    if (type && !VALID_TYPES.includes(type as typeof VALID_TYPES[number])) {
+        return NextResponse.json({ error: 'Tipo inválido' }, { status: 400 })
     }
 
     let query = supabase
@@ -23,7 +29,7 @@ export async function GET(request: NextRequest) {
         .limit(limit)
 
     if (type) {
-        query = query.eq('type', type as 'announcement' | 'event' | 'job')
+        query = query.eq('type', type as typeof VALID_TYPES[number])
     }
 
     const { data, error } = await query

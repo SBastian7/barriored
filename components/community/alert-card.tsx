@@ -1,6 +1,6 @@
 import { AlertTriangle, Droplets, Zap, Shield, Construction, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { CommunityAlert } from '@/lib/types'
+import type { CommunityAlert, AlertType } from '@/lib/types'
 
 const alertIcons = {
     water: Droplets,
@@ -8,6 +8,14 @@ const alertIcons = {
     security: Shield,
     construction: Construction,
     general: Info,
+}
+
+const alertTypeLabels: Record<AlertType, string> = {
+    water: 'Agua',
+    power: 'Energía',
+    security: 'Seguridad',
+    construction: 'Obras',
+    general: 'General',
 }
 
 const severityStyles = {
@@ -39,7 +47,7 @@ export function AlertCard({ alert }: { alert: CommunityAlert }) {
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
-                        Alerta de {alert.type}
+                        Alerta de {alertTypeLabels[alert.type] ?? alert.type}
                     </span>
                     {alert.severity === 'critical' && (
                         <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-white text-primary px-1 border border-black italic">

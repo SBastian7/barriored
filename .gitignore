@@ -47,3 +47,11 @@ next-env.d.ts
 .agents
 /.claude
 /.agents
+.mcp.json
+.playwright-mcp/
+
+# Supabase
+supabase/.temp/
+
+# Plans/docs (internal)
+docs/plans/

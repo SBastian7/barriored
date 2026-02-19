@@ -7,7 +7,9 @@ import { EventsSection } from '@/components/community/events-section'
 import { JobsSection } from '@/components/community/jobs-section'
 import { ServicesSection } from '@/components/community/services-section'
 import { CommunityCTA } from '@/components/community/community-cta'
-import type { CommunityPost, CommunityAlert } from '@/lib/types'
+import type { CommunityPost, CommunityAlert, AlertSeverity } from '@/lib/types'
+
+const SEVERITY_ORDER: Record<AlertSeverity, number> = { critical: 0, warning: 1, info: 2 }
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string }> }) {
     const { community: slug } = await params
@@ -37,7 +39,6 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
             .select('*')
             .eq('community_id', community.id)
             .eq('is_active', true)
-            .order('severity', { ascending: true })
             .order('created_at', { ascending: false }),
 
         supabase.from('community_posts')
@@ -85,8 +86,8 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
             </header>
 
             <div className="space-y-16">
-                {/* Urgent Alerts First */}
-                <AlertsBanner alerts={(alertsRes.data ?? []) as any} />
+                {/* Urgent Alerts First - sorted by severity priority */}
+                <AlertsBanner alerts={((alertsRes.data ?? []) as any as CommunityAlert[]).sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])} />
 
                 {/* Content Sections */}
                 <div className="grid gap-20">

@@ -1,5 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { z } from 'zod'
+
+const updateAlertSchema = z.object({
+    title: z.string().min(3).max(150).optional(),
+    description: z.string().max(500).optional(),
+    severity: z.enum(['info', 'warning', 'critical']).optional(),
+    type: z.enum(['water', 'power', 'security', 'construction', 'general']).optional(),
+    is_active: z.boolean().optional(),
+    starts_at: z.string().optional(),
+    ends_at: z.string().optional(),
+})
 
 export async function PATCH(
     request: Request,
@@ -10,14 +21,18 @@ export async function PATCH(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-    // Admin check
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
 
     const body = await request.json()
+    const parsed = updateAlertSchema.safeParse(body)
+    if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
+    }
+
     const { data, error } = await supabase
         .from('community_alerts')
-        .update(body)
+        .update(parsed.data)
         .eq('id', id)
         .select()
         .single()
@@ -35,7 +50,6 @@ export async function DELETE(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-    // Admin check
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
 
