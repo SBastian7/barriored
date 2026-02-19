@@ -10,7 +10,7 @@ export function HeroBanner({
   businessCount: number
 }) {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden py-32">
       {/* Background image with overlay */}
       <div className="absolute inset-0">
         {community.cover_image_url ? (

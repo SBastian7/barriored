@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         .limit(limit)
 
     if (type) {
-        query = query.eq('type', type)
+        query = query.eq('type', type as 'announcement' | 'event' | 'job')
     }
 
     const { data, error } = await query

@@ -12,7 +12,24 @@
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest init:*)",
       "Bash(npx shadcn@latest add:*)",
-      "Bash(timeout 15 npm run dev:*)"
+      "Bash(timeout 15 npm run dev:*)",
+      "Bash(git diff:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(/c/Program Files/GitHub:*)",
+      "Bash(git merge:*)",
+      "Bash(npx next build:*)",
+      "Bash(npx next dev:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__supabase__execute_sql",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__apply_migration",
+      "Bash(ls:*)"
     ]
   },
   "enabledPlugins": {

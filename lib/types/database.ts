@@ -32,8 +32,8 @@ export type Database = {
           phone: string | null
           photos: string[] | null
           slug: string
-          status: string | null
-          updated_at: string | null
+          status: "pending" | "approved" | "rejected"
+          updated_at: string
           website: string | null
           whatsapp: string | null
         }
@@ -151,7 +151,7 @@ export type Database = {
           logo_url: string | null
           municipality: string
           name: string
-          primary_color: string | null
+          primary_color: string
           slug: string
         }
         Insert: {
@@ -191,10 +191,10 @@ export type Database = {
           ends_at: string | null
           id: string
           is_active: boolean
-          severity: string
+          severity: "info" | "warning" | "critical"
           starts_at: string
           title: string
-          type: string
+          type: "water" | "power" | "security" | "construction" | "general"
         }
         Insert: {
           author_id: string
@@ -249,9 +249,9 @@ export type Database = {
           image_url: string | null
           is_pinned: boolean
           metadata: Json
-          status: string
+          status: "pending" | "approved" | "rejected"
           title: string
-          type: string
+          type: "announcement" | "event" | "job"
           updated_at: string
         }
         Insert: {
@@ -307,7 +307,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
-          role: string | null
+          role: "neighbor" | "merchant" | "admin"
         }
         Insert: {
           avatar_url?: string | null
@@ -340,7 +340,7 @@ export type Database = {
       public_services: {
         Row: {
           address: string | null
-          category: string
+          category: "emergency" | "health" | "government" | "transport" | "utilities"
           community_id: string
           description: string | null
           hours: string | null

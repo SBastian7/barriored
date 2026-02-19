@@ -62,7 +62,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
         name={business.name}
         categoryName={business.categories?.name ?? ''}
         photo={business.photos?.[0] ?? null}
-        isVerified={business.is_verified}
+        isVerified={!!business.is_verified}
       />
       {business.photos && business.photos.length > 1 && (
         <PhotoGallery photos={business.photos} />
