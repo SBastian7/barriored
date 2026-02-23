@@ -9,14 +9,26 @@ type Business = {
   categories: { name: string; slug: string } | null
 }
 
-export function FeaturedBusinesses({ businesses, communitySlug }: { businesses: Business[]; communitySlug: string }) {
+type BusinessSectionProps = {
+  businesses: Business[]
+  communitySlug: string
+  title: string
+  showBadge?: boolean
+}
+
+export function BusinessSection({
+  businesses,
+  communitySlug,
+  title,
+  showBadge = false
+}: BusinessSectionProps) {
   if (businesses.length === 0) return null
   return (
     <section className="py-12 px-4 bg-muted/30">
       <div className="container mx-auto max-w-5xl">
         <div className="flex items-end justify-between mb-8">
           <h2 className="text-3xl font-heading font-black uppercase italic tracking-tight">
-            Negocios <span className="text-primary underline decoration-4 underline-offset-4">Recientes</span>
+            Negocios <span className="text-primary underline decoration-4 underline-offset-4">{title}</span>
           </h2>
           <Link href={`/${communitySlug}/directory`}>
             <Button variant="ghost" className="font-black uppercase text-[11px] tracking-widest gap-1">
@@ -26,7 +38,14 @@ export function FeaturedBusinesses({ businesses, communitySlug }: { businesses: 
         </div>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {businesses.map((biz) => (
-            <BusinessCard key={biz.id} business={biz} communitySlug={communitySlug} />
+            <div key={biz.id} className="relative">
+              {showBadge && (
+                <div className="absolute -top-3 -right-3 z-10 bg-secondary text-black text-[10px] font-black uppercase tracking-widest px-3 py-1 rotate-[-2deg] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  Destacado
+                </div>
+              )}
+              <BusinessCard business={biz} communitySlug={communitySlug} />
+            </div>
           ))}
         </div>
         <div className="text-center mt-12">
