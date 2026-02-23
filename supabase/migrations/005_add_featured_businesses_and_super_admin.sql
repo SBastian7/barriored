@@ -11,6 +11,9 @@ ADD COLUMN featured_order INTEGER NULL,
 ADD COLUMN featured_requested BOOLEAN DEFAULT FALSE,
 ADD COLUMN featured_requested_at TIMESTAMP WITH TIME ZONE NULL;
 
+-- Drop old is_featured index and create new combined index
+DROP INDEX IF EXISTS idx_businesses_featured;
+
 -- Create indexes for efficient queries
 CREATE INDEX idx_businesses_featured_order
   ON businesses(community_id, is_featured, featured_order)
