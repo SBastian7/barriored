@@ -20,7 +20,7 @@ export default async function sitemap() {
 
   const businessUrls = (businesses ?? []).map((b) => ({
     url: `${siteUrl}/${(b.communities as any)?.slug}/business/${b.slug}`,
-    lastModified: new Date(b.updated_at),
+    lastModified: b.updated_at ? new Date(b.updated_at) : new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }))

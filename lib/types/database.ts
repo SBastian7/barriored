@@ -440,6 +440,32 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      search_businesses: {
+        Args: { query: string; comm_id: string }
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          photos: string[] | null
+          whatsapp: string | null
+          address: string | null
+          categories: { name: string; slug: string }
+        }[]
+      }
+      nearby_businesses: {
+        Args: { lat: number; lng: number; radius_km: number; comm_id: string }
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          photos: string[] | null
+          whatsapp: string | null
+          address: string | null
+          categories: { name: string; slug: string }
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

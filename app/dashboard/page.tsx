@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       ) : (
         <div className="grid gap-6">
           {businesses.map((biz) => {
-            const s = STATUS_LABELS[biz.status] ?? STATUS_LABELS.pending
+            const s = STATUS_LABELS[biz.status as keyof typeof STATUS_LABELS] ?? STATUS_LABELS.pending
             return (
               <Card key={biz.id} className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-white overflow-hidden group rounded-none">
                 <CardHeader className="flex flex-row items-center justify-between p-6">
