@@ -50,6 +50,9 @@ next-env.d.ts
 .mcp.json
 .playwright-mcp/
 
+# Git worktrees
+.worktrees/
+
 # Supabase
 supabase/.temp/
 
