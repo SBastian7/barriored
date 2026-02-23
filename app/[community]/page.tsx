@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { HeroBanner } from '@/components/home/hero-banner'
 import { QuickNav } from '@/components/home/quick-nav'
-import { FeaturedBusinesses } from '@/components/home/featured-businesses'
+import { BusinessSection } from '@/components/home/featured-businesses'
 import { RegisterCTA } from '@/components/home/register-cta'
 
 export default async function CommunityHomePage({ params }: { params: Promise<{ community: string }> }) {
@@ -16,19 +16,55 @@ export default async function CommunityHomePage({ params }: { params: Promise<{ 
 
   if (!community) return null
 
-  const [businessCountRes, recentRes] = await Promise.all([
+  const [businessCountRes, featuredRes, recentRes] = await Promise.all([
     supabase.from('businesses').select('id', { count: 'exact', head: true })
       .eq('community_id', community.id).eq('status', 'approved'),
+
+    // Featured businesses query
     supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, categories(name, slug)')
-      .eq('community_id', community.id).eq('status', 'approved')
-      .order('created_at', { ascending: false }).limit(3),
+      .eq('community_id', community.id)
+      .eq('status', 'approved')
+      .eq('is_featured', true)
+      .order('featured_order', { ascending: true, nullsFirst: false })
+      .limit(3),
+
+    // Recent businesses query (will exclude featured in next step)
+    supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, categories(name, slug)')
+      .eq('community_id', community.id)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(10) // Fetch extra to account for featured exclusions
   ])
+
+  // Exclude featured businesses from recent list
+  const featuredIds = featuredRes.data?.map(b => b.id) ?? []
+  const recentBusinesses = recentRes.data?.filter(b => !featuredIds.includes(b.id)).slice(0, 3) ?? []
 
   return (
     <>
       <HeroBanner community={community} businessCount={businessCountRes.count ?? 0} />
       <QuickNav communitySlug={slug} />
-      <FeaturedBusinesses businesses={recentRes.data ?? []} communitySlug={slug} />
+
+      {/* Featured businesses section */}
+      {featuredRes.data && featuredRes.data.length > 0 && (
+        <BusinessSection
+          businesses={featuredRes.data}
+          communitySlug={slug}
+          title="Destacados"
+          showBadge={true}
+        />
+      )}
+
+      {/* Recent businesses section */}
+      {recentBusinesses.length > 0 && (
+        <BusinessSection
+          businesses={recentBusinesses}
+          communitySlug={slug}
+          title="Recientes"
+          showBadge={false}
+        />
+      )}
+
       <RegisterCTA communitySlug={slug} />
     </>
   )
