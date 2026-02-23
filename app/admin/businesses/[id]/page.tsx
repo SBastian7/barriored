@@ -19,14 +19,28 @@ export default function AdminBusinessReviewPage() {
   const supabase = createClient()
   const [business, setBusiness] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [currentProfile, setCurrentProfile] = useState<any>(null)
 
   useEffect(() => {
+    // Fetch business with featured fields
     supabase
       .from('businesses')
       .select('*, categories(name), profiles(full_name, phone)')
       .eq('id', id)
       .single()
       .then(({ data }) => setBusiness(data))
+
+    // Fetch current user profile to determine permissions
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from('profiles')
+          .select('role, is_super_admin, community_id')
+          .eq('id', user.id)
+          .single()
+          .then(({ data }) => setCurrentProfile(data))
+      }
+    })
   }, [id, supabase])
 
   async function handleAction(action: 'approve' | 'reject') {
