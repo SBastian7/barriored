@@ -118,6 +118,8 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [x] Multi-tenant architecture
 - [x] Neo-Brutalist Tropical brand design
 - [x] Mobile-responsive with bottom nav
+- [x] User profile system (view, edit, avatar upload)
+- [x] Logout state fix (immediate UI update)
 
 ### Phase 2: Monetization (Next)
 - [ ] Premium/featured business profiles (highlighted in listings)
@@ -133,6 +135,12 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [x] Local job postings
 - [x] Public services and emergency directory
 - [x] Admin/Moderator panel for community content
+- [x] Image upload for community posts (announcements, events, jobs)
+- [x] Edit own community posts (announcements, events, jobs)
+- [x] Delete own community posts with confirmation dialog
+- [x] Browser push notifications for community alerts
+- [x] Push notification permission prompt
+- [x] Service worker for offline notification handling
 
 ### Phase 4: Marketplace (Clasificados - NEXT)
 - [ ] `/{community}/marketplace` - Buy/sell classifieds between neighbors
