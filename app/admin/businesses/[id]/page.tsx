@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
+import { FeaturedBusinessControls } from '@/components/admin/featured-business-controls'
 
 export default function AdminBusinessReviewPage() {
   const { id } = useParams<{ id: string }>()
@@ -19,14 +20,28 @@ export default function AdminBusinessReviewPage() {
   const supabase = createClient()
   const [business, setBusiness] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [currentProfile, setCurrentProfile] = useState<any>(null)
 
   useEffect(() => {
+    // Fetch business with featured fields
     supabase
       .from('businesses')
       .select('*, categories(name), profiles(full_name, phone)')
       .eq('id', id)
       .single()
       .then(({ data }) => setBusiness(data))
+
+    // Fetch current user profile to determine permissions
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from('profiles')
+          .select('role, is_super_admin, community_id')
+          .eq('id', user.id)
+          .single()
+          .then(({ data }) => setCurrentProfile(data))
+      }
+    })
   }, [id, supabase])
 
   async function handleAction(action: 'approve' | 'reject') {
@@ -80,6 +95,25 @@ export default function AdminBusinessReviewPage() {
                 <Image key={i} src={url} alt={`Foto ${i + 1}`} width={200} height={150} className="rounded-lg object-cover" />
               ))}
             </div>
+          )}
+
+          {/* Featured Business Controls */}
+          {currentProfile && business && (
+            <FeaturedBusinessControls
+              business={{
+                id: business.id,
+                is_featured: business.is_featured,
+                featured_order: business.featured_order,
+                featured_requested: business.featured_requested,
+                featured_requested_at: business.featured_requested_at,
+              }}
+              isSuperAdmin={currentProfile.is_super_admin === true}
+              isCommunityAdmin={
+                currentProfile.role === 'admin' &&
+                !currentProfile.is_super_admin &&
+                currentProfile.community_id === business.community_id
+              }
+            />
           )}
 
           {business.status === 'pending' && (

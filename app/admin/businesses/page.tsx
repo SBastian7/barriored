@@ -13,7 +13,7 @@ export default async function AdminBusinessesPage() {
 
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('id, name, status, created_at, categories(name), profiles!businesses_owner_id_profiles_fkey(full_name)')
+    .select('id, name, status, created_at, featured_requested, categories(name), profiles!businesses_owner_id_profiles_fkey(full_name)')
     .eq('community_id', profile!.community_id!)
     .order('created_at', { ascending: false })
 
@@ -44,7 +44,14 @@ export default async function AdminBusinessesPage() {
               <Card key={biz.id} className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white rounded-none hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden group">
                 <CardContent className="flex items-center justify-between p-6">
                   <div>
-                    <p className="text-2xl font-heading font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors">{biz.name}</p>
+                    <p className="text-2xl font-heading font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors">
+                      {biz.name}
+                      {biz.featured_requested && (
+                        <Badge className="ml-2 bg-secondary text-black border-2 border-black text-[10px] font-black uppercase tracking-widest">
+                          Solicitud destacado
+                        </Badge>
+                      )}
+                    </p>
                     <p className="text-xs font-black uppercase tracking-widest text-black/50 italic">
                       {(biz.categories as any)?.name} — Por <span className="text-black">{(biz.profiles as any)?.full_name}</span>
                     </p>
@@ -70,7 +77,14 @@ export default async function AdminBusinessesPage() {
             <Card key={biz.id} className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/50 rounded-none grayscale hover:grayscale-0 transition-all">
               <CardContent className="flex items-center justify-between p-4">
                 <div>
-                  <p className="text-xl font-heading font-black uppercase italic tracking-tighter">{biz.name}</p>
+                  <p className="text-xl font-heading font-black uppercase italic tracking-tighter">
+                    {biz.name}
+                    {biz.featured_requested && (
+                      <Badge className="ml-2 bg-secondary text-black border-2 border-black text-[10px] font-black uppercase tracking-widest">
+                        Solicitud destacado
+                      </Badge>
+                    )}
+                  </p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-black/40 italic">{(biz.categories as any)?.name}</p>
                 </div>
                 <Badge variant="outline" className="opacity-50">Activo</Badge>

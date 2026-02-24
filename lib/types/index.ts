@@ -6,7 +6,7 @@ export type CommunityData = {
   department: string
   description: string | null
   logo_url: string | null
-  primary_color: string
+  primary_color: string | null
   cover_image_url: string | null
 }
 
