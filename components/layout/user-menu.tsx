@@ -94,6 +94,12 @@ export function UserMenu() {
         <DropdownMenuLabel>{userState.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
+          <Link href="/profile" className="flex items-center gap-2 w-full">
+            <User className="h-4 w-4" />
+            Mi Perfil
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/dashboard" className="flex items-center gap-2 w-full">
             <LayoutDashboard className="h-4 w-4" />
             Mi Panel
