@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { PostEditActions } from '@/components/community/post-edit-actions'
 import { User, Pin, Megaphone, Calendar } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { CommunityPost } from '@/lib/types'
@@ -27,6 +28,8 @@ export default async function AnnouncementDetailPage({
     const { community: slug, id } = await params
     const supabase = await createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+
     const { data: community } = await supabase
         .from('communities').select('id, name').eq('slug', slug).single()
     if (!community) return notFound()
@@ -41,6 +44,19 @@ export default async function AnnouncementDetailPage({
     if (!postRes || postRes.status !== 'approved' || postRes.type !== 'announcement') return notFound()
 
     const post = postRes as any as CommunityPost
+
+    let isAuthor = false
+    let isAdmin = false
+
+    if (user) {
+        isAuthor = post.author_id === user.id
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+        isAdmin = profile?.role === 'admin'
+    }
 
     return (
         <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
@@ -71,6 +87,16 @@ export default async function AnnouncementDetailPage({
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-black uppercase italic tracking-tighter leading-[0.9] text-black">
                         {post.title}
                     </h1>
+
+                    <div className="flex justify-end">
+                        <PostEditActions
+                            postId={post.id}
+                            postType="announcement"
+                            communitySlug={slug}
+                            isAuthor={isAuthor}
+                            isAdmin={isAdmin}
+                        />
+                    </div>
 
                     <div className="flex items-center gap-4 py-4 border-y-2 border-black/10">
                         <div className="w-12 h-12 border-2 border-black bg-accent/20 flex items-center justify-center overflow-hidden">
