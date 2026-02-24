@@ -12,7 +12,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createPostSchema, type CreatePostInput } from '@/lib/validations/community'
-import { Megaphone, Calendar, Briefcase, Loader2, Image as ImageIcon } from 'lucide-react'
+import { ImageUploadField } from './image-upload-field'
+import { Megaphone, Calendar, Briefcase, Loader2 } from 'lucide-react'
 
 type Props = {
     type: 'announcement' | 'event' | 'job'
@@ -102,18 +103,11 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                     {errors.content && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{errors.content.message}</p>}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="image_url" className="font-black uppercase tracking-widest text-xs">URL de Imagen (Opcional)</Label>
-                    <div className="relative">
-                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40" />
-                        <Input
-                            id="image_url"
-                            placeholder="https://ejemplo.com/imagen.jpg"
-                            className="pl-10"
-                            {...register('image_url')}
-                        />
-                    </div>
-                </div>
+                <ImageUploadField
+                    value={watch('image_url') || null}
+                    onChange={(url) => setValue('image_url', url || '')}
+                    label="Imagen (Opcional)"
+                />
 
                 {/* Type Specific Fields */}
                 {type === 'event' && (
