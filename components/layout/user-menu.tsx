@@ -58,9 +58,10 @@ export function UserMenu() {
   }, [])
 
   async function handleSignOut() {
+    setUserState(null)  // Clear local state immediately
     await supabase.auth.signOut()
-    router.refresh()
     router.push('/')
+    router.refresh()
   }
 
   if (loading) {
