@@ -6,6 +6,7 @@ import { AnnouncementsSection } from '@/components/community/announcements-secti
 import { EventsSection } from '@/components/community/events-section'
 import { JobsSection } from '@/components/community/jobs-section'
 import { CommunityCTA } from '@/components/community/community-cta'
+import { PushNotificationPrompt } from '@/components/community/push-notification-prompt'
 import type { CommunityPost, CommunityAlert, AlertSeverity } from '@/lib/types'
 
 const SEVERITY_ORDER: Record<AlertSeverity, number> = { critical: 0, warning: 1, info: 2 }
@@ -98,6 +99,8 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
                 {/* Call to Action */}
                 <CommunityCTA communitySlug={slug} />
             </div>
+
+            <PushNotificationPrompt />
         </div>
     )
 }
