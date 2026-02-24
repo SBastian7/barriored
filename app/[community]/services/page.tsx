@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ServiceCard } from '@/components/community/service-card'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { Badge } from '@/components/ui/badge'
-import { Siren, HeartPulse, Landmark, Bus, Wrench, Search, Info } from 'lucide-react'
+import { Siren, HeartPulse, Landmark, Bus, Wrench, Info } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -65,7 +65,6 @@ export default async function ServicesPage({
         <div className="container mx-auto max-w-5xl px-4 py-8 pb-24">
             <Breadcrumbs items={[
                 { label: community.name, href: `/${slug}` },
-                { label: 'Comunidad', href: `/${slug}/community` },
                 { label: 'Servicios', active: true },
             ]} />
 
@@ -84,7 +83,7 @@ export default async function ServicesPage({
 
             {/* Category filters */}
             <div className="flex flex-wrap gap-3 mb-12">
-                <Link href={`/${slug}/community/services`}>
+                <Link href={`/${slug}/services`}>
                     <Badge
                         variant={!filterCat ? 'default' : 'outline'}
                         className={`text-sm px-6 py-2 border-2 border-black rounded-none uppercase tracking-widest font-black transition-all ${!filterCat ? 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' : ''}`}
@@ -92,16 +91,18 @@ export default async function ServicesPage({
                         Todos
                     </Badge>
                 </Link>
-                {Object.entries(CATEGORY_META).map(([key, { label }]) => (
-                    <Link key={key} href={`/${slug}/community/services?category=${key}`}>
-                        <Badge
-                            variant={filterCat === key ? 'default' : 'outline'}
-                            className={`text-sm px-6 py-2 border-2 border-black rounded-none uppercase tracking-widest font-black transition-all ${filterCat === key ? 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' : ''}`}
-                        >
-                            {label}
-                        </Badge>
-                    </Link>
-                ))}
+                {Object.entries(CATEGORY_META)
+                    .filter(([key]) => key !== 'transport' && key !== 'government')
+                    .map(([key, { label }]) => (
+                        <Link key={key} href={`/${slug}/services?category=${key}`}>
+                            <Badge
+                                variant={filterCat === key ? 'default' : 'outline'}
+                                className={`text-sm px-6 py-2 border-2 border-black rounded-none uppercase tracking-widest font-black transition-all ${filterCat === key ? 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' : ''}`}
+                            >
+                                {label}
+                            </Badge>
+                        </Link>
+                    ))}
             </div>
 
             {services.length === 0 ? (
@@ -114,26 +115,28 @@ export default async function ServicesPage({
                 </div>
             ) : (
                 <div className="space-y-16">
-                    {Object.entries(grouped).map(([cat, items]) => {
-                        const meta = CATEGORY_META[cat as ServiceCategory]
-                        const Icon = meta?.icon || Siren
-                        return (
-                            <section key={cat} className="space-y-8">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 border-2 border-black ${meta.color} flex items-center justify-center -rotate-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]`}>
-                                        <Icon className="h-6 w-6 text-white" />
+                    {Object.entries(grouped)
+                        .filter(([cat]) => cat !== 'transport' && cat !== 'government')
+                        .map(([cat, items]) => {
+                            const meta = CATEGORY_META[cat as ServiceCategory]
+                            const Icon = meta?.icon || Siren
+                            return (
+                                <section key={cat} className="space-y-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 border-2 border-black ${meta.color} flex items-center justify-center -rotate-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]`}>
+                                            <Icon className="h-6 w-6 text-white" />
+                                        </div>
+                                        <h2 className="text-3xl font-heading font-black uppercase italic tracking-tight">{meta?.label ?? cat}</h2>
+                                        <div className="h-1 flex-1 bg-black/5 ml-4"></div>
                                     </div>
-                                    <h2 className="text-3xl font-heading font-black uppercase italic tracking-tight">{meta?.label ?? cat}</h2>
-                                    <div className="h-1 flex-1 bg-black/5 ml-4"></div>
-                                </div>
-                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                    {items.map((svc) => (
-                                        <ServiceCard key={svc.id} service={svc} />
-                                    ))}
-                                </div>
-                            </section>
-                        )
-                    })}
+                                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                        {items.map((svc) => (
+                                            <ServiceCard key={svc.id} service={svc} />
+                                        ))}
+                                    </div>
+                                </section>
+                            )
+                        })}
                 </div>
             )}
 

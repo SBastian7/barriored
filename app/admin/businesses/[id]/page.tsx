@@ -7,12 +7,24 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
+import { CheckCircle, XCircle, MapPin, Phone, Mail, Globe, Clock, Camera, User } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { FeaturedBusinessControls } from '@/components/admin/featured-business-controls'
+import dynamic from 'next/dynamic'
+
+const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false })
+const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false })
+const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false })
+
+const DAY_NAMES: Record<string, string> = {
+  lunes: 'Lunes', martes: 'Martes', miercoles: 'Miercoles', jueves: 'Jueves',
+  viernes: 'Viernes', sabado: 'Sabado', domingo: 'Domingo',
+  mon: 'Lunes', tue: 'Martes', wed: 'Miercoles', thu: 'Jueves',
+  fri: 'Viernes', sat: 'Sabado', sun: 'Domingo',
+}
 
 export default function AdminBusinessReviewPage() {
   const { id } = useParams<{ id: string }>()
@@ -58,42 +70,50 @@ export default function AdminBusinessReviewPage() {
 
   if (!business) return <p>Cargando...</p>
 
+  const location = business.location as any
+  const lat = location?.coordinates?.[1]
+  const lng = location?.coordinates?.[0]
+  const hours = business.hours as Record<string, { open: string; close: string }> | null
+
   return (
     <div className="space-y-8">
       <Breadcrumbs
         items={[
-          { label: 'Administración', href: '/admin/businesses' },
+          { label: 'Administracion', href: '/admin/businesses' },
           { label: 'Negocios', href: '/admin/businesses' },
           { label: `Revisar: ${business.name}`, active: true }
         ]}
       />
 
       <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none overflow-hidden">
-        <CardHeader className="border-b-4 border-black bg-muted">
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-4xl font-heading font-black uppercase italic tracking-tighter">{business.name}</CardTitle>
-              <p className="text-xs font-black uppercase tracking-widest text-black/50 italic mt-2">
-                {business.categories?.name} — Registrado por: <span className="text-black">{business.profiles?.full_name}</span>
-              </p>
+        {/* Header with main photo */}
+        <CardHeader className="border-b-4 border-black bg-muted p-0">
+          {business.photos?.[0] && (
+            <div className="relative h-48 md:h-64 w-full border-b-4 border-black">
+              <Image src={business.photos[0]} alt={business.name} fill className="object-cover" />
             </div>
-            <Badge variant="secondary">{business.status}</Badge>
+          )}
+          <div className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-4xl font-heading font-black uppercase italic tracking-tighter">{business.name}</CardTitle>
+                <p className="text-xs font-black uppercase tracking-widest text-black/50 italic mt-2">
+                  {business.categories?.name}
+                </p>
+              </div>
+              <Badge variant={business.status === 'pending' ? 'secondary' : business.status === 'approved' ? 'default' : 'destructive'}>
+                {business.status}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {business.description && <p>{business.description}</p>}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <p><strong>WhatsApp:</strong> {business.whatsapp}</p>
-            <p><strong>Telefono:</strong> {business.phone ?? 'N/A'}</p>
-            <p><strong>Email:</strong> {business.email ?? 'N/A'}</p>
-            <p><strong>Direccion:</strong> {business.address ?? 'N/A'}</p>
-          </div>
 
-          {business.photos?.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto">
-              {business.photos.map((url: string, i: number) => (
-                <Image key={i} src={url} alt={`Foto ${i + 1}`} width={200} height={150} className="rounded-lg object-cover" />
-              ))}
+        <CardContent className="p-6 space-y-6">
+          {/* Description */}
+          {business.description && (
+            <div className="relative pl-5">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
+              <p className="text-lg leading-relaxed italic text-black/80">{business.description}</p>
             </div>
           )}
 
@@ -116,12 +136,145 @@ export default function AdminBusinessReviewPage() {
             />
           )}
 
+          {/* Contact & Details Grid */}
+          <div className="grid gap-3">
+            {/* Submitter info */}
+            <div className="flex items-center gap-3 border-2 border-black p-3 bg-secondary/10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="bg-secondary p-2 border-2 border-black">
+                <User className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Registrado por</p>
+                <p className="font-bold text-sm">{business.profiles?.full_name ?? 'N/A'} {business.profiles?.phone && `— ${business.profiles.phone}`}</p>
+              </div>
+            </div>
+
+            {business.whatsapp && (
+              <div className="flex items-center gap-3 border-2 border-black p-3 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="bg-[#25D366] p-2 border-2 border-black">
+                  <Phone className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-black/40">WhatsApp</p>
+                  <p className="font-bold text-sm">+{business.whatsapp}</p>
+                </div>
+              </div>
+            )}
+
+            {business.phone && (
+              <div className="flex items-center gap-3 border-2 border-black p-3 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="bg-secondary p-2 border-2 border-black">
+                  <Phone className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Telefono</p>
+                  <p className="font-bold text-sm">{business.phone}</p>
+                </div>
+              </div>
+            )}
+
+            {business.email && (
+              <div className="flex items-center gap-3 border-2 border-black p-3 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="bg-accent p-2 border-2 border-black">
+                  <Mail className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Email</p>
+                  <p className="font-bold text-sm">{business.email}</p>
+                </div>
+              </div>
+            )}
+
+            {business.address && (
+              <div className="flex items-center gap-3 border-2 border-black p-3 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="bg-primary p-2 border-2 border-black">
+                  <MapPin className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Direccion</p>
+                  <p className="font-bold text-sm">{business.address}</p>
+                </div>
+              </div>
+            )}
+
+            {business.website && (
+              <div className="flex items-center gap-3 border-2 border-black p-3 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="bg-accent p-2 border-2 border-black">
+                  <Globe className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Sitio Web</p>
+                  <a href={business.website} target="_blank" rel="noopener noreferrer" className="font-bold text-sm hover:text-primary transition-colors">{business.website}</a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Business Hours */}
+          {hours && Object.keys(hours).length > 0 && (
+            <div className="border-2 border-black bg-white p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <h3 className="text-lg font-heading font-black uppercase italic flex items-center gap-2 mb-4">
+                <Clock className="h-5 w-5 text-primary" /> Horarios
+              </h3>
+              <div className="space-y-2">
+                {Object.entries(hours).map(([day, h]) => (
+                  <div key={day} className="flex justify-between items-center border-b border-black/10 pb-1 px-2">
+                    <span className="font-black uppercase tracking-tighter text-sm">{DAY_NAMES[day] ?? day}</span>
+                    <span className="font-mono font-bold bg-black text-white px-2 py-0.5 text-xs">{h.open} - {h.close}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Location Map */}
+          {lat && lng && (
+            <div className="border-2 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="bg-black/5 px-4 py-2 border-b-2 border-black">
+                <h3 className="text-sm font-black uppercase tracking-widest text-black/60 flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> Ubicacion en mapa
+                </h3>
+              </div>
+              <div className="h-56">
+                <MapContainer center={[lat, lng]} zoom={16} className="h-full w-full" scrollWheelZoom={false}>
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <Marker position={[lat, lng]} />
+                </MapContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Photos Gallery */}
+          {business.photos?.length > 0 && (
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-widest text-black/60 flex items-center gap-2 mb-3">
+                <Camera className="h-4 w-4" /> Fotos ({business.photos.length})
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {business.photos.map((url: string, i: number) => (
+                  <div key={i} className="relative aspect-square border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <Image src={url} alt={`Foto ${i + 1}`} fill className="object-cover" />
+                    {i === 0 && (
+                      <div className="absolute top-0 left-0 bg-secondary text-black px-2 py-1 border-r-2 border-b-2 border-black">
+                        <span className="text-[9px] font-black uppercase tracking-widest">Principal</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
           {business.status === 'pending' && (
-            <div className="flex gap-4 pt-6 mt-6 border-t-2 border-dashed border-black">
-              <Button onClick={() => handleAction('approve')} disabled={loading} className="bg-green-500 hover:bg-green-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-black uppercase italic h-12 px-8">
+            <div className="flex gap-4 pt-6 mt-6 border-t-4 border-dashed border-black">
+              <Button onClick={() => handleAction('approve')} disabled={loading} className="flex-1 bg-green-500 hover:bg-green-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-black uppercase italic h-14 text-base">
                 <CheckCircle className="h-5 w-5 mr-2" /> Aprobar Negocio
               </Button>
-              <Button variant="destructive" onClick={() => handleAction('reject')} disabled={loading} className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black uppercase italic h-12 px-8">
+              <Button variant="destructive" onClick={() => handleAction('reject')} disabled={loading} className="flex-1 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black uppercase italic h-14 text-base">
                 <XCircle className="h-5 w-5 mr-2" /> Rechazar
               </Button>
             </div>

@@ -11,7 +11,7 @@ const navSections = [
   { label: 'Directorio', icon: Store, path: '/directory', active: true },
   { label: 'Comunidad', icon: Users, path: '/community', active: true },
   { label: 'Marketplace', icon: ShoppingBag, path: '/marketplace', active: false },
-  { label: 'Servicios', icon: Info, path: '/services', active: false },
+  { label: 'Servicios', icon: Info, path: '/services', active: true },
 ]
 
 export function TopBar() {

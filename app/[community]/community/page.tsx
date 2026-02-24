@@ -5,7 +5,6 @@ import { AlertsBanner } from '@/components/community/alerts-banner'
 import { AnnouncementsSection } from '@/components/community/announcements-section'
 import { EventsSection } from '@/components/community/events-section'
 import { JobsSection } from '@/components/community/jobs-section'
-import { ServicesSection } from '@/components/community/services-section'
 import { CommunityCTA } from '@/components/community/community-cta'
 import type { CommunityPost, CommunityAlert, AlertSeverity } from '@/lib/types'
 
@@ -94,7 +93,6 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
                     <AnnouncementsSection posts={(announcementsRes.data ?? []) as any} communitySlug={slug} />
                     <EventsSection posts={(eventsRes.data ?? []) as any} communitySlug={slug} />
                     <JobsSection posts={(jobsRes.data ?? []) as any} communitySlug={slug} />
-                    <ServicesSection communitySlug={slug} />
                 </div>
 
                 {/* Call to Action */}

@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { BusinessCard } from '@/components/directory/business-card'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
+import { DirectoryView } from '@/components/directory/directory-view'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; category: string }> }) {
   const { category: catSlug } = await params
@@ -15,21 +14,22 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
   const { community: slug, category: catSlug } = await params
   const supabase = await createClient()
 
-  const [communityRes, categoryRes] = await Promise.all([
+  const [communityRes, categoryRes, categoriesRes] = await Promise.all([
     supabase.from('communities').select('id, name').eq('slug', slug).single(),
     supabase.from('categories').select('id, name').eq('slug', catSlug).single(),
+    supabase.from('categories').select('id, name, slug').order('sort_order'),
   ])
 
   if (!communityRes.data || !categoryRes.data) notFound()
 
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('id, name, slug, description, photos, whatsapp, address, categories(name, slug)')
+    .select('id, name, slug, description, photos, whatsapp, address, location, created_at, categories(name, slug)')
     .eq('community_id', communityRes.data.id)
     .eq('category_id', categoryRes.data.id)
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
-    .limit(20)
+    .limit(50)
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -40,19 +40,16 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
           { label: categoryRes.data.name, active: true }
         ]}
       />
-      <h1 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter italic text-shadow-md mb-12">
+      <h1 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter italic text-shadow-md mb-8">
         {categoryRes.data.name}
       </h1>
 
-      {(!businesses || businesses.length === 0) ? (
-        <p className="text-gray-500 text-center py-12">No hay negocios en esta categoria.</p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {businesses.map((biz: any) => (
-            <BusinessCard key={biz.id} business={biz} communitySlug={slug} />
-          ))}
-        </div>
-      )}
+      <DirectoryView
+        businesses={businesses ?? []}
+        categories={categoriesRes.data ?? []}
+        communitySlug={slug}
+        initialCategory={catSlug}
+      />
     </div>
   )
 }

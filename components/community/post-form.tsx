@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createPostSchema, type CreatePostInput } from '@/lib/validations/community'
 import { Megaphone, Calendar, Briefcase, Loader2, Image as ImageIcon } from 'lucide-react'
@@ -37,7 +38,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
             title: '',
             content: '',
             image_url: '',
-            ...(type === 'event' ? { metadata: { date: '', location: '' } } : {}),
+            ...(type === 'event' ? { metadata: { organizer: '', date: '', location: '' } } : {}),
             ...(type === 'job' ? { metadata: { category: '', contact_method: 'whatsapp', contact_value: '' } } : {}),
         } as any
     })
@@ -116,24 +117,35 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
 
                 {/* Type Specific Fields */}
                 {type === 'event' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-accent/5 border-2 border-black border-dashed">
+                    <div className="space-y-6 p-6 bg-accent/5 border-2 border-black border-dashed">
                         <div className="space-y-2">
-                            <Label htmlFor="event-date" className="font-black uppercase tracking-widest text-xs">Fecha y Hora</Label>
+                            <Label htmlFor="event-organizer" className="font-black uppercase tracking-widest text-xs">Organizador</Label>
                             <Input
-                                id="event-date"
-                                type="datetime-local"
-                                {...register('metadata.date' as any)}
+                                id="event-organizer"
+                                placeholder="Ej: Junta de Acción Comunal o Comité Cultural"
+                                {...register('metadata.organizer' as any)}
                             />
-                            {(errors as any).metadata?.date && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.date.message}</p>}
+                            {(errors as any).metadata?.organizer && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.organizer.message}</p>}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="event-location" className="font-black uppercase tracking-widest text-xs">Lugar / Dirección</Label>
-                            <Input
-                                id="event-location"
-                                placeholder="Ej: Salón Comunal o Parque Principal"
-                                {...register('metadata.location' as any)}
-                            />
-                            {(errors as any).metadata?.location && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.location.message}</p>}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="event-date" className="font-black uppercase tracking-widest text-xs">Fecha y Hora</Label>
+                                <Input
+                                    id="event-date"
+                                    type="datetime-local"
+                                    {...register('metadata.date' as any)}
+                                />
+                                {(errors as any).metadata?.date && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.date.message}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="event-location" className="font-black uppercase tracking-widest text-xs">Lugar / Dirección</Label>
+                                <Input
+                                    id="event-location"
+                                    placeholder="Ej: Salón Comunal o Parque Principal"
+                                    {...register('metadata.location' as any)}
+                                />
+                                {(errors as any).metadata?.location && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.location.message}</p>}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -179,12 +191,24 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="job-contact-value" className="font-black uppercase tracking-widest text-xs">Dato de Contacto</Label>
-                                <Input
-                                    id="job-contact-value"
-                                    placeholder={jobMetadata?.contact_method === 'email' ? 'nombre@correo.com' : '312 345 6789'}
-                                    {...register('metadata.contact_value' as any)}
-                                />
-                                {(errors as any).metadata?.contact_value && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.contact_value.message}</p>}
+                                {jobMetadata?.contact_method === 'email' ? (
+                                    <Input
+                                        id="job-contact-value"
+                                        type="email"
+                                        placeholder="nombre@correo.com"
+                                        {...register('metadata.contact_value' as any)}
+                                    />
+                                ) : (
+                                    <PhoneInput
+                                        value={watch('metadata.contact_value' as any) || ''}
+                                        onChange={(val) => setValue('metadata.contact_value' as any, val)}
+                                        placeholder="312 345 6789"
+                                        error={(errors as any).metadata?.contact_value?.message}
+                                    />
+                                )}
+                                {jobMetadata?.contact_method === 'email' && (errors as any).metadata?.contact_value && (
+                                    <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.contact_value.message}</p>
+                                )}
                             </div>
                         </div>
                     </div>

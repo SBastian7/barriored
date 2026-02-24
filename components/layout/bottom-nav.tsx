@@ -11,7 +11,7 @@ const navItems = [
   { label: 'Directorio', icon: Store, path: '/directory', enabled: true },
   { label: 'Comunidad', icon: Users, path: '/community', enabled: true },
   { label: 'Marketplace', icon: ShoppingBag, path: '/marketplace', enabled: false },
-  { label: 'Servicios', icon: Info, path: '/services', enabled: false },
+  { label: 'Servicios', icon: Info, path: '/services', enabled: true },
 ]
 
 export function BottomNav() {

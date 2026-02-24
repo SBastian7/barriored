@@ -20,7 +20,7 @@ export function ServicesSection({ communitySlug }: { communitySlug: string }) {
                     Servicios Públicos
                 </h2>
                 <Link
-                    href={`/${communitySlug}/community/services`}
+                    href={`/${communitySlug}/services`}
                     className="group text-sm font-black uppercase tracking-widest text-primary hover:text-black transition-colors flex items-center gap-2 mb-1"
                 >
                     Ver Directorio <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -31,7 +31,7 @@ export function ServicesSection({ communitySlug }: { communitySlug: string }) {
                 {categories.map((cat) => (
                     <Link
                         key={cat.key}
-                        href={`/${communitySlug}/community/services?category=${cat.key}`}
+                        href={`/${communitySlug}/services?category=${cat.key}`}
                         className="group flex flex-col items-center gap-4 p-6 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all"
                     >
                         <div className={`w-14 h-14 flex items-center justify-center border-2 border-black ${cat.color} group-hover:scale-110 transition-transform`}>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { whatsappUrl } from '@/lib/utils'
 import { MessageCircle } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
+import '@/lib/leaflet-icon-fix'
 
 type Props = {
   businesses: any[]

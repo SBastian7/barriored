@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 
@@ -64,7 +65,11 @@ export function SignupForm() {
       </div>
       <div>
         <Label htmlFor="signup_phone">Telefono / WhatsApp</Label>
-        <Input id="signup_phone" placeholder="573001234567" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <PhoneInput
+          value={form.phone}
+          onChange={(val) => setForm({ ...form, phone: val })}
+          placeholder="300 123 4567"
+        />
       </div>
       <div>
         <Label htmlFor="community">Comunidad</Label>

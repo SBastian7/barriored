@@ -182,6 +182,22 @@ export default async function JobDetailPage({
                         </Card>
                     </div>
                 </div>
+
+                {/* Additional content sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-12">
+                    <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-secondary/5">
+                        <CardContent className="p-6">
+                            <h3 className="font-heading font-black uppercase italic text-lg mb-2">Verificado por Moderadores</h3>
+                            <p className="text-sm text-black/60">Esta oferta laboral ha sido verificada por los moderadores de BarrioRed para garantizar información confiable.</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-accent/5">
+                        <CardContent className="p-6">
+                            <h3 className="font-heading font-black uppercase italic text-lg mb-2">Empleo Local</h3>
+                            <p className="text-sm text-black/60">Conectamos talento del barrio con oportunidades laborales. ¡Fortalecemos la economía comunitaria!</p>
+                        </CardContent>
+                    </Card>
+                </div>
             </article>
         </div>
     )

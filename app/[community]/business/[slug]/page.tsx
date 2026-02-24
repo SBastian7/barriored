@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { BusinessHeader } from '@/components/business/business-header'
+import { BusinessHero } from '@/components/business/business-hero'
 import { BusinessInfo } from '@/components/business/business-info'
-import { PhotoGallery } from '@/components/business/photo-gallery'
 import { LocationMap } from '@/components/business/location-map'
 import { WhatsAppButton } from '@/components/shared/whatsapp-button'
+import { ShareButton } from '@/components/business/share-button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; slug: string }> }) {
@@ -43,7 +43,6 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   if (!business) notFound()
 
   // Extract lat/lng from PostGIS geography
-  // Supabase returns location as GeoJSON or null
   const location = business.location as any
   const lat = location?.coordinates?.[1]
   const lng = location?.coordinates?.[0]
@@ -58,15 +57,19 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
           { label: business.name, active: true }
         ]}
       />
-      <BusinessHeader
+      <BusinessHero
         name={business.name}
         categoryName={business.categories?.name ?? ''}
-        photo={business.photos?.[0] ?? null}
+        photos={business.photos ?? []}
         isVerified={!!business.is_verified}
       />
-      {business.photos && business.photos.length > 1 && (
-        <PhotoGallery photos={business.photos} />
-      )}
+
+      {/* Share button row */}
+      <ShareButton
+        title={business.name}
+        description={business.description || `${business.name} en BarrioRed`}
+      />
+
       <BusinessInfo
         address={business.address}
         phone={business.phone}
@@ -75,7 +78,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
         hours={business.hours as any}
         description={business.description}
       />
-      {lat && lng && <LocationMap lat={lat} lng={lng} name={business.name} />}
+      {lat && lng && <LocationMap lat={lat} lng={lng} name={business.name} address={business.address} />}
       {business.whatsapp && (
         <WhatsAppButton number={business.whatsapp} message={`Hola, te encontre en BarrioRed`} />
       )}

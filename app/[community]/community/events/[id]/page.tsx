@@ -81,15 +81,11 @@ export default async function EventDetailPage({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-6 border-y-2 border-black/10">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 border-2 border-black bg-accent/20 flex items-center justify-center overflow-hidden">
-                                {post.profiles?.avatar_url ? (
-                                    <img src={post.profiles.avatar_url} alt={post.profiles.full_name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <User className="h-6 w-6 text-black/40" />
-                                )}
+                                <CalendarDays className="h-6 w-6 text-black/40" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Organizado por</p>
-                                <p className="font-heading font-black text-xl uppercase italic leading-none">{post.profiles?.full_name ?? 'Vecino'}</p>
+                                <p className="font-heading font-black text-xl uppercase italic leading-none">{metadata.organizer || 'Comunidad'}</p>
                             </div>
                         </div>
 
@@ -169,6 +165,22 @@ export default async function EventDetailPage({
                             </CardContent>
                         </Card>
                     </div>
+                </div>
+
+                {/* Additional content sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-12">
+                    <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-accent/5">
+                        <CardContent className="p-6">
+                            <h3 className="font-heading font-black uppercase italic text-lg mb-2">Verificado por Moderadores</h3>
+                            <p className="text-sm text-black/60">Este evento ha sido verificado por los moderadores de BarrioRed para garantizar información confiable para la comunidad.</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-secondary/5">
+                        <CardContent className="p-6">
+                            <h3 className="font-heading font-black uppercase italic text-lg mb-2">Eventos Comunitarios</h3>
+                            <p className="text-sm text-black/60">Participar en eventos fortalece el tejido social del barrio. ¡Tu asistencia hace la diferencia!</p>
+                        </CardContent>
+                    </Card>
                 </div>
             </article>
         </div>
