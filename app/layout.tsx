@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
+import { ServiceWorkerRegister } from '@/components/service-worker-register'
 import './globals.css'
 
 const inter = Inter({
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased">
         {children}
         <Toaster />
+        <ServiceWorkerRegister />
       </body>
     </html>
   )
