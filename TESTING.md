@@ -182,6 +182,31 @@ February 24, 2026
 - [ ] Verify invalid subscription auto-deleted (410 status)
 - [ ] Verify other subscriptions still receive notification
 
+### Admin Push Notifications Dispatch
+
+**Auto-Send Testing:**
+- [ ] Create active alert → notification sent automatically
+- [ ] Create inactive alert → no notification sent
+- [ ] Toast shows correct message for active alert
+- [ ] Toast shows correct message for inactive alert
+- [ ] Notification send failure doesn't block alert creation
+
+**Manual Send Testing:**
+- [ ] Click "Notificar" on any alert → notification sent
+- [ ] Button shows loading spinner during send
+- [ ] Toast shows recipient count
+- [ ] Button works on both active and inactive alerts
+
+**Edge Cases:**
+- [ ] 0 subscribers → graceful handling with info message
+- [ ] Multiple alerts → only clicked alert shows loading
+- [ ] Network error → error toast, alert still exists
+- [ ] Rapid clicking → button disabled, no duplicate sends
+
+**End-to-End:**
+- [ ] Notification appears on subscribed device
+- [ ] Clicking notification opens correct page
+
 ---
 
 ## Cross-Feature Integration
