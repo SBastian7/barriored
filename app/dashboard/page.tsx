@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, Zap, MessageSquare, Calendar, Briefcase, Eye } from 'lucide-react'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { JobFilledToggle } from '@/components/community/job-filled-toggle'
 import { PostDeleteButton } from '@/components/community/post-delete-button'
+import { DeletionRequestButton } from '@/components/business/deletion-request-button'
 import type { JobMetadata } from '@/lib/types'
 
 const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'accent' }> = {
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
 
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('id, name, status, created_at, categories(name)')
+    .select('id, name, status, created_at, deletion_requested, deletion_reason, categories(name)')
     .eq('owner_id', user!.id)
     .order('created_at', { ascending: false })
 
@@ -88,6 +89,46 @@ export default async function DashboardPage() {
             )
           })}
         </div>
+      )}
+
+      {/* Deletion Request Section */}
+      {businesses && businesses.length > 0 && businesses[0] && !businesses[0].deletion_requested && (
+        <Card className="brutalist-card border-red-600 mt-8">
+          <CardHeader>
+            <CardTitle className="text-red-600">Zona de Peligro</CardTitle>
+            <CardDescription>
+              Las acciones aquí son permanentes y requieren aprobación administrativa.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Solicitar la eliminación desactivará tu perfil hasta que un
+              administrador revise tu solicitud. Esta acción es reversible por el equipo.
+            </p>
+            <DeletionRequestButton
+              businessId={businesses[0].id}
+              businessName={businesses[0].name}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {businesses && businesses.length > 0 && businesses[0]?.deletion_requested && (
+        <Card className="brutalist-card border-secondary bg-secondary/10 mt-8">
+          <CardHeader>
+            <CardTitle>Eliminación Pendiente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Tu solicitud de eliminación está siendo revisada por un administrador.
+            </p>
+            {businesses[0].deletion_reason && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Razón: {businesses[0].deletion_reason}
+              </p>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       <h2 className="text-2xl font-black uppercase tracking-tight italic mb-6 mt-16 underline decoration-accent decoration-4 underline-offset-4">
