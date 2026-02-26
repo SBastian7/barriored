@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PostEditActions } from '@/components/community/post-edit-actions'
-import { User, Pin, Briefcase, DollarSign, MessageSquare, Phone, Mail, Share2 } from 'lucide-react'
+import { SharePostButton } from '@/components/community/share-post-button'
+import { User, Pin, Briefcase, DollarSign, MessageSquare, Phone, Mail } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { CommunityPost, JobMetadata } from '@/lib/types'
 
@@ -75,6 +76,8 @@ export default async function JobDetailPage({
             ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactValue) ? `mailto:${contactValue}` : '#')
             : (/^[\d\s+\-()]+$/.test(contactValue) ? `tel:${contactValue}` : '#')
 
+    const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://barriored.co'}/${slug}/community/jobs/${id}`
+
     return (
         <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
             <Breadcrumbs items={[
@@ -95,22 +98,18 @@ export default async function JobDetailPage({
                                 <Pin className="h-3.5 w-3.5 mr-2" /> Destacado
                             </Badge>
                         )}
-                        <a
-                            href={`https://wa.me/?text=${encodeURIComponent(`${post.title} - Empleo en BarrioRed`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-black/40 ml-auto hover:text-black transition-colors"
-                        >
-                            <Share2 className="h-3.5 w-3.5" />
-                            Compartir Vacante
-                        </a>
                     </div>
 
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-black uppercase italic tracking-tighter leading-[0.9] text-black">
                         {post.title}
                     </h1>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-3">
+                        <SharePostButton
+                            title={post.title}
+                            content={post.content}
+                            url={shareUrl}
+                        />
                         <PostEditActions
                             postId={post.id}
                             postType="job"
