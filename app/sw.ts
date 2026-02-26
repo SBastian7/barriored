@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { Serwist, CacheFirst, NetworkFirst } from 'serwist'
+import { Serwist, CacheFirst, NetworkFirst, StaleWhileRevalidate } from 'serwist'
 import { CacheableResponsePlugin } from '@serwist/cacheable-response'
 import { ExpirationPlugin } from '@serwist/expiration'
 
@@ -65,6 +65,41 @@ const runtimeCaching = [
         new ExpirationPlugin({
           maxEntries: 50,
           maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+        }),
+      ],
+    }),
+  },
+  {
+    // Cache HTML pages for offline viewing
+    matcher: ({ request }: { request: Request }) => request.mode === 'navigate',
+    handler: new NetworkFirst({
+      cacheName: 'pages',
+      plugins: [
+        new CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+        new ExpirationPlugin({
+          maxEntries: 50,
+          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+        }),
+      ],
+      networkTimeoutSeconds: 3,
+    }),
+  },
+  {
+    // Cache business and community content pages
+    matcher: ({ url }: { url: URL }) =>
+      url.pathname.includes('/business/') ||
+      url.pathname.includes('/community/'),
+    handler: new StaleWhileRevalidate({
+      cacheName: 'content-pages',
+      plugins: [
+        new CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+        new ExpirationPlugin({
+          maxEntries: 100,
+          maxAgeSeconds: 24 * 60 * 60, // 1 day
         }),
       ],
     }),
