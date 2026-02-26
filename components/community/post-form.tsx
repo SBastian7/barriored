@@ -278,6 +278,43 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                                 )}
                             </div>
                         </div>
+
+                        {/* Business Linking */}
+                        {ownedBusinesses.length > 0 && (
+                            <div className="space-y-4 pt-6 border-t border-black/10">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="linkBusinessJob"
+                                        checked={linkToBusiness}
+                                        onCheckedChange={(checked) => {
+                                            setLinkToBusiness(checked as boolean)
+                                            if (!checked) setSelectedBusinessId('')
+                                        }}
+                                    />
+                                    <Label htmlFor="linkBusinessJob" className="cursor-pointer font-black uppercase tracking-widest text-xs">
+                                        ¿Este empleo es de un negocio?
+                                    </Label>
+                                </div>
+
+                                {linkToBusiness && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="businessJob" className="font-black uppercase tracking-widest text-xs">Negocio</Label>
+                                        <Select value={selectedBusinessId} onValueChange={setSelectedBusinessId}>
+                                            <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
+                                                <SelectValue placeholder="Selecciona tu negocio" />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-2 border-black rounded-none">
+                                                {ownedBusinesses.map((business) => (
+                                                    <SelectItem key={business.id} value={business.id}>
+                                                        {business.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
