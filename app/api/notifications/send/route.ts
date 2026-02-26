@@ -38,16 +38,26 @@ export async function POST(request: Request) {
   }
 
   // Get all subscriptions for users in this community
+  // First get user IDs in this community
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('community_id', community_id)
+
+  const userIds = profiles?.map(p => p.id) || []
+
+  if (userIds.length === 0) {
+    return NextResponse.json(
+      { success: true, sent: 0, message: 'No hay usuarios en esta comunidad' },
+      { status: 200 }
+    )
+  }
+
+  // Then get push subscriptions for those users
   const { data: subscriptions } = await supabase
     .from('push_subscriptions')
     .select('endpoint, p256dh, auth, user_id')
-    .in(
-      'user_id',
-      supabase
-        .from('profiles')
-        .select('id')
-        .eq('community_id', community_id)
-    )
+    .in('user_id', userIds)
 
   if (!subscriptions || subscriptions.length === 0) {
     return NextResponse.json(

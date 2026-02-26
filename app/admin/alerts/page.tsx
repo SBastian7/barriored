@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2 } from 'lucide-react'
+import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2, Bell } from 'lucide-react'
 import type { CommunityAlert } from '@/lib/types'
 
 export default function AdminAlertsPage() {
@@ -19,6 +19,7 @@ export default function AdminAlertsPage() {
     const [communities, setCommunities] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [sendingNotification, setSendingNotification] = useState<string | null>(null)
 
     // Form state
     const [formData, setFormData] = useState({
@@ -33,6 +34,30 @@ export default function AdminAlertsPage() {
     useEffect(() => {
         fetchData()
     }, [])
+
+    async function sendNotification(alert: any) {
+        try {
+            const response = await fetch('/api/notifications/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    community_id: alert.community_id,
+                    title: alert.title,
+                    body: alert.description || alert.title,
+                    url: `/${alert.communities?.slug || 'parqueindustrial'}/community`
+                })
+            })
+
+            if (!response.ok) {
+                throw new Error('API call failed')
+            }
+
+            return await response.json()
+        } catch (error) {
+            console.error('Notification send error:', error)
+            return { success: false, sent: 0, error: true }
+        }
+    }
 
     async function fetchData() {
         setLoading(true)
