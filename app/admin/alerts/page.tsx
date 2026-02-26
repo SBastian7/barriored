@@ -130,6 +130,22 @@ export default function AdminAlertsPage() {
         else fetchData()
     }
 
+    async function handleManualSend(alert: any) {
+        setSendingNotification(alert.id)
+
+        const result = await sendNotification(alert)
+
+        setSendingNotification(null)
+
+        if (result.success && result.sent > 0) {
+            toast.success(`📣 Notificación enviada a ${result.sent} vecinos`)
+        } else if (result.success && result.sent === 0) {
+            toast.success('✅ Notificación enviada a 0 vecinos (nadie suscrito aún)')
+        } else {
+            toast.error('⚠️ Error al enviar notificación')
+        }
+    }
+
     const alertIcons: any = {
         water: Droplets,
         power: Power,
