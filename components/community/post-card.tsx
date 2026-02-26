@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, Briefcase, Pin, User, CheckCircle } from 'lucide-react'
+import { ImageLoader } from '@/components/ui/image-loader'
 import type { CommunityPost, EventMetadata, JobMetadata } from '@/lib/types'
 
 export function PostCard({ post, communitySlug }: { post: CommunityPost; communitySlug: string }) {
@@ -12,8 +13,15 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
         <Link href={`/${communitySlug}/community/${post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : 'jobs'}/${post.id}`}>
             <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden group h-full flex flex-col">
                 {post.image_url && (
-                    <div className="aspect-video overflow-hidden border-b-2 border-black">
-                        <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    <div className="border-b-2 border-black">
+                        <ImageLoader
+                            src={post.image_url}
+                            alt={post.title}
+                            width={400}
+                            height={300}
+                            aspectRatio="4/3"
+                            className="w-full"
+                        />
                     </div>
                 )}
                 <CardContent className="p-4 space-y-3 flex-1 flex flex-col">
@@ -72,7 +80,14 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
                         <div className="flex items-center gap-2 pt-3 border-t-2 border-dashed border-black/10 text-[10px] font-black uppercase tracking-widest text-black/40">
                             <div className="w-5 h-5 rounded-none border border-black bg-accent/20 flex items-center justify-center overflow-hidden">
                                 {post.profiles?.avatar_url ? (
-                                    <img src={post.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                                    <ImageLoader
+                                        src={post.profiles.avatar_url}
+                                        alt={post.profiles?.full_name || 'Usuario'}
+                                        width={20}
+                                        height={20}
+                                        aspectRatio="1/1"
+                                        className="w-full h-full"
+                                    />
                                 ) : (
                                     <User className="h-3 w-3" />
                                 )}

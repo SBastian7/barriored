@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { X, Upload, Loader2, ImagePlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { ImageLoader } from '@/components/ui/image-loader'
 
 type Props = {
   value: string | null
@@ -73,16 +73,17 @@ export function ImageUploadField({ value, onChange, label, error }: Props) {
 
       {value ? (
         <div className="relative aspect-video w-full border-4 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group">
-          <Image
+          <ImageLoader
             src={value}
             alt="Imagen subida"
             fill
-            className="object-cover"
+            aspectRatio="16/9"
+            className="w-full h-full"
           />
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute top-2 right-2 bg-red-500 text-white border-2 border-black p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+            className="absolute top-2 right-2 bg-red-500 text-white border-2 border-black p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
           >
             <X className="h-4 w-4" />
           </button>
