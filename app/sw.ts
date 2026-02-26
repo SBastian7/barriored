@@ -1,3 +1,5 @@
+/// <reference lib="webworker" />
+
 import { Serwist, CacheFirst, NetworkFirst } from 'serwist'
 import { CacheableResponsePlugin } from '@serwist/cacheable-response'
 import { ExpirationPlugin } from '@serwist/expiration'
