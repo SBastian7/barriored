@@ -30,7 +30,10 @@
       "Bash(git fetch:*)",
       "Bash(git stash:*)",
       "Bash(ls:*)",
-      "Bash(gh pr list:*)"
+      "Bash(gh pr list:*)",
+      "Bash(git worktree add:*)",
+      "Bash(node -e:*)",
+      "Bash(npx web-push:*)"
     ]
   },
   "enabledPlugins": {

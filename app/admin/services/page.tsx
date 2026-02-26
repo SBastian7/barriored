@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -136,7 +137,11 @@ export default function AdminServicesPage() {
 
                             <div className="space-y-1">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Teléfono</Label>
-                                <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="312 345 6789" />
+                                <PhoneInput
+                                    value={formData.phone}
+                                    onChange={(val) => setFormData({ ...formData, phone: val })}
+                                    placeholder="312 345 6789"
+                                />
                             </div>
 
                             <div className="space-y-1">
