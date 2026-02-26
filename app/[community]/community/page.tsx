@@ -5,6 +5,7 @@ import { AlertsBanner } from '@/components/community/alerts-banner'
 import { AnnouncementsSection } from '@/components/community/announcements-section'
 import { EventsSection } from '@/components/community/events-section'
 import { JobsSection } from '@/components/community/jobs-section'
+import { PromotionsSection } from '@/components/community/promotions-section'
 import { CommunityCTA } from '@/components/community/community-cta'
 import { PushNotificationPrompt } from '@/components/community/push-notification-prompt'
 import type { CommunityPost, CommunityAlert, AlertSeverity } from '@/lib/types'
@@ -34,7 +35,7 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
     if (!community) notFound()
 
     // Parallel data fetching for initial hub view
-    const [alertsRes, announcementsRes, eventsRes, jobsRes] = await Promise.all([
+    const [alertsRes, announcementsRes, eventsRes, jobsRes, promotionsRes] = await Promise.all([
         supabase.from('community_alerts')
             .select('*')
             .eq('community_id', community.id)
@@ -66,6 +67,14 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
             .not('metadata->>is_filled', 'eq', 'true')
             .order('created_at', { ascending: false })
             .limit(3),
+
+        supabase.from('community_posts')
+            .select('*, profiles(full_name, avatar_url)')
+            .eq('community_id', community.id)
+            .eq('status', 'approved')
+            .eq('type', 'promotion')
+            .order('created_at', { ascending: false })
+            .limit(3),
     ])
 
     return (
@@ -95,6 +104,7 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
                     <AnnouncementsSection posts={(announcementsRes.data ?? []) as any} communitySlug={slug} />
                     <EventsSection posts={(eventsRes.data ?? []) as any} communitySlug={slug} />
                     <JobsSection posts={(jobsRes.data ?? []) as any} communitySlug={slug} />
+                    <PromotionsSection posts={(promotionsRes.data ?? []) as any} communitySlug={slug} />
                 </div>
 
                 {/* Call to Action */}
