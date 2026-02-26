@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PostEditActions } from '@/components/community/post-edit-actions'
 import { SharePostButton } from '@/components/community/share-post-button'
+import { ReportButton } from '@/components/shared/report-button'
 import { User, Pin, Briefcase, DollarSign, MessageSquare, Phone, Mail } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { CommunityPost, JobMetadata } from '@/lib/types'
@@ -110,6 +111,7 @@ export default async function JobDetailPage({
                             content={post.content}
                             url={shareUrl}
                         />
+                        <ReportButton entityType="post" entityId={post.id} variant="outline" />
                         <PostEditActions
                             postId={post.id}
                             postType="job"
