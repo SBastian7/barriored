@@ -5,6 +5,7 @@ import { BusinessInfo } from '@/components/business/business-info'
 import { LocationMap } from '@/components/business/location-map'
 import { WhatsAppButton } from '@/components/shared/whatsapp-button'
 import { ShareButton } from '@/components/business/share-button'
+import { ReportButton } from '@/components/shared/report-button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; slug: string }> }) {
@@ -64,11 +65,14 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
         isVerified={!!business.is_verified}
       />
 
-      {/* Share button row */}
-      <ShareButton
-        title={business.name}
-        description={business.description || `${business.name} en BarrioRed`}
-      />
+      {/* Action buttons row */}
+      <div className="flex justify-end gap-3 mb-6">
+        <ShareButton
+          title={business.name}
+          description={business.description || `${business.name} en BarrioRed`}
+        />
+        <ReportButton entityType="business" entityId={business.id} variant="outline" />
+      </div>
 
       <BusinessInfo
         address={business.address}
