@@ -271,6 +271,18 @@ export default function AdminAlertsPage() {
                                                         <AlertTriangle className="h-3 w-3" /> {alert.is_active ? 'Activa' : 'Inactiva'}
                                                     </button>
                                                     <button
+                                                        onClick={() => handleManualSend(alert)}
+                                                        disabled={sendingNotification === alert.id}
+                                                        className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-white bg-accent hover:bg-accent/80 transition-colors disabled:opacity-50"
+                                                    >
+                                                        {sendingNotification === alert.id ? (
+                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            <Bell className="h-3 w-3" />
+                                                        )}
+                                                        Notificar
+                                                    </button>
+                                                    <button
                                                         onClick={() => deleteAlert(alert.id)}
                                                         className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors"
                                                     >
