@@ -23,10 +23,17 @@ type PhoneInputProps = {
 export function PhoneInput({ value, onChange, placeholder = '300 123 4567', error, className }: PhoneInputProps) {
   // Parse prefix and local number from full value
   const parseValue = useCallback((val: string) => {
+    if (!val) return { prefix: '+57', local: '' }
+
     for (const p of COUNTRY_PREFIXES) {
-      const code = p.code.replace('+', '')
-      if (val.startsWith(code)) {
-        return { prefix: p.code, local: val.slice(code.length) }
+      // Check with + sign first
+      if (val.startsWith(p.code)) {
+        return { prefix: p.code, local: val.slice(p.code.length) }
+      }
+      // Fallback: check without + sign (for backward compatibility)
+      const codeWithoutPlus = p.code.replace('+', '')
+      if (val.startsWith(codeWithoutPlus)) {
+        return { prefix: p.code, local: val.slice(codeWithoutPlus.length) }
       }
     }
     return { prefix: '+57', local: val }
@@ -42,13 +49,13 @@ export function PhoneInput({ value, onChange, placeholder = '300 123 4567', erro
   function handleLocalChange(raw: string) {
     const digits = raw.replace(/\D/g, '')
     setLocalNumber(digits)
-    onChange(prefix.replace('+', '') + digits)
+    onChange(prefix + digits)
   }
 
   function handlePrefixChange(newPrefix: string) {
     setPrefix(newPrefix)
     setShowDropdown(false)
-    onChange(newPrefix.replace('+', '') + localNumber)
+    onChange(newPrefix + localNumber)
   }
 
   // Format display: 300 123 4567

@@ -1,10 +1,4 @@
 import type { NextConfig } from 'next'
-import withPWAInit from '@ducanh2912/next-pwa'
-
-const withPWA = withPWAInit({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-})
 
 const nextConfig: NextConfig = {
   turbopack: {},
@@ -18,6 +12,24 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
+  // Headers for service worker
+  async headers() {
+    return [
+      {
+        source: '/service-worker.js',
+        headers: [
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ]
+  },
 }
 
-export default withPWA(nextConfig)
+export default nextConfig

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { JobFilledToggle } from './job-filled-toggle'
 
 type Props = {
   postId: string
@@ -24,9 +25,10 @@ type Props = {
   communitySlug: string
   isAuthor: boolean
   isAdmin: boolean
+  isFilled?: boolean
 }
 
-export function PostEditActions({ postId, postType, communitySlug, isAuthor, isAdmin }: Props) {
+export function PostEditActions({ postId, postType, communitySlug, isAuthor, isAdmin, isFilled }: Props) {
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 
@@ -65,7 +67,7 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
   }
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 flex-wrap">
       <Link href={`/${communitySlug}/community/${postTypeSpanish}/${postId}/edit`}>
         <Button
           variant="outline"
@@ -76,6 +78,14 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
           Editar
         </Button>
       </Link>
+
+      {postType === 'job' && isAuthor && (
+        <JobFilledToggle
+          postId={postId}
+          isFilled={isFilled || false}
+          variant="compact"
+        />
+      )}
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
