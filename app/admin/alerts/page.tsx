@@ -85,16 +85,36 @@ export default function AdminAlertsPage() {
         }
 
         setSubmitting(true)
-        const { error } = await supabase.from('community_alerts').insert([{ ...formData, author_id: user.id }])
-        setSubmitting(false)
+        const { data: newAlert, error } = await supabase
+            .from('community_alerts')
+            .insert([{ ...formData, author_id: user.id }])
+            .select('*, communities(name, slug)')
+            .single()
 
         if (error) {
             toast.error('Error al crear alerta: ' + error.message)
-        } else {
-            toast.success('Alerta creada con éxito')
-            setFormData({ ...formData, title: '', description: '' })
-            fetchData()
+            setSubmitting(false)
+            return
         }
+
+        // Auto-send notification if alert is active
+        if (formData.is_active && newAlert) {
+            const notifResult = await sendNotification(newAlert)
+
+            if (notifResult.success && notifResult.sent > 0) {
+                toast.success(`✅ Alerta creada y notificación enviada a ${notifResult.sent} vecinos`)
+            } else if (notifResult.success && notifResult.sent === 0) {
+                toast.success('✅ Alerta creada y notificación enviada a 0 vecinos (nadie suscrito aún)')
+            } else {
+                toast.warning('⚠️ Alerta creada pero falló el envío de notificación')
+            }
+        } else {
+            toast.success('✅ Alerta creada (inactiva, sin notificación)')
+        }
+
+        setSubmitting(false)
+        setFormData({ ...formData, title: '', description: '' })
+        fetchData()
     }
 
     async function toggleStatus(id: string, current: boolean) {
