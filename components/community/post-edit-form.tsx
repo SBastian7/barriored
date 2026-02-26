@@ -13,15 +13,15 @@ import { PhoneInput } from '@/components/ui/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createPostSchema, type CreatePostInput } from '@/lib/validations/community'
 import { ImageUploadField } from './image-upload-field'
-import { Megaphone, Calendar, Briefcase, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import type { CommunityPost } from '@/lib/types'
 
 type Props = {
-    type: 'announcement' | 'event' | 'job'
-    communityId: string
+    post: CommunityPost
     communitySlug: string
 }
 
-export function PostForm({ type, communityId, communitySlug }: Props) {
+export function PostEditForm({ post, communitySlug }: Props) {
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -34,21 +34,20 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
     } = useForm<CreatePostInput>({
         resolver: zodResolver(createPostSchema),
         defaultValues: {
-            type,
-            community_id: communityId,
-            title: '',
-            content: '',
-            image_url: '',
-            ...(type === 'event' ? { metadata: { organizer: '', date: '', location: '' } } : {}),
-            ...(type === 'job' ? { metadata: { category: '', contact_method: 'whatsapp', contact_value: '' } } : {}),
+            type: post.type,
+            community_id: post.community_id,
+            title: post.title,
+            content: post.content,
+            image_url: post.image_url || '',
+            metadata: post.metadata || {},
         } as any
     })
 
     async function onSubmit(data: CreatePostInput) {
         setIsSubmitting(true)
         try {
-            const res = await fetch('/api/community/posts', {
-                method: 'POST',
+            const res = await fetch(`/api/community/posts/${post.id}`, {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             })
@@ -59,10 +58,12 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                 throw new Error(result.error || 'Algo salió mal')
             }
 
-            toast.success('¡Enviado!', {
-                description: 'Tu publicación ha sido enviada para revisión por un administrador.'
+            toast.success('¡Actualizado!', {
+                description: 'Tu publicación ha sido actualizada correctamente.'
             })
-            router.push(`/${communitySlug}/community`)
+
+            const postTypeSpanish = post.type === 'announcement' ? 'anuncios' : post.type === 'event' ? 'eventos' : 'empleos'
+            router.push(`/${communitySlug}/community/${postTypeSpanish}/${post.id}`)
             router.refresh()
         } catch (error: any) {
             toast.error('Error', {
@@ -84,7 +85,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                     <Label htmlFor="title" className="font-black uppercase tracking-widest text-xs">Título de la Publicación</Label>
                     <Input
                         id="title"
-                        placeholder={type === 'announcement' ? 'Ej: Se perdió un perrito' : type === 'event' ? 'Ej: Bingo Bailable Vecinal' : 'Ej: Se busca Panadero'}
+                        placeholder={post.type === 'announcement' ? 'Ej: Se perdió un perrito' : post.type === 'event' ? 'Ej: Bingo Bailable Vecinal' : 'Ej: Se busca Panadero'}
                         {...register('title')}
                         className={errors.title ? 'border-primary' : ''}
                     />
@@ -110,7 +111,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                 />
 
                 {/* Type Specific Fields */}
-                {type === 'event' && (
+                {post.type === 'event' && (
                     <div className="space-y-6 p-6 bg-accent/5 border-2 border-black border-dashed">
                         <div className="space-y-2">
                             <Label htmlFor="event-organizer" className="font-black uppercase tracking-widest text-xs">Organizador</Label>
@@ -144,7 +145,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                     </div>
                 )}
 
-                {type === 'job' && (
+                {post.type === 'job' && (
                     <div className="space-y-6 p-6 bg-secondary/5 border-2 border-black border-dashed">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
@@ -171,7 +172,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                                 <Label className="font-black uppercase tracking-widest text-xs">Método de Contacto</Label>
                                 <Select
                                     onValueChange={(v) => setValue('metadata.contact_method' as any, v)}
-                                    defaultValue="whatsapp"
+                                    defaultValue={(post.metadata as any)?.contact_method || 'whatsapp'}
                                 >
                                     <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
                                         <SelectValue placeholder="Selecciona uno" />
@@ -209,23 +210,32 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                 )}
             </div>
 
-            <div className="pt-6 border-t-4 border-black mt-8">
+            <div className="pt-6 border-t-4 border-black mt-8 flex gap-4">
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={() => router.back()}
+                    className="flex-1 h-16 text-xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all font-black uppercase tracking-widest"
+                >
+                    Cancelar
+                </Button>
                 <Button
                     type="submit"
                     disabled={isSubmitting}
                     size="lg"
-                    className="w-full h-16 text-xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all font-black uppercase tracking-widest"
+                    className="flex-1 h-16 text-xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all font-black uppercase tracking-widest"
                 >
                     {isSubmitting ? (
-                        <><Loader2 className="mr-2 h-6 w-6 animate-spin" /> Procesando...</>
+                        <><Loader2 className="mr-2 h-6 w-6 animate-spin" /> Actualizando...</>
                     ) : (
-                        'Publicar en la Red Vecinal'
+                        'Actualizar Publicación'
                     )}
                 </Button>
             </div>
 
             <p className="text-[10px] font-black uppercase tracking-widest text-black/40 text-center italic">
-                * Todas las publicaciones pasan por un filtro de seguridad antes de ser visibles.
+                * Los cambios se guardarán inmediatamente sin necesidad de revisión adicional.
             </p>
         </form>
     )
