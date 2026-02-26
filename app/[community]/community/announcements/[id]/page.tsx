@@ -3,6 +3,7 @@ import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { PostEditActions } from '@/components/community/post-edit-actions'
+import { SharePostButton } from '@/components/community/share-post-button'
 import { User, Pin, Megaphone, Calendar } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { CommunityPost } from '@/lib/types'
@@ -58,6 +59,8 @@ export default async function AnnouncementDetailPage({
         isAdmin = profile?.role === 'admin'
     }
 
+    const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://barriored.co'}/${slug}/community/announcements/${id}`
+
     return (
         <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
             <Breadcrumbs items={[
@@ -88,7 +91,12 @@ export default async function AnnouncementDetailPage({
                         {post.title}
                     </h1>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-3">
+                        <SharePostButton
+                            title={post.title}
+                            content={post.content}
+                            url={shareUrl}
+                        />
                         <PostEditActions
                             postId={post.id}
                             postType="announcement"
