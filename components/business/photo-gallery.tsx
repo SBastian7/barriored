@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { X, ChevronLeft, ChevronRight, Expand } from 'lucide-react'
+import { ImageLoader } from '@/components/ui/image-loader'
 
 type PhotoGalleryProps = {
   photos: string[]
@@ -34,7 +35,14 @@ export function PhotoGallery({ photos, onSelect }: PhotoGalleryProps) {
                 : "border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] grayscale hover:grayscale-0"
             )}
           >
-            <Image src={photo} alt={`Foto ${i + 1}`} width={120} height={90} className="object-cover w-32 h-24" />
+            <ImageLoader
+              src={photo}
+              alt={`Foto ${i + 1}`}
+              width={120}
+              height={90}
+              aspectRatio="4/3"
+              className="w-32 h-24"
+            />
           </button>
         ))}
       </div>
@@ -145,7 +153,14 @@ export function Lightbox({ photos, initialIndex, onClose }: LightboxProps) {
                 : "border-white/30 opacity-50 hover:opacity-100"
             )}
           >
-            <Image src={photo} alt={`Miniatura ${i + 1}`} width={60} height={45} className="object-cover w-16 h-12" />
+            <ImageLoader
+              src={photo}
+              alt={`Miniatura ${i + 1}`}
+              width={60}
+              height={45}
+              aspectRatio="4/3"
+              className="w-16 h-12"
+            />
           </button>
         ))}
       </div>

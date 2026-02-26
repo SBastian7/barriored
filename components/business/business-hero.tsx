@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, Expand } from 'lucide-react'
+import { ImageLoader } from '@/components/ui/image-loader'
 import { PhotoGallery, Lightbox } from './photo-gallery'
 
 type Props = {
@@ -34,7 +34,14 @@ export function BusinessHero({ name, categoryName, photos, isVerified }: Props) 
         >
           {currentPhoto ? (
             <>
-              <Image src={currentPhoto} alt={name} fill className="object-cover" sizes="100vw" priority />
+              <ImageLoader
+                src={currentPhoto}
+                alt={name}
+                fill
+                priority
+                aspectRatio="16/9"
+                className="w-full h-full"
+              />
               {/* Fullscreen hint overlay */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 text-white px-4 py-2 border-2 border-white/30 flex items-center gap-2">
