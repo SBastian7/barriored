@@ -33,7 +33,9 @@
       "Bash(gh pr list:*)",
       "Bash(git worktree add:*)",
       "Bash(node -e:*)",
-      "Bash(npx web-push:*)"
+      "Bash(npx web-push:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(curl:*)"
     ]
   },
   "enabledPlugins": {

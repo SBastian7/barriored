@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Briefcase, Pin, User } from 'lucide-react'
+import { Calendar, MapPin, Briefcase, Pin, User, CheckCircle } from 'lucide-react'
 import type { CommunityPost, EventMetadata, JobMetadata } from '@/lib/types'
 
 export function PostCard({ post, communitySlug }: { post: CommunityPost; communitySlug: string }) {
@@ -17,13 +17,18 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
                     </div>
                 )}
                 <CardContent className="p-4 space-y-3 flex-1 flex flex-col">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant={typeColors[post.type]} className="border-black border uppercase tracking-widest text-[10px]">
                             {typeLabels[post.type]}
                         </Badge>
                         {post.is_pinned && (
                             <Badge variant="outline" className="gap-1 border-black border uppercase tracking-widest text-[10px] bg-yellow-200">
                                 <Pin className="h-3 w-3" /> Fijado
+                            </Badge>
+                        )}
+                        {post.type === 'job' && (post.metadata as JobMetadata)?.is_filled && (
+                            <Badge className="gap-1 border-black border uppercase tracking-widest text-[10px] bg-gray-500 text-white">
+                                <CheckCircle className="h-3 w-3" /> Lleno
                             </Badge>
                         )}
                     </div>

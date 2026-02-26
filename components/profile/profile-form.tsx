@@ -15,9 +15,15 @@ import { Loader2, Save, X } from 'lucide-react'
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
-  phone: z.string().regex(/^\+57\d{10}$/, 'Formato inválido. Debe ser +57XXXXXXXXXX').optional().or(z.literal('')),
+  phone: z.union([
+    z.string().regex(/^\+57\d{10}$/, 'Formato inválido. Debe ser +57XXXXXXXXXX'),
+    z.literal(''),
+  ]).optional(),
   avatar_url: z.string().optional(),
-  community_id: z.string().uuid().optional().or(z.literal('')).nullable(),
+  community_id: z.union([
+    z.string().uuid(),
+    z.literal(''),
+  ]).optional().nullable(),
 })
 
 type ProfileFormData = z.infer<typeof profileSchema>
@@ -143,14 +149,14 @@ export function ProfileForm({ profile, communities, onCancel, onSave }: Props) {
             Comunidad Predeterminada (Opcional)
           </Label>
           <Select
-            onValueChange={(v) => setValue('community_id', v)}
-            defaultValue={watch('community_id') || ''}
+            onValueChange={(v) => setValue('community_id', v === '__none__' ? '' : v)}
+            defaultValue={watch('community_id') || '__none__'}
           >
             <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
               <SelectValue placeholder="Selecciona tu comunidad" />
             </SelectTrigger>
             <SelectContent className="border-2 border-black rounded-none">
-              <SelectItem value="">Ninguna</SelectItem>
+              <SelectItem value="__none__">Ninguna</SelectItem>
               {communities.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}

@@ -63,6 +63,7 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
             .eq('community_id', community.id)
             .eq('status', 'approved')
             .eq('type', 'job')
+            .not('metadata->>is_filled', 'eq', 'true')
             .order('created_at', { ascending: false })
             .limit(3),
     ])
