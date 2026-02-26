@@ -25,6 +25,7 @@ export type EventMetadata = {
   end_date?: string
   location: string
   location_coords?: { lat: number; lng: number }
+  organizer?: string
 }
 
 export type JobMetadata = {
@@ -32,6 +33,7 @@ export type JobMetadata = {
   salary_range?: string
   contact_method: 'whatsapp' | 'phone' | 'email'
   contact_value: string
+  is_filled?: boolean
 }
 
 export type CommunityPost = {
