@@ -58,9 +58,10 @@ export function UserMenu() {
   }, [])
 
   async function handleSignOut() {
+    setUserState(null)  // Clear local state immediately
     await supabase.auth.signOut()
-    router.refresh()
     router.push('/')
+    router.refresh()
   }
 
   if (loading) {
@@ -92,6 +93,12 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>{userState.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/profile" className="flex items-center gap-2 w-full">
+            <User className="h-4 w-4" />
+            Mi Perfil
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/dashboard" className="flex items-center gap-2 w-full">
             <LayoutDashboard className="h-4 w-4" />

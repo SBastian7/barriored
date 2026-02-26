@@ -3,6 +3,7 @@ import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PostEditActions } from '@/components/community/post-edit-actions'
 import { User, Pin, Briefcase, DollarSign, MessageSquare, Phone, Mail, Share2 } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { CommunityPost, JobMetadata } from '@/lib/types'
@@ -28,6 +29,8 @@ export default async function JobDetailPage({
     const { community: slug, id } = await params
     const supabase = await createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+
     const { data: community } = await supabase
         .from('communities').select('id, name').eq('slug', slug).single()
     if (!community) return notFound()
@@ -43,6 +46,19 @@ export default async function JobDetailPage({
 
     const post = postRes as any as CommunityPost
     const metadata = (post.metadata ?? {}) as Partial<JobMetadata>
+
+    let isAuthor = false
+    let isAdmin = false
+
+    if (user) {
+        isAuthor = post.author_id === user.id
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+        isAdmin = profile?.role === 'admin'
+    }
 
     const contactIcons = {
         whatsapp: MessageSquare,
@@ -93,6 +109,16 @@ export default async function JobDetailPage({
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-black uppercase italic tracking-tighter leading-[0.9] text-black">
                         {post.title}
                     </h1>
+
+                    <div className="flex justify-end">
+                        <PostEditActions
+                            postId={post.id}
+                            postType="job"
+                            communitySlug={slug}
+                            isAuthor={isAuthor}
+                            isAdmin={isAdmin}
+                        />
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-6 border-y-2 border-black/10">
                         <div className="flex items-center gap-4">
