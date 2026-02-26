@@ -141,6 +141,7 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [x] Browser push notifications for community alerts
 - [x] Push notification permission prompt
 - [x] Service worker for offline notification handling
+- [x] Admin push notification dispatch (automatic + manual)
 
 ### Phase 4: Marketplace (Clasificados - NEXT)
 - [ ] `/{community}/marketplace` - Buy/sell classifieds between neighbors
