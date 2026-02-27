@@ -13,6 +13,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { FeaturedBusinessControls } from '@/components/admin/featured-business-controls'
+import { RejectionDialog } from '@/components/admin/rejection-dialog'
 import dynamic from 'next/dynamic'
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false })
@@ -56,15 +57,15 @@ export default function AdminBusinessReviewPage() {
     })
   }, [id, supabase])
 
-  async function handleAction(action: 'approve' | 'reject') {
+  async function handleApprove() {
     setLoading(true)
-    const res = await fetch(`/api/businesses/${id}/${action}`, { method: 'POST' })
+    const res = await fetch(`/api/businesses/${id}/approve`, { method: 'POST' })
     setLoading(false)
     if (res.ok) {
-      toast.success(action === 'approve' ? 'Negocio aprobado' : 'Negocio rechazado')
+      toast.success('Negocio aprobado')
       router.push('/admin/businesses')
     } else {
-      toast.error('Error procesando accion')
+      toast.error('Error procesando acción')
     }
   }
 
@@ -271,12 +272,17 @@ export default function AdminBusinessReviewPage() {
           {/* Action Buttons */}
           {business.status === 'pending' && (
             <div className="flex gap-4 pt-6 mt-6 border-t-4 border-dashed border-black">
-              <Button onClick={() => handleAction('approve')} disabled={loading} className="flex-1 bg-green-500 hover:bg-green-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-black uppercase italic h-14 text-base">
+              <Button
+                onClick={handleApprove}
+                disabled={loading}
+                className="flex-1 bg-green-500 hover:bg-green-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-black uppercase italic h-14 text-base"
+              >
                 <CheckCircle className="h-5 w-5 mr-2" /> Aprobar Negocio
               </Button>
-              <Button variant="destructive" onClick={() => handleAction('reject')} disabled={loading} className="flex-1 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black uppercase italic h-14 text-base">
-                <XCircle className="h-5 w-5 mr-2" /> Rechazar
-              </Button>
+              <RejectionDialog
+                businessId={id}
+                businessName={business.name}
+              />
             </div>
           )}
         </CardContent>
