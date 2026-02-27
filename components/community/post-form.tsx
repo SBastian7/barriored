@@ -75,7 +75,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
         try {
             // Add business linking to metadata if selected
             const selectedBusiness = ownedBusinesses.find(b => b.id === selectedBusinessId)
-            if (linkToBusiness && selectedBusiness && data.metadata) {
+            if (linkToBusiness && selectedBusiness && data.type !== 'announcement' && 'metadata' in data) {
                 data.metadata = {
                     ...data.metadata,
                     linked_business_id: selectedBusiness.id,

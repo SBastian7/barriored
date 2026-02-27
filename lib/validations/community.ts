@@ -24,6 +24,8 @@ export const createEventSchema = basePostSchema.extend({
             lat: z.number(),
             lng: z.number(),
         }).optional(),
+        linked_business_id: z.string().optional(),
+        linked_business_name: z.string().optional(),
     }),
 })
 
@@ -35,6 +37,8 @@ export const createJobSchema = basePostSchema.extend({
         salary_range: z.string().optional(),
         contact_method: z.enum(['whatsapp', 'phone', 'email']),
         contact_value: z.string().min(1, 'Contacto requerido'),
+        linked_business_id: z.string().optional(),
+        linked_business_name: z.string().optional(),
     }),
 })
 

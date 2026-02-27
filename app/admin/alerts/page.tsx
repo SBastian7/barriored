@@ -87,7 +87,7 @@ export default function AdminAlertsPage() {
         setSubmitting(true)
         const { data: newAlert, error } = await supabase
             .from('community_alerts')
-            .insert([{ ...formData, author_id: user.id }])
+            .insert([{ ...formData, author_id: user.id }] as any)
             .select('*, communities(name, slug)')
             .single()
 
@@ -118,7 +118,7 @@ export default function AdminAlertsPage() {
     }
 
     async function toggleStatus(id: string, current: boolean) {
-        const { error } = await supabase.from('community_alerts').update({ is_active: !current }).eq('id', id)
+        const { error } = await (supabase as any).from('community_alerts').update({ is_active: !current }).eq('id', id)
         if (error) toast.error('Error al actualizar')
         else fetchData()
     }
