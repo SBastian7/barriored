@@ -7,7 +7,7 @@ export const metadata = { title: 'Registrar negocio | BarrioRed' }
 export default async function RegisterPage({ params }: { params: Promise<{ community: string }> }) {
   const { community: slug } = await params
   const supabase = await createClient()
-  const { data: community } = await supabase.from('communities').select('name').eq('slug', slug).single()
+  const { data: community } = await supabase.from('communities').select('name').eq('slug', slug).single<{ name: string }>()
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">

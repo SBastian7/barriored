@@ -12,7 +12,18 @@ export default async function CommunityHomePage({ params }: { params: Promise<{ 
     .from('communities')
     .select('*')
     .eq('slug', slug)
-    .single()
+    .single<{
+      id: string
+      name: string
+      slug: string
+      municipality: string
+      department: string
+      description: string | null
+      logo_url: string | null
+      primary_color: string | null
+      cover_image_url: string | null
+      [key: string]: any
+    }>()
 
   if (!community) return null
 
@@ -37,8 +48,8 @@ export default async function CommunityHomePage({ params }: { params: Promise<{ 
   ])
 
   // Exclude featured businesses from recent list
-  const featuredIds = featuredRes.data?.map(b => b.id) ?? []
-  const recentBusinesses = recentRes.data?.filter(b => !featuredIds.includes(b.id)).slice(0, 3) ?? []
+  const featuredIds = (featuredRes.data as any[] ?? []).map((b: any) => b.id)
+  const recentBusinesses = (recentRes.data as any[] ?? []).filter((b: any) => !featuredIds.includes(b.id)).slice(0, 3)
 
   return (
     <>

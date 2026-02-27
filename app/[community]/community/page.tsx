@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ community
     const { community: slug } = await params
     const supabase = await createClient()
     const { data: community } = await supabase
-        .from('communities').select('name').eq('slug', slug).single()
+        .from('communities').select('name').eq('slug', slug).single<{ name: string }>()
 
     if (!community) return {}
     return { title: `Red Vecinal ${community.name} | BarrioRed` }
@@ -30,7 +30,7 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
         .from('communities')
         .select('id, name')
         .eq('slug', slug)
-        .single()
+        .single<{ id: string; name: string }>()
 
     if (!community) notFound()
 

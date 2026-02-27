@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ community
     .from('communities')
     .select('name, municipality')
     .eq('slug', slug)
-    .single()
+    .single<{ name: string; municipality: string }>()
 
   if (!community) return {}
   return {
@@ -34,7 +34,18 @@ export default async function CommunityLayout({
     .select('*')
     .eq('slug', slug)
     .eq('is_active', true)
-    .single()
+    .single<{
+      id: string
+      name: string
+      slug: string
+      municipality: string
+      department: string
+      description: string | null
+      logo_url: string | null
+      primary_color: string | null
+      cover_image_url: string | null
+      [key: string]: any
+    }>()
 
   if (!community) notFound()
 

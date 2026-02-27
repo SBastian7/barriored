@@ -25,7 +25,20 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Check if user is suspended
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_suspended')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.is_suspended) {
+      return NextResponse.redirect(new URL('/suspended', request.url))
+    }
+  }
 
   return supabaseResponse
 }

@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ community
     const { community: slug } = await params
     const supabase = await createClient()
     const { data: community } = await supabase
-        .from('communities').select('name').eq('slug', slug).single()
+        .from('communities').select('name').eq('slug', slug).single<{ name: string }>()
 
     if (!community) return {}
     return { title: `Nuevo Anuncio en ${community.name} | BarrioRed` }
@@ -22,7 +22,7 @@ export default async function NewAnnouncementPage({ params }: { params: Promise<
     if (!user) redirect(`/auth/login?returnUrl=/${slug}/community/announcements/new`)
 
     const { data: community } = await supabase
-        .from('communities').select('id, name').eq('slug', slug).single()
+        .from('communities').select('id, name').eq('slug', slug).single<{ id: string; name: string }>()
     if (!community) notFound()
 
     return (
