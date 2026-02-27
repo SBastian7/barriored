@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ community
     const { id } = await params
     const supabase = await createClient()
     const { data: post } = await supabase
-        .from('community_posts').select('title').eq('id', id).single()
+        .from('community_posts').select('title').eq('id', id).single<{ title: string }>()
 
     if (!post) return {}
     return {
@@ -29,7 +29,7 @@ export default async function EditEventPage({
     if (!user) redirect('/auth/login')
 
     const { data: community } = await supabase
-        .from('communities').select('id, name').eq('slug', slug).single()
+        .from('communities').select('id, name').eq('slug', slug).single<{ id: string; name: string }>()
     if (!community) return notFound()
 
     const { data: postRes } = await supabase
@@ -38,7 +38,7 @@ export default async function EditEventPage({
         .eq('id', id)
         .eq('community_id', community.id)
         .eq('type', 'event')
-        .single()
+        .single<CommunityPost>()
 
     if (!postRes) return notFound()
 
@@ -53,7 +53,7 @@ export default async function EditEventPage({
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .single()
+            .single<{ role: string }>()
         if (profile?.role === 'admin') {
             isAuthorized = true
         }

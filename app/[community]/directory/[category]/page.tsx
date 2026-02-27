@@ -6,7 +6,7 @@ import { DirectoryView } from '@/components/directory/directory-view'
 export async function generateMetadata({ params }: { params: Promise<{ community: string; category: string }> }) {
   const { category: catSlug } = await params
   const supabase = await createClient()
-  const { data: cat } = await supabase.from('categories').select('name').eq('slug', catSlug).single()
+  const { data: cat } = await supabase.from('categories').select('name').eq('slug', catSlug).single<{ name: string }>()
   return { title: cat ? `${cat.name} | BarrioRed` : 'Categoria' }
 }
 
@@ -15,8 +15,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
   const supabase = await createClient()
 
   const [communityRes, categoryRes, categoriesRes] = await Promise.all([
-    supabase.from('communities').select('id, name').eq('slug', slug).single(),
-    supabase.from('categories').select('id, name').eq('slug', catSlug).single(),
+    supabase.from('communities').select('id, name').eq('slug', slug).single<{ id: string; name: string }>(),
+    supabase.from('categories').select('id, name').eq('slug', catSlug).single<{ id: string; name: string }>(),
     supabase.from('categories').select('id, name, slug').order('sort_order'),
   ])
 

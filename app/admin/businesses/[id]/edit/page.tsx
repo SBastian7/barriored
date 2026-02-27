@@ -66,10 +66,10 @@ export default function AdminBusinessEditPage() {
       .from('businesses')
       .select('*')
       .eq('id', id)
-      .single()
+      .single<{ [key: string]: any }>()
 
     if (bizData) {
-      setBusiness(bizData)
+      setBusiness(bizData as any)
       setName(bizData.name)
       setDescription(bizData.description || '')
       setCategoryId(bizData.category_id)
