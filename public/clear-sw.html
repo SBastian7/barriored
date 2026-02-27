@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clear Service Worker - BarrioRed</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #dc2626;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 0;
+      width: 100%;
+    }
+    button:hover {
+      background: #b91c1c;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      background: #f0f0f0;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🧹 Clear Service Worker</h1>
+    <p>Use this page to completely clear the service worker registration.</p>
+
+    <button onclick="unregisterAll()">Unregister All Service Workers</button>
+    <button onclick="clearCache()">Clear All Caches</button>
+    <button onclick="doEverything()">Do Everything (Recommended)</button>
+
+    <div id="status">Ready. Click a button above.</div>
+  </div>
+
+  <script>
+    const status = document.getElementById('status');
+
+    function log(message) {
+      status.textContent += '\n' + message;
+      console.log(message);
+    }
+
+    async function unregisterAll() {
+      status.textContent = 'Starting unregistration...\n';
+
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          log(`Found ${registrations.length} service worker(s)`);
+
+          for (let registration of registrations) {
+            log(`Unregistering: ${registration.scope}`);
+            const success = await registration.unregister();
+            log(success ? '✅ Unregistered successfully' : '❌ Failed to unregister');
+          }
+
+          log('\n✅ All service workers unregistered!');
+        } catch (error) {
+          log('❌ Error: ' + error.message);
+        }
+      } else {
+        log('❌ Service Workers not supported');
+      }
+    }
+
+    async function clearCache() {
+      status.textContent = 'Clearing caches...\n';
+
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys();
+          log(`Found ${cacheNames.length} cache(s)`);
+
+          for (let cacheName of cacheNames) {
+            log(`Deleting cache: ${cacheName}`);
+            await caches.delete(cacheName);
+          }
+
+          log('\n✅ All caches cleared!');
+        } catch (error) {
+          log('❌ Error: ' + error.message);
+        }
+      } else {
+        log('❌ Cache API not supported');
+      }
+    }
+
+    async function doEverything() {
+      status.textContent = 'Running full cleanup...\n';
+      await clearCache();
+      log('\n---\n');
+      await unregisterAll();
+      log('\n🎉 All done! Close this tab and restart your dev server.');
+    }
+  </script>
+</body>
+</html>
