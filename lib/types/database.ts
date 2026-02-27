@@ -20,6 +20,9 @@ export type Database = {
           category_id: string
           community_id: string
           created_at: string | null
+          deletion_reason: string | null
+          deletion_requested: boolean | null
+          deletion_requested_at: string | null
           description: string | null
           email: string | null
           featured_order: number | null
@@ -46,6 +49,9 @@ export type Database = {
           category_id: string
           community_id: string
           created_at?: string | null
+          deletion_reason?: string | null
+          deletion_requested?: boolean | null
+          deletion_requested_at?: string | null
           description?: string | null
           email?: string | null
           featured_order?: number | null
@@ -72,6 +78,9 @@ export type Database = {
           category_id?: string
           community_id?: string
           created_at?: string | null
+          deletion_reason?: string | null
+          deletion_requested?: boolean | null
+          deletion_requested_at?: string | null
           description?: string | null
           email?: string | null
           featured_order?: number | null
@@ -260,6 +269,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_pinned: boolean
+          last_promoted_at: string | null
           metadata: Json
           status: string
           title: string
@@ -274,6 +284,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_pinned?: boolean
+          last_promoted_at?: string | null
           metadata?: Json
           status?: string
           title: string
@@ -288,6 +299,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_pinned?: boolean
+          last_promoted_at?: string | null
           metadata?: Json
           status?: string
           title?: string
