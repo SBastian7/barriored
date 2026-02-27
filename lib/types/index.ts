@@ -26,6 +26,8 @@ export type EventMetadata = {
   location: string
   location_coords?: { lat: number; lng: number }
   organizer?: string
+  linked_business_id?: string
+  linked_business_name?: string
 }
 
 export type JobMetadata = {
@@ -34,6 +36,8 @@ export type JobMetadata = {
   contact_method: 'whatsapp' | 'phone' | 'email'
   contact_value: string
   is_filled?: boolean
+  linked_business_id?: string
+  linked_business_name?: string
 }
 
 export type PromotionMetadata = {

@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, Briefcase, Pin, User, CheckCircle, Building } from 'lucide-react'
 import { ImageLoader } from '@/components/ui/image-loader'
-import type { CommunityPost, EventMetadata, JobMetadata } from '@/lib/types'
+import type { CommunityPost, EventMetadata, JobMetadata, PromotionMetadata } from '@/lib/types'
 
 export function PostCard({ post, communitySlug }: { post: CommunityPost; communitySlug: string }) {
     const typeLabels = { announcement: 'Anuncio', event: 'Evento', job: 'Empleo', promotion: 'Promoción' }
@@ -41,7 +41,7 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
                                 <CheckCircle className="h-3 w-3" /> Lleno
                             </Badge>
                         )}
-                        {post.metadata?.linked_business_id && (
+                        {post.type === 'promotion' && 'linked_business_id' in post.metadata && post.metadata.linked_business_id && (
                             <Badge
                                 asChild
                                 className="gap-1 bg-accent border-2 border-black text-white hover:bg-accent/90 uppercase tracking-widest text-[10px]"

@@ -4,7 +4,7 @@
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-  // ../../node_modules/serwist/dist/chunks/waitUntil.js
+  // node_modules/serwist/dist/chunks/waitUntil.js
   var _cacheNameDetails = {
     googleAnalytics: "googleAnalytics",
     precache: "precache-v2",
@@ -219,7 +219,7 @@
     return returnPromise;
   };
 
-  // ../../node_modules/idb/build/index.js
+  // node_modules/idb/build/index.js
   var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
   var idbProxyableTypes;
   var cursorAdvanceMethods;
@@ -465,7 +465,7 @@
     }
   }));
 
-  // ../../node_modules/serwist/dist/chunks/printInstallDetails.js
+  // node_modules/serwist/dist/chunks/printInstallDetails.js
   var copyResponse = async (response, modifier) => {
     let origin = null;
     if (response.url) {
@@ -1944,7 +1944,7 @@
     });
   };
 
-  // ../../node_modules/@serwist/utils/dist/index.js
+  // node_modules/@serwist/utils/dist/index.js
   var parallel = async (limit, array, func) => {
     const work = array.map((item, index) => ({
       index,
@@ -1971,7 +1971,7 @@
     return results;
   };
 
-  // ../../node_modules/serwist/dist/index.js
+  // node_modules/serwist/dist/index.js
   var isSafari = typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   var CacheableResponse = class {
     constructor(config = {}) {
