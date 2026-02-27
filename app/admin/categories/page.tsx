@@ -29,10 +29,10 @@ export default function AdminCategoriesPage() {
   async function handleSave() {
     const slug = slugify(name)
     if (editId) {
-      await supabase.from('categories').update({ name, slug, icon }).eq('id', editId)
+      await (supabase as any).from('categories').update({ name, slug, icon }).eq('id', editId)
       toast.success('Categoria actualizada')
     } else {
-      await supabase.from('categories').insert({ name, slug, icon, sort_order: categories.length })
+      await (supabase as any).from('categories').insert({ name, slug, icon, sort_order: categories.length })
       toast.success('Categoria creada')
     }
     setName(''); setIcon(''); setEditId(null); setOpen(false)

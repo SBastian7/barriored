@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ community
     const { id } = await params
     const supabase = await createClient()
     const { data: post } = await supabase
-        .from('community_posts').select('title, content').eq('id', id).single()
+        .from('community_posts').select('title, content').eq('id', id).single<{ title: string; content: string }>()
 
     if (!post) return {}
     return {
@@ -34,7 +34,7 @@ export default async function JobDetailPage({
     const { data: { user } } = await supabase.auth.getUser()
 
     const { data: community } = await supabase
-        .from('communities').select('id, name').eq('slug', slug).single()
+        .from('communities').select('id, name').eq('slug', slug).single<{ id: string; name: string }>()
     if (!community) return notFound()
 
     const { data: postRes } = await supabase
@@ -42,7 +42,7 @@ export default async function JobDetailPage({
         .select('*, profiles(full_name, avatar_url)')
         .eq('id', id)
         .eq('community_id', community.id)
-        .single()
+        .single<CommunityPost & { profiles: { full_name: string; avatar_url: string | null } | null }>()
 
     if (!postRes || postRes.status !== 'approved' || postRes.type !== 'job') return notFound()
 
@@ -58,7 +58,7 @@ export default async function JobDetailPage({
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .single()
+            .single<{ role: string }>()
         isAdmin = profile?.role === 'admin'
     }
 

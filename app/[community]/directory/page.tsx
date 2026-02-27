@@ -19,7 +19,7 @@ export default async function DirectoryPage({
   const supabase = await createClient()
 
   const { data: community } = await supabase
-    .from('communities').select('id, name').eq('slug', slug).single()
+    .from('communities').select('id, name').eq('slug', slug).single<{ id: string; name: string }>()
 
   if (!community) return null
 
@@ -29,7 +29,7 @@ export default async function DirectoryPage({
   // Fetch businesses - either search or all
   let businesses: any[] = []
   if (q) {
-    const { data } = await supabase.rpc('search_businesses', { query: q, comm_id: community.id })
+    const { data } = await (supabase.rpc as any)('search_businesses', { query: q, comm_id: community.id })
     // RPC returns raw rows - fetch with category join
     if (data && data.length > 0) {
       const ids = data.map((b: any) => b.id)

@@ -15,10 +15,10 @@ export default async function AdminCommunityPage() {
         .select('*, profiles(full_name), communities(name)')
         .order('created_at', { ascending: false })
 
-    const posts = postsRes || []
-    const pending = posts.filter(p => p.status === 'pending')
-    const approved = posts.filter(p => p.status === 'approved')
-    const rejected = posts.filter(p => p.status === 'rejected')
+    const posts = (postsRes as any[] || [])
+    const pending = posts.filter((p: any) => p.status === 'pending')
+    const approved = posts.filter((p: any) => p.status === 'approved')
+    const rejected = posts.filter((p: any) => p.status === 'rejected')
 
     const typeIcons: any = {
         announcement: MessageSquare,

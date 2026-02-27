@@ -18,7 +18,7 @@ export default async function PromotePage({ params }: { params: Promise<{ commun
     .from('communities')
     .select('id, name')
     .eq('slug', slug)
-    .single()
+    .single<{ id: string; name: string }>()
 
   if (!community) notFound()
 
@@ -29,7 +29,7 @@ export default async function PromotePage({ params }: { params: Promise<{ commun
     .eq('owner_id', user.id)
     .eq('community_id', community.id)
     .eq('status', 'approved')
-    .single()
+    .single<{ id: string; name: string }>()
 
   if (!business) {
     return (
@@ -58,7 +58,7 @@ export default async function PromotePage({ params }: { params: Promise<{ commun
     .gte('created_at', oneWeekAgo.toISOString())
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .single<{ id: string; created_at: string }>()
 
   if (recentPromotion) {
     const nextAllowed = new Date(recentPromotion.created_at)
