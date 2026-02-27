@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,9 +10,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createPostSchema, type CreatePostInput } from '@/lib/validations/community'
 import { ImageUploadField } from './image-upload-field'
+import { createClient } from '@/lib/supabase/client'
 import { Megaphone, Calendar, Briefcase, Loader2 } from 'lucide-react'
 
 type Props = {
@@ -24,6 +26,10 @@ type Props = {
 export function PostForm({ type, communityId, communitySlug }: Props) {
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [linkToBusiness, setLinkToBusiness] = useState(false)
+    const [selectedBusinessId, setSelectedBusinessId] = useState('')
+    const [ownedBusinesses, setOwnedBusinesses] = useState<{ id: string; name: string }[]>([])
+    const supabase = createClient()
 
     const {
         register,
@@ -44,9 +50,39 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
         } as any
     })
 
+    useEffect(() => {
+        async function fetchOwnedBusinesses() {
+            if (type !== 'event' && type !== 'job') return
+
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            const { data } = await supabase
+                .from('businesses')
+                .select('id, name')
+                .eq('owner_id', user.id)
+                .eq('status', 'approved')
+                .order('name')
+
+            setOwnedBusinesses(data || [])
+        }
+
+        fetchOwnedBusinesses()
+    }, [type])
+
     async function onSubmit(data: CreatePostInput) {
         setIsSubmitting(true)
         try {
+            // Add business linking to metadata if selected
+            const selectedBusiness = ownedBusinesses.find(b => b.id === selectedBusinessId)
+            if (linkToBusiness && selectedBusiness && data.metadata) {
+                data.metadata = {
+                    ...data.metadata,
+                    linked_business_id: selectedBusiness.id,
+                    linked_business_name: selectedBusiness.name,
+                }
+            }
+
             const res = await fetch('/api/community/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -141,6 +177,43 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                                 {(errors as any).metadata?.location && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.location.message}</p>}
                             </div>
                         </div>
+
+                        {/* Business Linking */}
+                        {ownedBusinesses.length > 0 && (
+                            <div className="space-y-4 pt-6 border-t border-black/10">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="linkBusiness"
+                                        checked={linkToBusiness}
+                                        onCheckedChange={(checked) => {
+                                            setLinkToBusiness(checked as boolean)
+                                            if (!checked) setSelectedBusinessId('')
+                                        }}
+                                    />
+                                    <Label htmlFor="linkBusiness" className="cursor-pointer font-black uppercase tracking-widest text-xs">
+                                        ¿Este evento es de un negocio?
+                                    </Label>
+                                </div>
+
+                                {linkToBusiness && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="business" className="font-black uppercase tracking-widest text-xs">Negocio</Label>
+                                        <Select value={selectedBusinessId} onValueChange={setSelectedBusinessId}>
+                                            <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
+                                                <SelectValue placeholder="Selecciona tu negocio" />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-2 border-black rounded-none">
+                                                {ownedBusinesses.map((business) => (
+                                                    <SelectItem key={business.id} value={business.id}>
+                                                        {business.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -205,6 +278,43 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                                 )}
                             </div>
                         </div>
+
+                        {/* Business Linking */}
+                        {ownedBusinesses.length > 0 && (
+                            <div className="space-y-4 pt-6 border-t border-black/10">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="linkBusinessJob"
+                                        checked={linkToBusiness}
+                                        onCheckedChange={(checked) => {
+                                            setLinkToBusiness(checked as boolean)
+                                            if (!checked) setSelectedBusinessId('')
+                                        }}
+                                    />
+                                    <Label htmlFor="linkBusinessJob" className="cursor-pointer font-black uppercase tracking-widest text-xs">
+                                        ¿Este empleo es de un negocio?
+                                    </Label>
+                                </div>
+
+                                {linkToBusiness && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="businessJob" className="font-black uppercase tracking-widest text-xs">Negocio</Label>
+                                        <Select value={selectedBusinessId} onValueChange={setSelectedBusinessId}>
+                                            <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
+                                                <SelectValue placeholder="Selecciona tu negocio" />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-2 border-black rounded-none">
+                                                {ownedBusinesses.map((business) => (
+                                                    <SelectItem key={business.id} value={business.id}>
+                                                        {business.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

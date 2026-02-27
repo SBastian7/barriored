@@ -4,7 +4,7 @@
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-  // node_modules/serwist/dist/chunks/waitUntil.js
+  // ../../node_modules/serwist/dist/chunks/waitUntil.js
   var _cacheNameDetails = {
     googleAnalytics: "googleAnalytics",
     precache: "precache-v2",
@@ -219,7 +219,7 @@
     return returnPromise;
   };
 
-  // node_modules/idb/build/index.js
+  // ../../node_modules/idb/build/index.js
   var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
   var idbProxyableTypes;
   var cursorAdvanceMethods;
@@ -465,7 +465,7 @@
     }
   }));
 
-  // node_modules/serwist/dist/chunks/printInstallDetails.js
+  // ../../node_modules/serwist/dist/chunks/printInstallDetails.js
   var copyResponse = async (response, modifier) => {
     let origin = null;
     if (response.url) {
@@ -1944,7 +1944,7 @@
     });
   };
 
-  // node_modules/@serwist/utils/dist/index.js
+  // ../../node_modules/@serwist/utils/dist/index.js
   var parallel = async (limit, array, func) => {
     const work = array.map((item, index) => ({
       index,
@@ -1971,7 +1971,7 @@
     return results;
   };
 
-  // node_modules/serwist/dist/index.js
+  // ../../node_modules/serwist/dist/index.js
   var isSafari = typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   var CacheableResponse = class {
     constructor(config = {}) {
@@ -2560,6 +2560,61 @@
       } else {
         if (false) {
           logs.push(`Found a cached response in the '${this.cacheName}' cache.`);
+        }
+      }
+      if (false) {
+        logger.groupCollapsed(messages.strategyStart(this.constructor.name, request));
+        for (const log of logs) {
+          logger.log(log);
+        }
+        messages.printFinalResponse(response);
+        logger.groupEnd();
+      }
+      if (!response) {
+        throw new SerwistError("no-response", {
+          url: request.url,
+          error
+        });
+      }
+      return response;
+    }
+  };
+  var StaleWhileRevalidate = class extends Strategy {
+    constructor(options = {}) {
+      super(options);
+      if (!this.plugins.some((p) => "cacheWillUpdate" in p)) {
+        this.plugins.unshift(cacheOkAndOpaquePlugin);
+      }
+    }
+    async _handle(request, handler) {
+      const logs = [];
+      if (false) {
+        finalAssertExports.isInstance(request, Request, {
+          moduleName: "serwist",
+          className: this.constructor.name,
+          funcName: "handle",
+          paramName: "request"
+        });
+      }
+      const fetchAndCachePromise = handler.fetchAndCachePut(request).catch(() => {
+      });
+      void handler.waitUntil(fetchAndCachePromise);
+      let response = await handler.cacheMatch(request);
+      let error;
+      if (response) {
+        if (false) {
+          logs.push(`Found a cached response in the '${this.cacheName}' cache. Will update with the network response in the background.`);
+        }
+      } else {
+        if (false) {
+          logs.push(`No response found in the '${this.cacheName}' cache. Will wait for the network response.`);
+        }
+        try {
+          response = await fetchAndCachePromise;
+        } catch (err) {
+          if (err instanceof Error) {
+            error = err;
+          }
         }
       }
       if (false) {
@@ -3204,6 +3259,41 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
             maxEntries: 50,
             maxAgeSeconds: 7 * 24 * 60 * 60
             // 7 days
+          })
+        ]
+      })
+    },
+    {
+      // Cache HTML pages for offline viewing
+      matcher: ({ request }) => request.mode === "navigate",
+      handler: new NetworkFirst({
+        cacheName: "pages",
+        plugins: [
+          new CacheableResponsePlugin({
+            statuses: [0, 200]
+          }),
+          new ExpirationPlugin({
+            maxEntries: 50,
+            maxAgeSeconds: 7 * 24 * 60 * 60
+            // 7 days
+          })
+        ],
+        networkTimeoutSeconds: 3
+      })
+    },
+    {
+      // Cache business and community content pages
+      matcher: ({ url }) => url.pathname.includes("/business/") || url.pathname.includes("/community/"),
+      handler: new StaleWhileRevalidate({
+        cacheName: "content-pages",
+        plugins: [
+          new CacheableResponsePlugin({
+            statuses: [0, 200]
+          }),
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 24 * 60 * 60
+            // 1 day
           })
         ]
       })
