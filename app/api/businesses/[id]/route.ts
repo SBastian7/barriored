@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { updateBusinessSchema } from '@/lib/validations/business'
+import { getPermissions } from '@/lib/auth/permissions'
 
 export async function PATCH(
   request: Request,
@@ -12,6 +13,30 @@ export async function PATCH(
 
   if (!user) {
     return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+  }
+
+  // Check permission or ownership
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('owner_id')
+    .eq('id', id)
+    .single()
+
+  if (!business) {
+    return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 404 })
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_super_admin')
+    .eq('id', user.id)
+    .single()
+
+  const permissions = getPermissions(profile?.role as any, profile?.is_super_admin)
+  const isOwner = business.owner_id === user.id
+
+  if (!isOwner && !permissions.canEditAnyBusiness) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
   const body = await request.json()
@@ -27,9 +52,13 @@ export async function PATCH(
     delete updateData.longitude
   }
 
+  // Update business
   const { data, error } = await supabase
     .from('businesses')
-    .update(updateData)
+    .update({
+      ...updateData,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
     .select()
     .single()
