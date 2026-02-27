@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .from('profiles')
     .select('role, is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single<{ role: string; is_super_admin: boolean | null }>()
 
   const permissions = getPermissions(profile?.role as any, profile?.is_super_admin)
   if (!permissions.canViewAdminPanel) redirect('/')

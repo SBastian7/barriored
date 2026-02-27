@@ -43,7 +43,7 @@ export default function AdminBusinessesPage() {
         .from('profiles')
         .select('community_id')
         .eq('id', user.id)
-        .single()
+        .single<{ community_id: string | null }>()
 
       if (!profile?.community_id) return
 
@@ -78,7 +78,7 @@ export default function AdminBusinessesPage() {
   }
 
   async function handleApproveDeletion(businessId: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('businesses')
       .update({
         is_active: false,
@@ -96,7 +96,7 @@ export default function AdminBusinessesPage() {
   }
 
   async function handleRejectDeletion(businessId: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('businesses')
       .update({
         deletion_requested: false,
