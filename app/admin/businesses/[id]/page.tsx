@@ -7,13 +7,25 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, XCircle, MapPin, Phone, Mail, Globe, Clock, Camera, User } from 'lucide-react'
+import { CheckCircle, XCircle, MapPin, Phone, Mail, Globe, Clock, Camera, User, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { FeaturedBusinessControls } from '@/components/admin/featured-business-controls'
 import { RejectionDialog } from '@/components/admin/rejection-dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { getPermissions } from '@/lib/auth/permissions'
 import dynamic from 'next/dynamic'
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false })
@@ -33,6 +45,7 @@ export default function AdminBusinessReviewPage() {
   const supabase = createClient()
   const [business, setBusiness] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [currentProfile, setCurrentProfile] = useState<any>(null)
 
   useEffect(() => {
@@ -69,12 +82,36 @@ export default function AdminBusinessReviewPage() {
     }
   }
 
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/businesses/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Negocio eliminado exitosamente')
+        router.push('/admin/businesses')
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Error al eliminar negocio')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Error al eliminar negocio')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (!business) return <p>Cargando...</p>
 
   const location = business.location as any
   const lat = location?.coordinates?.[1]
   const lng = location?.coordinates?.[0]
   const hours = business.hours as Record<string, { open: string; close: string }> | null
+
+  // Calculate permissions
+  const permissions = currentProfile
+    ? getPermissions(currentProfile.role, currentProfile.is_super_admin)
+    : null
 
   return (
     <div className="space-y-8">
@@ -283,6 +320,54 @@ export default function AdminBusinessReviewPage() {
                 businessId={id}
                 businessName={business.name}
               />
+            </div>
+          )}
+
+          {/* Edit & Delete Actions */}
+          {permissions && (permissions.canEditAnyBusiness || permissions.canDeleteBusinesses) && (
+            <div className="flex gap-4 pt-6 mt-6 border-t-2 border-black">
+              {permissions.canEditAnyBusiness && (
+                <Link href={`/admin/businesses/${id}/edit`} className="flex-1">
+                  <Button
+                    variant="outline"
+                    className="brutalist-button w-full h-12 border-accent bg-accent/5 hover:bg-accent/10"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" /> Editar Negocio
+                  </Button>
+                </Link>
+              )}
+
+              {permissions.canDeleteBusinesses && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      className="brutalist-button flex-1 h-12"
+                      disabled={deleting}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar Negocio?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción es permanente. Se eliminará <strong>{business.name}</strong> y todas sus fotos.
+                        Esta acción no se puede deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           )}
         </CardContent>
