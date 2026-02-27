@@ -26,6 +26,8 @@ type Business = {
 export default function AdminBusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [statusFilter, setStatusFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -53,6 +55,10 @@ export default function AdminBusinessesPage() {
         query = query.eq('deletion_requested', true)
       } else if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter)
+      }
+
+      if (categoryFilter !== 'all') {
+        query = query.eq('category_id', categoryFilter)
       }
 
       const { data } = await query
@@ -101,9 +107,22 @@ export default function AdminBusinessesPage() {
     }
   }
 
+  async function fetchCategories() {
+    const { data } = await supabase
+      .from('categories')
+      .select('id, name')
+      .order('sort_order', { ascending: true })
+
+    if (data) setCategories(data)
+  }
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
   useEffect(() => {
     fetchBusinesses()
-  }, [statusFilter])
+  }, [statusFilter, categoryFilter])
 
   const pending = businesses.filter((b) => b.status === 'pending')
   const approved = businesses.filter((b) => b.status === 'approved')
@@ -120,9 +139,9 @@ export default function AdminBusinessesPage() {
         <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
           Gestión de <span className="text-primary italic">Negocios</span>
         </h1>
-        <div className="w-64">
+        <div className="flex gap-3">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="brutalist-input">
+            <SelectTrigger className="brutalist-input w-64">
               <SelectValue placeholder="Filtrar por estado" />
             </SelectTrigger>
             <SelectContent>
@@ -131,6 +150,17 @@ export default function AdminBusinessesPage() {
               <SelectItem value="approved">Aprobados</SelectItem>
               <SelectItem value="rejected">Rechazados</SelectItem>
               <SelectItem value="deletion_requested">Solicitudes de Eliminación</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="brutalist-input w-64">
+              <SelectValue placeholder="Filtrar por categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
