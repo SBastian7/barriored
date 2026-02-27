@@ -57,4 +57,4 @@ next-env.d.ts
 supabase/.temp/
 
 # Plans/docs (internal)
-docs/plans/
+docs/plans/.claude/settings.local.json
