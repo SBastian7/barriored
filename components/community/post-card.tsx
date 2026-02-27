@@ -6,11 +6,13 @@ import { ImageLoader } from '@/components/ui/image-loader'
 import type { CommunityPost, EventMetadata, JobMetadata } from '@/lib/types'
 
 export function PostCard({ post, communitySlug }: { post: CommunityPost; communitySlug: string }) {
-    const typeLabels = { announcement: 'Anuncio', event: 'Evento', job: 'Empleo' }
-    const typeColors = { announcement: 'default', event: 'outline', job: 'secondary' } as const
+    const typeLabels = { announcement: 'Anuncio', event: 'Evento', job: 'Empleo', promotion: 'Promoción' }
+    const typeColors = { announcement: 'default', event: 'outline', job: 'secondary', promotion: 'secondary' } as const
+
+    const linkPath = post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : post.type === 'job' ? 'jobs' : 'promotions'
 
     return (
-        <Link href={`/${communitySlug}/community/${post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : 'jobs'}/${post.id}`}>
+        <Link href={`/${communitySlug}/community/${linkPath}/${post.id}`}>
             <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden group h-full flex flex-col">
                 {post.image_url && (
                     <div className="border-b-2 border-black">

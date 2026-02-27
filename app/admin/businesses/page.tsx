@@ -14,13 +14,13 @@ import { toast } from 'sonner'
 type Business = {
   id: string
   name: string
-  status: string
-  created_at: string
+  status: string | null
+  created_at: string | null
   featured_requested: boolean | null
   deletion_requested: boolean | null
   deletion_reason: string | null
-  categories: { name: string } | null
-  profiles: { full_name: string } | null
+  categories: { name: string | null } | null
+  profiles: { full_name: string | null } | null
 }
 
 export default function AdminBusinessesPage() {
