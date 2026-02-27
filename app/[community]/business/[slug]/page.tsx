@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ community
     .from('businesses')
     .select('name, description, categories(name)')
     .eq('slug', slug)
-    .single()
+    .single<{ name: string; description: string | null }>()
 
   if (!business) return {}
   return {
@@ -32,7 +32,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const supabase = await createClient()
 
   const { data: community } = await supabase
-    .from('communities').select('id, name').eq('slug', commSlug).single()
+    .from('communities').select('id, name').eq('slug', commSlug).single<{ id: string; name: string }>()
 
   if (!community) notFound()
 
@@ -42,7 +42,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
     .eq('community_id', community.id)
     .eq('slug', slug)
     .eq('status', 'approved')
-    .single()
+    .single<{ id: string; [key: string]: any }>()
 
   if (!business) notFound()
 

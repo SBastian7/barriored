@@ -7,12 +7,25 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, XCircle, MapPin, Phone, Mail, Globe, Clock, Camera, User } from 'lucide-react'
+import { CheckCircle, XCircle, MapPin, Phone, Mail, Globe, Clock, Camera, User, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { FeaturedBusinessControls } from '@/components/admin/featured-business-controls'
+import { RejectionDialog } from '@/components/admin/rejection-dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { getPermissions } from '@/lib/auth/permissions'
 import dynamic from 'next/dynamic'
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false })
@@ -32,6 +45,7 @@ export default function AdminBusinessReviewPage() {
   const supabase = createClient()
   const [business, setBusiness] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [currentProfile, setCurrentProfile] = useState<any>(null)
 
   useEffect(() => {
@@ -56,15 +70,34 @@ export default function AdminBusinessReviewPage() {
     })
   }, [id, supabase])
 
-  async function handleAction(action: 'approve' | 'reject') {
+  async function handleApprove() {
     setLoading(true)
-    const res = await fetch(`/api/businesses/${id}/${action}`, { method: 'POST' })
+    const res = await fetch(`/api/businesses/${id}/approve`, { method: 'POST' })
     setLoading(false)
     if (res.ok) {
-      toast.success(action === 'approve' ? 'Negocio aprobado' : 'Negocio rechazado')
+      toast.success('Negocio aprobado')
       router.push('/admin/businesses')
     } else {
-      toast.error('Error procesando accion')
+      toast.error('Error procesando acción')
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/businesses/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Negocio eliminado exitosamente')
+        router.push('/admin/businesses')
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Error al eliminar negocio')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Error al eliminar negocio')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -74,6 +107,11 @@ export default function AdminBusinessReviewPage() {
   const lat = location?.coordinates?.[1]
   const lng = location?.coordinates?.[0]
   const hours = business.hours as Record<string, { open: string; close: string }> | null
+
+  // Calculate permissions
+  const permissions = currentProfile
+    ? getPermissions(currentProfile.role, currentProfile.is_super_admin)
+    : null
 
   return (
     <div className="space-y-8">
@@ -271,12 +309,65 @@ export default function AdminBusinessReviewPage() {
           {/* Action Buttons */}
           {business.status === 'pending' && (
             <div className="flex gap-4 pt-6 mt-6 border-t-4 border-dashed border-black">
-              <Button onClick={() => handleAction('approve')} disabled={loading} className="flex-1 bg-green-500 hover:bg-green-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-black uppercase italic h-14 text-base">
+              <Button
+                onClick={handleApprove}
+                disabled={loading}
+                className="flex-1 bg-green-500 hover:bg-green-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-black uppercase italic h-14 text-base"
+              >
                 <CheckCircle className="h-5 w-5 mr-2" /> Aprobar Negocio
               </Button>
-              <Button variant="destructive" onClick={() => handleAction('reject')} disabled={loading} className="flex-1 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black uppercase italic h-14 text-base">
-                <XCircle className="h-5 w-5 mr-2" /> Rechazar
-              </Button>
+              <RejectionDialog
+                businessId={id}
+                businessName={business.name}
+              />
+            </div>
+          )}
+
+          {/* Edit & Delete Actions */}
+          {permissions && (permissions.canEditAnyBusiness || permissions.canDeleteBusinesses) && (
+            <div className="flex gap-4 pt-6 mt-6 border-t-2 border-black">
+              {permissions.canEditAnyBusiness && (
+                <Link href={`/admin/businesses/${id}/edit`} className="flex-1">
+                  <Button
+                    variant="outline"
+                    className="brutalist-button w-full h-12 border-accent bg-accent/5 hover:bg-accent/10"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" /> Editar Negocio
+                  </Button>
+                </Link>
+              )}
+
+              {permissions.canDeleteBusinesses && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      className="brutalist-button flex-1 h-12"
+                      disabled={deleting}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar Negocio?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción es permanente. Se eliminará <strong>{business.name}</strong> y todas sus fotos.
+                        Esta acción no se puede deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           )}
         </CardContent>

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Store, Tag, Users, AlertTriangle, Siren } from 'lucide-react'
+import { getPermissions } from '@/lib/auth/permissions'
 
 export const metadata = { title: 'Admin | BarrioRed' }
 
@@ -11,8 +12,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?returnUrl=/admin')
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') redirect('/')
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_super_admin')
+    .eq('id', user.id)
+    .single<{ role: string; is_super_admin: boolean | null }>()
+
+  const permissions = getPermissions(profile?.role as any, profile?.is_super_admin)
+  if (!permissions.canViewAdminPanel) redirect('/')
 
   return (
     <div className="min-h-screen bg-background">

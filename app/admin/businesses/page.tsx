@@ -6,8 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Loader2 } from 'lucide-react'
+import { Eye, Loader2, Search } from 'lucide-react'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { toast } from 'sonner'
 
@@ -26,6 +27,9 @@ type Business = {
 export default function AdminBusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [statusFilter, setStatusFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -39,7 +43,7 @@ export default function AdminBusinessesPage() {
         .from('profiles')
         .select('community_id')
         .eq('id', user.id)
-        .single()
+        .single<{ community_id: string | null }>()
 
       if (!profile?.community_id) return
 
@@ -55,6 +59,14 @@ export default function AdminBusinessesPage() {
         query = query.eq('status', statusFilter)
       }
 
+      if (categoryFilter !== 'all') {
+        query = query.eq('category_id', categoryFilter)
+      }
+
+      if (searchQuery.trim()) {
+        query = query.ilike('name', `%${searchQuery.trim()}%`)
+      }
+
       const { data } = await query
       setBusinesses(data || [])
     } catch (error) {
@@ -66,7 +78,7 @@ export default function AdminBusinessesPage() {
   }
 
   async function handleApproveDeletion(businessId: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('businesses')
       .update({
         is_active: false,
@@ -84,7 +96,7 @@ export default function AdminBusinessesPage() {
   }
 
   async function handleRejectDeletion(businessId: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('businesses')
       .update({
         deletion_requested: false,
@@ -101,9 +113,22 @@ export default function AdminBusinessesPage() {
     }
   }
 
+  async function fetchCategories() {
+    const { data } = await supabase
+      .from('categories')
+      .select('id, name')
+      .order('sort_order', { ascending: true })
+
+    if (data) setCategories(data)
+  }
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
   useEffect(() => {
     fetchBusinesses()
-  }, [statusFilter])
+  }, [statusFilter, categoryFilter])
 
   const pending = businesses.filter((b) => b.status === 'pending')
   const approved = businesses.filter((b) => b.status === 'approved')
@@ -120,9 +145,9 @@ export default function AdminBusinessesPage() {
         <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
           Gestión de <span className="text-primary italic">Negocios</span>
         </h1>
-        <div className="w-64">
+        <div className="flex gap-3">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="brutalist-input">
+            <SelectTrigger className="brutalist-input w-64">
               <SelectValue placeholder="Filtrar por estado" />
             </SelectTrigger>
             <SelectContent>
@@ -133,6 +158,26 @@ export default function AdminBusinessesPage() {
               <SelectItem value="deletion_requested">Solicitudes de Eliminación</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="brutalist-input w-64">
+              <SelectValue placeholder="Filtrar por categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40" />
+            <Input
+              placeholder="Buscar por nombre..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="brutalist-input pl-10"
+            />
+          </div>
         </div>
       </div>
 
