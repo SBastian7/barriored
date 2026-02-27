@@ -6,8 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Loader2 } from 'lucide-react'
+import { Eye, Loader2, Search } from 'lucide-react'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { toast } from 'sonner'
 
@@ -27,6 +28,7 @@ export default function AdminBusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -59,6 +61,10 @@ export default function AdminBusinessesPage() {
 
       if (categoryFilter !== 'all') {
         query = query.eq('category_id', categoryFilter)
+      }
+
+      if (searchQuery.trim()) {
+        query = query.ilike('name', `%${searchQuery.trim()}%`)
       }
 
       const { data } = await query
@@ -163,6 +169,15 @@ export default function AdminBusinessesPage() {
               ))}
             </SelectContent>
           </Select>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40" />
+            <Input
+              placeholder="Buscar por nombre..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="brutalist-input pl-10"
+            />
+          </div>
         </div>
       </div>
 
