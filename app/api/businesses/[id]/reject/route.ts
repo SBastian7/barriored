@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requirePermission } from '@/lib/auth/api-protection'
 
 export async function POST(
   request: Request,
@@ -7,20 +8,45 @@ export async function POST(
 ) {
   const { id } = await params
   const supabase = await createClient()
+
+  // Check permission
+  const auth = await requirePermission('canRejectBusinesses', supabase)
+  if (!auth.authorized) return auth.error
+
+  // Get rejection feedback from body
+  const body = await request.json()
+  const { rejection_reason, rejection_details } = body
+
+  if (!rejection_reason) {
+    return NextResponse.json(
+      { error: 'Se requiere motivo de rechazo' },
+      { status: 400 }
+    )
+  }
+
+  // Get current user
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
-
+  // Update business with rejection info
   const { data, error } = await supabase
     .from('businesses')
-    .update({ status: 'rejected' })
+    .update({
+      status: 'rejected',
+      rejection_reason,
+      rejection_details: rejection_details || null,
+      rejected_by: user!.id,
+      rejected_at: new Date().toISOString(),
+    })
     .eq('id', id)
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  if (error) {
+    console.error('Error rejecting business:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // TODO: Send notification to business owner about rejection
+
+  return NextResponse.json({ success: true, data })
 }
