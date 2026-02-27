@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { updateBusinessSchema } from '@/lib/validations/business'
 import { getPermissions } from '@/lib/auth/permissions'
+import { requirePermission } from '@/lib/auth/api-protection'
 
 export async function PATCH(
   request: Request,
@@ -68,4 +69,58 @@ export async function PATCH(
   }
 
   return NextResponse.json(data)
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const supabase = await createClient()
+
+  // Check permission (admin only)
+  const auth = await requirePermission('canDeleteBusinesses', supabase)
+  if (!auth.authorized) return auth.error
+
+  // Get business photos for cleanup
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('photos')
+    .eq('id', id)
+    .single()
+
+  if (!business) {
+    return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 404 })
+  }
+
+  // Delete photos from storage
+  if (business.photos && Array.isArray(business.photos)) {
+    for (const photoUrl of business.photos) {
+      try {
+        // Extract file path from URL
+        const urlParts = photoUrl.split('/')
+        const fileName = urlParts[urlParts.length - 1]
+
+        await supabase.storage
+          .from('business-photos')
+          .remove([fileName])
+      } catch (error) {
+        console.error('Error deleting photo:', error)
+        // Continue with business deletion even if photo deletion fails
+      }
+    }
+  }
+
+  // Delete business record
+  const { error } = await supabase
+    .from('businesses')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting business:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }
