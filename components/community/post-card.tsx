@@ -1,16 +1,18 @@
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Briefcase, Pin, User, CheckCircle } from 'lucide-react'
+import { Calendar, MapPin, Briefcase, Pin, User, CheckCircle, Building } from 'lucide-react'
 import { ImageLoader } from '@/components/ui/image-loader'
 import type { CommunityPost, EventMetadata, JobMetadata } from '@/lib/types'
 
 export function PostCard({ post, communitySlug }: { post: CommunityPost; communitySlug: string }) {
-    const typeLabels = { announcement: 'Anuncio', event: 'Evento', job: 'Empleo' }
-    const typeColors = { announcement: 'default', event: 'outline', job: 'secondary' } as const
+    const typeLabels = { announcement: 'Anuncio', event: 'Evento', job: 'Empleo', promotion: 'Promoción' }
+    const typeColors = { announcement: 'default', event: 'outline', job: 'secondary', promotion: 'secondary' } as const
+
+    const linkPath = post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : post.type === 'job' ? 'jobs' : 'promotions'
 
     return (
-        <Link href={`/${communitySlug}/community/${post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : 'jobs'}/${post.id}`}>
+        <Link href={`/${communitySlug}/community/${linkPath}/${post.id}`}>
             <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden group h-full flex flex-col">
                 {post.image_url && (
                     <div className="border-b-2 border-black">
@@ -37,6 +39,20 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
                         {post.type === 'job' && (post.metadata as JobMetadata)?.is_filled && (
                             <Badge className="gap-1 border-black border uppercase tracking-widest text-[10px] bg-gray-500 text-white">
                                 <CheckCircle className="h-3 w-3" /> Lleno
+                            </Badge>
+                        )}
+                        {post.metadata?.linked_business_id && (
+                            <Badge
+                                asChild
+                                className="gap-1 bg-accent border-2 border-black text-white hover:bg-accent/90 uppercase tracking-widest text-[10px]"
+                            >
+                                <Link
+                                    href={`/${communitySlug}/business/${post.metadata.linked_business_id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Building className="h-3 w-3" />
+                                    {post.metadata.linked_business_name}
+                                </Link>
                             </Badge>
                         )}
                     </div>

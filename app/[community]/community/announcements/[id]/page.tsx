@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { PostEditActions } from '@/components/community/post-edit-actions'
 import { SharePostButton } from '@/components/community/share-post-button'
+import { ReportButton } from '@/components/shared/report-button'
 import { User, Pin, Megaphone, Calendar } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { CommunityPost } from '@/lib/types'
@@ -97,6 +98,7 @@ export default async function AnnouncementDetailPage({
                             content={post.content}
                             url={shareUrl}
                         />
+                        <ReportButton entityType="post" entityId={post.id} variant="outline" />
                         <PostEditActions
                             postId={post.id}
                             postType="announcement"
