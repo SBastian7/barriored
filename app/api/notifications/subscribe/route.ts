@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   }
 
   // Upsert subscription
-  const { error } = await supabase.from('push_subscriptions').upsert(
+  const { error } = await (supabase as any).from('push_subscriptions').upsert(
     {
       user_id: user.id,
       endpoint: subscription.endpoint,
