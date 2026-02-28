@@ -58,7 +58,7 @@ export function SuspendUserDialog({
             suspension_reason: reason.trim(),
           }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update(update)
         .eq('id', userId)
