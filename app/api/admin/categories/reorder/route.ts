@@ -23,7 +23,7 @@ export async function PATCH(request: Request) {
 
     // Update sort_order for each category
     const updates = reorderedCategories.map(async (item: { id: string; sort_order: number }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('categories')
         .update({ sort_order: item.sort_order })
         .eq('id', item.id)
