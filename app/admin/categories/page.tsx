@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { SortableCategoryItem } from '@/components/admin/sortable-category-item'
 import { createClient } from '@/lib/supabase/client'
 import { getPermissions } from '@/lib/auth/permissions'
-import type { Category } from '@/lib/types/database'
+import type { Category } from '@/lib/types'
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])

@@ -10,6 +10,15 @@ export type CommunityData = {
   cover_image_url: string | null
 }
 
+export type Category = {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+  sort_order: number
+  created_at?: string
+}
+
 export type BusinessStatus = 'pending' | 'approved' | 'rejected'
 export type UserRole = 'neighbor' | 'merchant' | 'admin'
 

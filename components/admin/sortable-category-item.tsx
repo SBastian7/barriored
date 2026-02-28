@@ -4,7 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Edit, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Category } from '@/lib/types/database'
+import type { Category } from '@/lib/types'
 
 interface SortableCategoryItemProps {
   category: Category
