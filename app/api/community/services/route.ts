@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const parsed = createServiceSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from('public_services')
         .insert({
             ...parsed.data,
