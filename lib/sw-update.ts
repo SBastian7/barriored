@@ -5,10 +5,15 @@ let serwist: SerwistWindow | null = null
 export function registerServiceWorker() {
   if (
     typeof window === 'undefined' ||
-    !('serviceWorker' in navigator) ||
-    process.env.NODE_ENV !== 'production'
+    !('serviceWorker' in navigator)
   ) {
     return null
+  }
+
+  // Allow service worker in development for testing
+  // In production, this always runs. In dev, check if sw.js exists
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[SW] Running in development mode - service worker will register if sw.js exists')
   }
 
   serwist = new SerwistWindow('/sw.js', { scope: '/' })

@@ -292,7 +292,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                                         }}
                                     />
                                     <Label htmlFor="linkBusinessJob" className="cursor-pointer font-black uppercase tracking-widest text-xs">
-                                        ¿Este empleo es de un negocio?
+                                        ¿Este empleo es de un negocio registrado?
                                     </Label>
                                 </div>
 

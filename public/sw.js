@@ -3198,6 +3198,74 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
 
   // app/sw.ts
   var runtimeCaching = [
+    // Next.js static assets (CSS, JS, fonts) - immutable, cache first
+    {
+      matcher: ({ url }) => url.pathname.startsWith("/_next/static/"),
+      handler: new CacheFirst({
+        cacheName: "next-static",
+        plugins: [
+          new CacheableResponsePlugin({
+            statuses: [0, 200]
+          }),
+          new ExpirationPlugin({
+            maxEntries: 200,
+            maxAgeSeconds: 365 * 24 * 60 * 60
+            // 1 year
+          })
+        ]
+      })
+    },
+    // CSS files
+    {
+      matcher: ({ request }) => request.destination === "style",
+      handler: new CacheFirst({
+        cacheName: "stylesheets",
+        plugins: [
+          new CacheableResponsePlugin({
+            statuses: [0, 200]
+          }),
+          new ExpirationPlugin({
+            maxEntries: 50,
+            maxAgeSeconds: 365 * 24 * 60 * 60
+            // 1 year
+          })
+        ]
+      })
+    },
+    // JavaScript files
+    {
+      matcher: ({ request }) => request.destination === "script",
+      handler: new CacheFirst({
+        cacheName: "scripts",
+        plugins: [
+          new CacheableResponsePlugin({
+            statuses: [0, 200]
+          }),
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 365 * 24 * 60 * 60
+            // 1 year
+          })
+        ]
+      })
+    },
+    // Fonts
+    {
+      matcher: ({ request }) => request.destination === "font",
+      handler: new CacheFirst({
+        cacheName: "fonts",
+        plugins: [
+          new CacheableResponsePlugin({
+            statuses: [0, 200]
+          }),
+          new ExpirationPlugin({
+            maxEntries: 30,
+            maxAgeSeconds: 365 * 24 * 60 * 60
+            // 1 year
+          })
+        ]
+      })
+    },
     {
       matcher: ({ url }) => url.origin.includes("supabase.co") && url.pathname.includes("/storage/"),
       handler: new CacheFirst({
