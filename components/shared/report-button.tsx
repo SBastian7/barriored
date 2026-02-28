@@ -79,7 +79,7 @@ export function ReportButton({
         .from('profiles')
         .select('id')
         .eq('id', user.id)
-        .single()
+        .single() as { data: any }
 
       if (!profile) {
         toast.error('No se encontró tu perfil')
@@ -87,7 +87,7 @@ export function ReportButton({
       }
 
       // Insert report
-      const { error } = await supabase.from('content_reports').insert({
+      const { error } = await (supabase as any).from('content_reports').insert({
         reporter_id: profile.id,
         reported_entity_type: entityType,
         reported_entity_id: entityId,
