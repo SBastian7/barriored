@@ -79,7 +79,7 @@ export default function AdminStatisticsPage() {
         .from('profiles')
         .select('community_id, is_super_admin')
         .eq('id', user.id)
-        .single()
+        .single() as { data: any }
 
       const now = new Date()
       const date7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -159,7 +159,7 @@ export default function AdminStatisticsPage() {
 
       const { data: roleData } = await roleQuery
 
-      const byRole = roleData?.reduce((acc, p) => {
+      const byRole = roleData?.reduce((acc, p: any) => {
         const role = p.role || 'user'
         const existing = acc.find(item => item.role === role)
         if (existing) {

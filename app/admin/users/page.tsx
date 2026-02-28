@@ -45,7 +45,7 @@ export default function AdminUsersPage() {
         .from('profiles')
         .select('community_id, is_super_admin')
         .eq('id', currentUser.id)
-        .single()
+        .single() as { data: any }
 
       // Build query
       let query = supabase

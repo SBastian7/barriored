@@ -35,10 +35,10 @@ export default async function AdminReportsPage() {
     `)
     .order('created_at', { ascending: false })
 
-  const pending = reports?.filter((r) => r.status === 'pending') ?? []
-  const reviewed = reports?.filter((r) => r.status === 'reviewed') ?? []
-  const resolved = reports?.filter((r) => r.status === 'resolved') ?? []
-  const dismissed = reports?.filter((r) => r.status === 'dismissed') ?? []
+  const pending = reports?.filter((r: any) => r.status === 'pending') ?? []
+  const reviewed = reports?.filter((r: any) => r.status === 'reviewed') ?? []
+  const resolved = reports?.filter((r: any) => r.status === 'resolved') ?? []
+  const dismissed = reports?.filter((r: any) => r.status === 'dismissed') ?? []
 
   // Helper to get entity name
   const getEntityName = (report: any) => {
@@ -86,7 +86,7 @@ export default async function AdminReportsPage() {
             Reportes Pendientes
           </h2>
           <div className="grid gap-4">
-            {pending.map((report) => (
+            {pending.map((report: any) => (
               <Card
                 key={report.id}
                 className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white rounded-none hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden group"
@@ -141,7 +141,7 @@ export default async function AdminReportsPage() {
             Revisados ({reviewed.length})
           </h2>
           <div className="grid gap-3">
-            {reviewed.map((report) => (
+            {reviewed.map((report: any) => (
               <Card
                 key={report.id}
                 className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/50 rounded-none"
@@ -173,7 +173,7 @@ export default async function AdminReportsPage() {
             Resueltos ({resolved.length})
           </h2>
           <div className="grid gap-3">
-            {resolved.map((report) => (
+            {resolved.map((report: any) => (
               <Card
                 key={report.id}
                 className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/30 rounded-none grayscale"
@@ -203,7 +203,7 @@ export default async function AdminReportsPage() {
             Descartados ({dismissed.length})
           </h2>
           <div className="grid gap-3">
-            {dismissed.map((report) => (
+            {dismissed.map((report: any) => (
               <Card
                 key={report.id}
                 className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/30 rounded-none grayscale"

@@ -58,7 +58,7 @@ export default function AdminServicesPage() {
         }
 
         setSubmitting(true)
-        const { error } = await supabase.from('public_services').insert([formData])
+        const { error } = await (supabase as any).from('public_services').insert([formData])
         setSubmitting(false)
 
         if (error) {

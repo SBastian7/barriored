@@ -49,20 +49,20 @@ export default function AdminReportDetailPage() {
         setReport(data)
 
         // Fetch the reported entity details
-        if (data?.reported_entity_type === 'business') {
+        if ((data as any)?.reported_entity_type === 'business') {
           supabase
             .from('businesses')
             .select('id, name, description, address, status, categories(name)')
-            .eq('id', data.reported_entity_id)
+            .eq('id', (data as any).reported_entity_id)
             .single()
             .then(({ data: business }) => {
               setReport((prev: any) => ({ ...prev, entity: business }))
             })
-        } else if (data?.reported_entity_type === 'post') {
+        } else if ((data as any)?.reported_entity_type === 'post') {
           supabase
             .from('community_posts')
             .select('id, title, content, type, status')
-            .eq('id', data.reported_entity_id)
+            .eq('id', (data as any).reported_entity_id)
             .single()
             .then(({ data: post }) => {
               setReport((prev: any) => ({ ...prev, entity: post }))
@@ -90,7 +90,7 @@ export default function AdminReportDetailPage() {
     }
 
     setLoading(true)
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('content_reports')
       .update({
         status: action,
