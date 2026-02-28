@@ -21,7 +21,7 @@ export async function PATCH(
     .from('businesses')
     .select('owner_id')
     .eq('id', id)
-    .single()
+    .single() as { data: any }
 
   if (!business) {
     return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 404 })
@@ -31,7 +31,7 @@ export async function PATCH(
     .from('profiles')
     .select('role, is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any }
 
   const permissions = getPermissions(profile?.role as any, profile?.is_super_admin)
   const isOwner = business.owner_id === user.id
