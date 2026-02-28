@@ -13,7 +13,7 @@ export default async function EditBusinessPage({ params }: { params: Promise<{ i
     .select('*')
     .eq('id', id)
     .eq('owner_id', user!.id)
-    .single()
+    .single() as { data: any }
 
   if (!business) notFound()
 
