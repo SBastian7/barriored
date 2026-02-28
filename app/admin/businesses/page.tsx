@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Loader2, Search } from 'lucide-react'
+import { Eye, Loader2, Search, Download } from 'lucide-react'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { toast } from 'sonner'
 
@@ -113,6 +113,31 @@ export default function AdminBusinessesPage() {
     }
   }
 
+  async function handleExport() {
+    try {
+      const response = await fetch('/api/admin/export/businesses')
+
+      if (!response.ok) {
+        throw new Error('Error al exportar')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `negocios-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+      toast.success('Datos exportados exitosamente')
+    } catch (error) {
+      console.error('Error exporting:', error)
+      toast.error('Error al exportar datos')
+    }
+  }
+
   async function fetchCategories() {
     const { data } = await supabase
       .from('categories')
@@ -145,6 +170,12 @@ export default function AdminBusinessesPage() {
         <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
           Gestión de <span className="text-primary italic">Negocios</span>
         </h1>
+        <Button onClick={handleExport} className="brutalist-button bg-green-600 text-white">
+          <Download className="h-4 w-4 mr-2" /> Exportar a CSV
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
         <div className="flex gap-3">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="brutalist-input w-64">
