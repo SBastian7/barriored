@@ -10,7 +10,7 @@ export default async function LandingPage() {
     .from('communities')
     .select('id, name, slug, municipality, description')
     .eq('is_active', true)
-    .order('name')
+    .order('name') as { data: any }
 
   return (
     <main className="min-h-screen bg-background selection:bg-primary selection:text-white overflow-hidden relative">
@@ -42,7 +42,7 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid gap-8 md:grid-cols-2">
-            {communities?.map((community) => (
+            {communities?.map((community: any) => (
               <Link key={community.id} href={`/${community.slug}`} className="group">
                 <Card className="h-full border-4 border-black transition-all group-hover:translate-x-[-4px] group-hover:translate-y-[-4px] group-hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] bg-white">
                   <CardHeader className="p-8">
