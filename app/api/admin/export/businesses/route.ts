@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     .from('profiles')
     .select('community_id, is_super_admin')
     .eq('id', user!.id)
-    .single()
+    .single() as { data: any }
 
   // Build query
   let query = supabase
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
     'Email Propietario',
   ]
 
-  const rows = businesses?.map(b => [
+  const rows = businesses?.map((b: any) => [
     b.id,
     b.name,
     b.slug,

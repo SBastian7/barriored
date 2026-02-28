@@ -13,7 +13,7 @@ export async function POST(
   const auth = await requirePermission('canApproveBusinesses', supabase)
   if (!auth.authorized) return auth.error
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('businesses')
     .update({ status: 'approved', is_verified: true })
     .eq('id', id)

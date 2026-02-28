@@ -20,7 +20,7 @@ export async function PATCH(
     .from('profiles')
     .select('role, is_super_admin, community_id')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any }
 
   if (!profile || profile.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden - Must be admin' }, { status: 403 })
@@ -40,7 +40,7 @@ export async function PATCH(
       updateData.featured_order = null
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('businesses')
       .update(updateData)
       .eq('id', id)
@@ -60,13 +60,13 @@ export async function PATCH(
     .from('businesses')
     .select('community_id')
     .eq('id', id)
-    .single()
+    .single() as { data: any }
 
   if (!business || business.community_id !== profile.community_id) {
     return NextResponse.json({ error: 'Forbidden - Business not in your community' }, { status: 403 })
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('businesses')
     .update({
       featured_requested: true,

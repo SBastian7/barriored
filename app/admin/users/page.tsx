@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
       if (data) {
         // Fetch counts for each user
         const usersWithCounts = await Promise.all(
-          data.map(async (user) => {
+          data.map(async (user: any) => {
             const [businesses, posts] = await Promise.all([
               supabase
                 .from('businesses')
