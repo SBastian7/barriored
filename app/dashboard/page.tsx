@@ -21,19 +21,19 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: profile } = await supabase
-    .from('profiles').select('community_id, communities(slug)').eq('id', user!.id).single()
+    .from('profiles').select('community_id, communities(slug)').eq('id', user!.id).single() as { data: any }
 
   const { data: businesses } = await supabase
     .from('businesses')
     .select('id, name, status, created_at, deletion_requested, deletion_reason, categories(name)')
     .eq('owner_id', user!.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: any }
 
   const { data: communityPosts } = await supabase
     .from('community_posts')
     .select('id, title, type, status, created_at, metadata, communities(slug, name)')
     .eq('author_id', user!.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: any }
 
   const communitySlug = (profile?.communities as any)?.slug
 
@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       .gte('created_at', oneWeekAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .single() as { data: any }
 
     canPromote = !recentPromotion
 
