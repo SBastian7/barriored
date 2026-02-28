@@ -41,7 +41,7 @@ export function SignupForm() {
       // Update profile with community_id (trigger only sets full_name)
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        await supabase.from('profiles').update({
+        await (supabase as any).from('profiles').update({
           community_id: form.community_id,
           phone: form.phone,
           role: 'merchant',
