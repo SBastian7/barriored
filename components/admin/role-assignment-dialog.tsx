@@ -74,7 +74,7 @@ export function RoleAssignmentDialog({
 
     setLoading(true)
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({ role: newRole })
         .eq('id', userId)
