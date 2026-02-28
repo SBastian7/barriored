@@ -28,7 +28,7 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser()
 
   // Update business with rejection info
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('businesses')
     .update({
       status: 'rejected',
