@@ -56,7 +56,7 @@ export function PromotionForm({ communityId, communitySlug, businessId, business
         valid_until: formData.validUntil || undefined,
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('community_posts')
         .insert({
           community_id: communityId,
