@@ -19,12 +19,12 @@ export default async function ProfilePage() {
     .from('profiles')
     .select('id, full_name, phone, avatar_url, community_id, role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any }
 
   const { data: communities } = await supabase
     .from('communities')
     .select('id, name')
-    .order('name')
+    .order('name') as { data: any }
 
   return (
     <ProfileView
