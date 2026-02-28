@@ -88,7 +88,7 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-6">
-          {businesses.map((biz) => {
+          {businesses.map((biz: any) => {
             const s = STATUS_LABELS[biz.status as keyof typeof STATUS_LABELS] ?? STATUS_LABELS.pending
             return (
               <Card key={biz.id} className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-white overflow-hidden group rounded-none">
@@ -216,7 +216,7 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-6">
-          {communityPosts.map((post) => {
+          {communityPosts.map((post: any) => {
             const s = STATUS_LABELS[post.status as keyof typeof STATUS_LABELS] ?? STATUS_LABELS.pending
             const typeIcons = {
               announcement: { icon: MessageSquare, label: 'Anuncio', color: 'bg-primary', urlPath: 'anuncios' },
