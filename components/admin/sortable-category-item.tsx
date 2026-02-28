@@ -35,16 +35,18 @@ export function SortableCategoryItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`brutalist-card p-4 flex items-center gap-4 ${
-        isDragging ? 'opacity-50 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]' : ''
+      className={`brutalist-card p-4 flex items-center gap-4 transition-all ${
+        isDragging
+          ? 'opacity-50 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] scale-105 rotate-2'
+          : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1'
       }`}
     >
       {/* Drag Handle */}
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing p-2 hover:bg-secondary/20 rounded"
-        aria-label="Reordenar categoría"
+        className="cursor-grab active:cursor-grabbing p-2 hover:bg-secondary/20 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+        aria-label={`Reordenar categoría ${category.name}`}
       >
         <GripVertical className="h-5 w-5 text-muted-foreground" />
       </button>
