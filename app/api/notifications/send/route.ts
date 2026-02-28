@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   const { data: subscriptions } = await supabase
     .from('push_subscriptions')
     .select('endpoint, p256dh, auth, user_id')
-    .in('user_id', userIds)
+    .in('user_id', userIds) as { data: any }
 
   if (!subscriptions || subscriptions.length === 0) {
     return NextResponse.json(
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   })
 
   let sentCount = 0
-  const sendPromises = subscriptions.map(async (sub) => {
+  const sendPromises = subscriptions.map(async (sub: any) => {
     try {
       await webpush.sendNotification(
         {
