@@ -42,7 +42,7 @@ export default function CategoriesPage() {
       .from('profiles')
       .select('role, is_super_admin')
       .eq('id', user.id)
-      .single()
+      .single() as { data: { role: string; is_super_admin: boolean | null } | null }
 
     const permissions = getPermissions(profile?.role as any, profile?.is_super_admin)
     const canManage = permissions.canManageCategories
