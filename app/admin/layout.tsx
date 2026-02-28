@@ -1,72 +1,55 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { Building2, Users, BarChart3, FolderTree, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Store, Tag, Users, UserCog, AlertTriangle, Siren, BarChart3 } from 'lucide-react'
-import { getPermissions } from '@/lib/auth/permissions'
 
-export const metadata = { title: 'Admin | BarrioRed' }
-
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login?returnUrl=/admin')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, is_super_admin')
-    .eq('id', user.id)
-    .single<{ role: string; is_super_admin: boolean | null }>()
-
-  const permissions = getPermissions(profile?.role as any, profile?.is_super_admin)
-  if (!permissions.canViewAdminPanel) redirect('/')
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const navItems = [
+    { href: '/admin', label: 'Panel', icon: BarChart3 },
+    { href: '/admin/businesses', label: 'Negocios', icon: Building2 },
+    { href: '/admin/users', label: 'Usuarios', icon: Users },
+    { href: '/admin/categories', label: 'Categorías', icon: FolderTree },
+    { href: '/admin/alerts', label: 'Alertas', icon: Bell },
+    { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3 },
+  ]
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-white border-b-4 border-black px-4 h-16 flex items-center gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 sticky top-0">
-        <Link href="/"><Button variant="outline" size="icon" className="border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><ArrowLeft className="h-5 w-5" /></Button></Link>
-        <span className="font-heading font-black uppercase tracking-tighter italic text-2xl">
-          Admin<span className="text-primary italic">Red</span>
-        </span>
-        <nav className="flex gap-4 ml-6">
-          <Link href="/admin/businesses">
-            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 transition-colors">
-              <Store className="h-4 w-4 mr-1" /> Negocios
-            </Button>
-          </Link>
-          <Link href="/admin/categories">
-            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-secondary/10 transition-colors">
-              <Tag className="h-4 w-4 mr-1" /> Categorías
-            </Button>
-          </Link>
-          <Link href="/admin/users">
-            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-accent/10 transition-colors">
-              <UserCog className="h-4 w-4 mr-1" /> Usuarios
-            </Button>
-          </Link>
-          <Link href="/admin/community">
-            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-accent/10 transition-colors">
-              <Users className="h-4 w-4 mr-1" /> Comunidad
-            </Button>
-          </Link>
-          <Link href="/admin/alerts">
-            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-red-100 transition-colors">
-              <AlertTriangle className="h-4 w-4 mr-1" /> Alertas
-            </Button>
-          </Link>
-          <Link href="/admin/services">
-            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-emerald-100 transition-colors">
-              <Siren className="h-4 w-4 mr-1" /> Servicios
-            </Button>
-          </Link>
-          <Link href="/admin/statistics">
-            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 transition-colors">
-              <BarChart3 className="h-4 w-4 mr-1" /> Estadísticas
-            </Button>
-          </Link>
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 border-r-4 border-black bg-background p-6 hidden lg:block">
+        <div className="mb-8">
+          <h2 className="text-2xl font-black uppercase tracking-tighter italic">
+            Admin Panel
+          </h2>
+        </div>
+        <nav className="space-y-2">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start brutalist-button"
+                >
+                  <Icon className="h-4 w-4 mr-3" />
+                  {item.label}
+                </Button>
+              </Link>
+            )
+          })}
         </nav>
-      </header>
-      <main className="container mx-auto max-w-5xl px-4 py-12">{children}</main>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1">
+        <Suspense fallback={<div className="p-8">Cargando...</div>}>
+          {children}
+        </Suspense>
+      </main>
     </div>
   )
 }
