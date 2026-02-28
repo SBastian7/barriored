@@ -21,6 +21,8 @@ import {
   Megaphone,
   Calendar,
   Briefcase,
+  Shield as ShieldIcon,
+  Flag,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -49,6 +51,11 @@ type Stats = {
     events: number
     jobs: number
     recentPosts7d: number
+  }
+  moderation: {
+    totalReports: number
+    pendingReports: number
+    resolvedReports: number
   }
 }
 
@@ -178,6 +185,13 @@ export default function AdminStatisticsPage() {
         postsQuery.gte('created_at', date7d.toISOString()),
       ])
 
+      // Fetch moderation stats
+      const [allReports, pendingReports, resolvedReports] = await Promise.all([
+        supabase.from('content_reports').select('*', { count: 'exact' }),
+        supabase.from('content_reports').select('*', { count: 'exact' }).eq('status', 'pending'),
+        supabase.from('content_reports').select('*', { count: 'exact' }).eq('status', 'resolved'),
+      ])
+
       setStats({
         businesses: {
           total: allBusinesses.count || 0,
@@ -203,6 +217,11 @@ export default function AdminStatisticsPage() {
           events: events.count || 0,
           jobs: jobs.count || 0,
           recentPosts7d: recentPosts.count || 0,
+        },
+        moderation: {
+          totalReports: allReports.count || 0,
+          pendingReports: pendingReports.count || 0,
+          resolvedReports: resolvedReports.count || 0,
         },
       })
     } catch (error) {
@@ -414,6 +433,34 @@ export default function AdminStatisticsPage() {
             label="Publicaciones (últimos 7 días)"
             value={stats.community.recentPosts7d}
             bg="bg-primary/10"
+          />
+        </div>
+      </div>
+
+      {/* Moderation Stats */}
+      <div>
+        <h2 className="text-2xl font-black uppercase italic mb-4 flex items-center gap-2">
+          <ShieldIcon className="h-6 w-6" /> Moderación
+        </h2>
+
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard
+            icon={Flag}
+            label="Total Reportes"
+            value={stats.moderation.totalReports}
+            bg="bg-white"
+          />
+          <StatCard
+            icon={Clock}
+            label="Pendientes"
+            value={stats.moderation.pendingReports}
+            bg="bg-yellow-50"
+          />
+          <StatCard
+            icon={CheckCircle}
+            label="Resueltos"
+            value={stats.moderation.resolvedReports}
+            bg="bg-green-50"
           />
         </div>
       </div>
