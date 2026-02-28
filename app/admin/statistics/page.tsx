@@ -15,6 +15,8 @@ import {
   Star,
   AlertTriangle,
   Loader2,
+  Users,
+  Shield,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -29,6 +31,13 @@ type Stats = {
     recentRegistrations30d: number
     featured: number
     deletionRequests: number
+  }
+  users: {
+    total: number
+    newUsers7d: number
+    newUsers30d: number
+    byRole: { role: string; count: number }[]
+    suspended: number
   }
 }
 
@@ -109,6 +118,40 @@ export default function AdminStatisticsPage() {
         return acc
       }, [] as { category: string; count: number }[]) || []
 
+      // Fetch user stats
+      let userQuery = supabase.from('profiles').select('*', { count: 'exact' })
+
+      if (!profile?.is_super_admin && profile?.community_id) {
+        userQuery = userQuery.eq('community_id', profile.community_id)
+      }
+
+      const [allUsers, newUsers7d, newUsers30d, suspended] = await Promise.all([
+        userQuery,
+        userQuery.gte('created_at', date7d.toISOString()),
+        userQuery.gte('created_at', date30d.toISOString()),
+        userQuery.eq('is_suspended', true),
+      ])
+
+      // Role distribution
+      let roleQuery = supabase.from('profiles').select('role')
+
+      if (!profile?.is_super_admin && profile?.community_id) {
+        roleQuery = roleQuery.eq('community_id', profile.community_id)
+      }
+
+      const { data: roleData } = await roleQuery
+
+      const byRole = roleData?.reduce((acc, p) => {
+        const role = p.role || 'user'
+        const existing = acc.find(item => item.role === role)
+        if (existing) {
+          existing.count++
+        } else {
+          acc.push({ role, count: 1 })
+        }
+        return acc
+      }, [] as { role: string; count: number }[]) || []
+
       setStats({
         businesses: {
           total: allBusinesses.count || 0,
@@ -120,6 +163,13 @@ export default function AdminStatisticsPage() {
           recentRegistrations30d: recent30d.count || 0,
           featured: featured.count || 0,
           deletionRequests: deletionRequests.count || 0,
+        },
+        users: {
+          total: allUsers.count || 0,
+          newUsers7d: newUsers7d.count || 0,
+          newUsers30d: newUsers30d.count || 0,
+          byRole,
+          suspended: suspended.count || 0,
         },
       })
     } catch (error) {
@@ -244,6 +294,54 @@ export default function AdminStatisticsPage() {
               {stats.businesses.byCategory.length === 0 && (
                 <p className="text-center text-black/40 py-4">No hay datos</p>
               )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* User Stats */}
+      <div>
+        <h2 className="text-2xl font-black uppercase italic mb-4 flex items-center gap-2">
+          <Users className="h-6 w-6" /> Usuarios
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard icon={Users} label="Total Usuarios" value={stats.users.total} bg="bg-white" />
+          <StatCard
+            icon={TrendingUp}
+            label={`Nuevos (${period})`}
+            value={period === '7d' ? stats.users.newUsers7d : stats.users.newUsers30d}
+            bg="bg-accent/10"
+          />
+          <StatCard
+            icon={Shield}
+            label="Moderadores/Admins"
+            value={stats.users.byRole.filter(r => r.role !== 'user').reduce((sum, r) => sum + r.count, 0)}
+            bg="bg-secondary/20"
+          />
+          <StatCard
+            icon={AlertTriangle}
+            label="Suspendidos"
+            value={stats.users.suspended}
+            bg="bg-red-50"
+          />
+        </div>
+
+        {/* By Role */}
+        <Card className="brutalist-card mt-4">
+          <CardHeader className="border-b-2 border-black">
+            <CardTitle className="font-heading font-black uppercase italic text-lg">
+              Usuarios por Rol
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              {stats.users.byRole.map(({ role, count }) => (
+                <div key={role} className="flex justify-between items-center border-b border-black/10 pb-2">
+                  <span className="font-bold capitalize">{role}</span>
+                  <Badge className="brutalist-button">{count}</Badge>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
