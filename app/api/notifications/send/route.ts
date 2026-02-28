@@ -44,9 +44,9 @@ export async function POST(request: Request) {
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id')
-    .eq('community_id', community_id)
+    .eq('community_id', community_id) as { data: any }
 
-  const userIds = profiles?.map(p => p.id) || []
+  const userIds = profiles?.map((p: any) => p.id) || []
 
   if (userIds.length === 0) {
     return NextResponse.json(
