@@ -31,7 +31,7 @@ export async function requirePermission(
     .from('profiles')
     .select('role, is_super_admin, is_suspended')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any; error: any }
 
   if (profileError || !profile) {
     return {
