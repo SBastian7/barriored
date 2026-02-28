@@ -29,7 +29,7 @@ export default function SuspendedPage() {
       .from('profiles')
       .select('is_suspended, suspension_reason')
       .eq('id', user.id)
-      .single()
+      .single() as { data: any }
 
     if (!profile?.is_suspended) {
       // User is not suspended, redirect to home
