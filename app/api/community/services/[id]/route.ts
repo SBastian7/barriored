@@ -31,7 +31,7 @@ export async function PATCH(
         return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from('public_services')
         .update(parsed.data)
         .eq('id', id)
