@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const { latitude, longitude, ...rest } = parsed.data
   const slug = slugify(rest.name)
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('businesses')
     .insert({
       ...rest,
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   }
 
   // Update user role to merchant if not already
-  await supabase.from('profiles').update({ role: 'merchant' }).eq('id', user.id)
+  await (supabase as any).from('profiles').update({ role: 'merchant' }).eq('id', user.id)
 
   return NextResponse.json(data, { status: 201 })
 }
