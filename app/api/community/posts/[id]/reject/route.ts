@@ -13,7 +13,7 @@ export async function POST(
     const auth = await requirePermission('canManageCommunityContent', supabase)
     if (!auth.authorized) return auth.error
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('community_posts')
         .update({
             status: 'rejected',

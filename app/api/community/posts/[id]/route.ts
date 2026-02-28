@@ -52,7 +52,7 @@ export async function PATCH(
         .from('community_posts')
         .select('author_id')
         .eq('id', id)
-        .single()
+        .single() as { data: any }
 
     if (!existing) {
         return NextResponse.json({ error: 'Publicacion no encontrada' }, { status: 404 })
@@ -61,7 +61,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from('community_posts')
         .update({ ...parsed.data, metadata: parsed.data.metadata as any, updated_at: new Date().toISOString() })
         .eq('id', id)
