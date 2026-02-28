@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { checkPermission } from '@/lib/auth/api-protection'
+import { requirePermission } from '@/lib/auth/api-protection'
 
 export async function PATCH(request: Request) {
   const supabase = await createClient()
 
   // Check permission
-  const permissionCheck = await checkPermission(supabase, 'canManageCategories')
+  const permissionCheck = await requirePermission('canManageCategories', supabase)
   if (!permissionCheck.authorized) {
-    return NextResponse.json({ error: permissionCheck.error }, { status: permissionCheck.status })
+    return permissionCheck.error
   }
 
   try {

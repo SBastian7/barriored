@@ -8,7 +8,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SortableCategoryItem } from '@/components/admin/sortable-category-item'
 import { createClient } from '@/lib/supabase/client'
-import { checkClientPermission } from '@/lib/auth/permissions'
+import { getPermissions } from '@/lib/auth/permissions'
 import type { Category } from '@/lib/types/database'
 
 export default function CategoriesPage() {
@@ -31,8 +31,23 @@ export default function CategoriesPage() {
 
   async function checkPermissions() {
     const supabase = createClient()
-    const canManage = await checkClientPermission(supabase, 'canManageCategories')
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, is_super_admin')
+      .eq('id', user.id)
+      .single()
+
+    const permissions = getPermissions(profile?.role as any, profile?.is_super_admin)
+    const canManage = permissions.canManageCategories
     setHasPermission(canManage)
+
     if (!canManage) {
       router.push('/admin')
     }
