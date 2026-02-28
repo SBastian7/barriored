@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
     // Admin check
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single() as { data: any }
     if (profile?.role !== 'admin') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
 
     const body = await request.json()

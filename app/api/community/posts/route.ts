@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     const { type, title, content, image_url, community_id, ...rest } = parsed.data
     const metadata = 'metadata' in rest ? rest.metadata : {}
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from('community_posts')
         .insert({
             community_id,
