@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Store, Tag, Users, UserCog, AlertTriangle, Siren } from 'lucide-react'
+import { ArrowLeft, Store, Tag, Users, UserCog, AlertTriangle, Siren, BarChart3 } from 'lucide-react'
 import { getPermissions } from '@/lib/auth/permissions'
 
 export const metadata = { title: 'Admin | BarrioRed' }
@@ -57,6 +57,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/services">
             <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-emerald-100 transition-colors">
               <Siren className="h-4 w-4 mr-1" /> Servicios
+            </Button>
+          </Link>
+          <Link href="/admin/statistics">
+            <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 transition-colors">
+              <BarChart3 className="h-4 w-4 mr-1" /> Estadísticas
             </Button>
           </Link>
         </nav>
