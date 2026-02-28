@@ -87,14 +87,14 @@ export async function DELETE(
         .from('community_posts')
         .select('author_id')
         .eq('id', id)
-        .single()
+        .single() as { data: any }
 
     if (!existing) {
         return NextResponse.json({ error: 'Publicacion no encontrada' }, { status: 404 })
     }
 
     if (existing.author_id !== user.id) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single() as { data: any }
         if (profile?.role !== 'admin') {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
         }

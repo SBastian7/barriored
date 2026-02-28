@@ -17,7 +17,7 @@ export async function POST(
         .from('community_posts')
         .select('author_id, type, metadata')
         .eq('id', id)
-        .single()
+        .single() as { data: any; error: any }
 
     if (fetchError || !post) {
         return NextResponse.json({ error: 'Publicación no encontrada' }, { status: 404 })
@@ -37,7 +37,7 @@ export async function POST(
     const metadata = post.metadata as JobMetadata
     const newFilledStatus = !metadata.is_filled
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
         .from('community_posts')
         .update({
             metadata: { ...metadata, is_filled: newFilledStatus },
