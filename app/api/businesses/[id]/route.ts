@@ -54,7 +54,7 @@ export async function PATCH(
   }
 
   // Update business
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('businesses')
     .update({
       ...updateData,
@@ -87,7 +87,7 @@ export async function DELETE(
     .from('businesses')
     .select('photos')
     .eq('id', id)
-    .single()
+    .single() as { data: any }
 
   if (!business) {
     return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 404 })
