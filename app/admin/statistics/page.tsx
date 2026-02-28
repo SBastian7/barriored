@@ -17,6 +17,10 @@ import {
   Loader2,
   Users,
   Shield,
+  MessageSquare,
+  Megaphone,
+  Calendar,
+  Briefcase,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -38,6 +42,13 @@ type Stats = {
     newUsers30d: number
     byRole: { role: string; count: number }[]
     suspended: number
+  }
+  community: {
+    totalPosts: number
+    announcements: number
+    events: number
+    jobs: number
+    recentPosts7d: number
   }
 }
 
@@ -152,6 +163,21 @@ export default function AdminStatisticsPage() {
         return acc
       }, [] as { role: string; count: number }[]) || []
 
+      // Fetch community stats
+      let postsQuery = supabase.from('community_posts').select('*', { count: 'exact' })
+
+      if (!profile?.is_super_admin && profile?.community_id) {
+        postsQuery = postsQuery.eq('community_id', profile.community_id)
+      }
+
+      const [allPosts, announcements, events, jobs, recentPosts] = await Promise.all([
+        postsQuery,
+        postsQuery.eq('type', 'announcement'),
+        postsQuery.eq('type', 'event'),
+        postsQuery.eq('type', 'job'),
+        postsQuery.gte('created_at', date7d.toISOString()),
+      ])
+
       setStats({
         businesses: {
           total: allBusinesses.count || 0,
@@ -170,6 +196,13 @@ export default function AdminStatisticsPage() {
           newUsers30d: newUsers30d.count || 0,
           byRole,
           suspended: suspended.count || 0,
+        },
+        community: {
+          totalPosts: allPosts.count || 0,
+          announcements: announcements.count || 0,
+          events: events.count || 0,
+          jobs: jobs.count || 0,
+          recentPosts7d: recentPosts.count || 0,
         },
       })
     } catch (error) {
@@ -345,6 +378,44 @@ export default function AdminStatisticsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Community Engagement */}
+      <div>
+        <h2 className="text-2xl font-black uppercase italic mb-4 flex items-center gap-2">
+          <MessageSquare className="h-6 w-6" /> Comunidad
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            icon={MessageSquare}
+            label="Total Publicaciones"
+            value={stats.community.totalPosts}
+            bg="bg-white"
+          />
+          <StatCard
+            icon={Megaphone}
+            label="Anuncios"
+            value={stats.community.announcements}
+            bg="bg-accent/10"
+          />
+          <StatCard
+            icon={Calendar}
+            label="Eventos"
+            value={stats.community.events}
+            bg="bg-secondary/20"
+          />
+          <StatCard icon={Briefcase} label="Empleos" value={stats.community.jobs} bg="bg-green-50" />
+        </div>
+
+        <div className="mt-4">
+          <StatCard
+            icon={TrendingUp}
+            label="Publicaciones (últimos 7 días)"
+            value={stats.community.recentPosts7d}
+            bg="bg-primary/10"
+          />
+        </div>
       </div>
     </div>
   )
