@@ -43,7 +43,7 @@ export function DeletionRequestButton({ businessId, businessName }: DeletionRequ
         .from('businesses')
         .select('owner_id')
         .eq('id', businessId)
-        .single()
+        .single() as { data: any; error: any }
 
       if (fetchError) throw fetchError
 
@@ -53,7 +53,7 @@ export function DeletionRequestButton({ businessId, businessName }: DeletionRequ
       }
 
       // Update business with deletion request
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('businesses')
         .update({
           deletion_requested: true,
