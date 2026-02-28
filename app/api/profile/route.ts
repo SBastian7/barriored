@@ -21,7 +21,7 @@ export async function GET() {
     .from('profiles')
     .select('id, full_name, phone, avatar_url, community_id, role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any; error: any }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -57,7 +57,7 @@ export async function PATCH(request: Request) {
       .from('communities')
       .select('id')
       .eq('id', parsed.data.community_id)
-      .single()
+      .single() as { data: any }
 
     if (!community) {
       return NextResponse.json(
@@ -73,7 +73,7 @@ export async function PATCH(request: Request) {
     community_id: parsed.data.community_id === '' ? null : parsed.data.community_id,
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('profiles')
     .update(updateData)
     .eq('id', user.id)
