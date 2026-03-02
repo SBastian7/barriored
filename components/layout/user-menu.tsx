@@ -39,7 +39,7 @@ export function UserMenu() {
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single()
+        .single() as { data: { role: string } | null; error: any }
 
       if (error) {
         console.error('Error loading profile:', error)
