@@ -142,6 +142,12 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [x] Push notification permission prompt
 - [x] Service worker for offline notification handling
 - [x] Admin push notification dispatch (automatic + manual)
+- [x] **Admin moderation panel with filtering** (type + status filters)
+- [x] **Full CRUD operations on community posts** (edit, delete, pin)
+- [x] **Pin/unpin announcements** with badge display
+- [x] **Edit alerts with expiration dates** (ends_at field)
+- [x] **Auto-deactivation of expired alerts** on page load
+- [x] **Enhanced navigation** with Community/Reports/Services links
 
 ### Phase 4: Marketplace (Clasificados - NEXT)
 - [ ] `/{community}/marketplace` - Buy/sell classifieds between neighbors
@@ -203,3 +209,6 @@ Sections marked "pronto" / "Proximamente" are disabled with a yellow badge. Enab
 - Reported sales increase by participating merchants
 - Neighbor connections facilitated
 - Local jobs connected through platform
+
+#Memory 
+For ui ux designs or implementations use the UIUX promax skill
