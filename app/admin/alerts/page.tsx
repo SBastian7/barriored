@@ -9,8 +9,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2, Bell, Clock } from 'lucide-react'
+import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2, Bell, Clock, Edit } from 'lucide-react'
 import type { CommunityAlert } from '@/lib/types'
 
 export default function AdminAlertsPage() {
@@ -20,6 +21,16 @@ export default function AdminAlertsPage() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [sendingNotification, setSendingNotification] = useState<string | null>(null)
+    const [editingAlert, setEditingAlert] = useState<any | null>(null)
+    const [editFormData, setEditFormData] = useState({
+        community_id: '',
+        type: 'general',
+        title: '',
+        description: '',
+        severity: 'info',
+        is_active: true,
+        ends_at: ''
+    })
 
     // Form state
     const [formData, setFormData] = useState({
@@ -144,6 +155,45 @@ export default function AdminAlertsPage() {
             toast.success('✅ Notificación enviada a 0 vecinos (nadie suscrito aún)')
         } else {
             toast.error('⚠️ Error al enviar notificación')
+        }
+    }
+
+    function handleOpenEditModal(alert: any) {
+        setEditingAlert(alert)
+        setEditFormData({
+            community_id: alert.community_id,
+            type: alert.type,
+            title: alert.title,
+            description: alert.description || '',
+            severity: alert.severity,
+            is_active: alert.is_active,
+            ends_at: alert.ends_at ? new Date(alert.ends_at).toISOString().slice(0, 16) : ''
+        })
+    }
+
+    async function handleSaveEdit() {
+        if (!editFormData.community_id || !editFormData.title) {
+            toast.error('Completa los campos obligatorios')
+            return
+        }
+
+        setSubmitting(true)
+        try {
+            const response = await fetch(`/api/admin/alerts/${editingAlert.id}/edit`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editFormData)
+            })
+
+            if (!response.ok) throw new Error('Error al actualizar')
+
+            toast.success('✅ Alerta actualizada correctamente')
+            setEditingAlert(null)
+            fetchData()
+        } catch (error) {
+            toast.error('❌ Error al actualizar alerta')
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -287,6 +337,12 @@ export default function AdminAlertsPage() {
                                                         <AlertTriangle className="h-3 w-3" /> {alert.is_active ? 'Activa' : 'Inactiva'}
                                                     </button>
                                                     <button
+                                                        onClick={() => handleOpenEditModal(alert)}
+                                                        className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-accent hover:bg-black/5 transition-colors"
+                                                    >
+                                                        <Edit className="h-3 w-3" /> Editar
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleManualSend(alert)}
                                                         disabled={sendingNotification === alert.id}
                                                         className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-white bg-accent hover:bg-accent/80 transition-colors disabled:opacity-50"
@@ -314,6 +370,113 @@ export default function AdminAlertsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Edit Alert Modal */}
+            <Dialog open={editingAlert !== null} onOpenChange={() => setEditingAlert(null)}>
+                <DialogContent className="border-4 border-black rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="font-heading font-black uppercase italic text-2xl">
+                            Editar Alerta
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Comunidad</Label>
+                            <Select onValueChange={(v) => setEditFormData({ ...editFormData, community_id: v })} value={editFormData.community_id}>
+                                <SelectTrigger className="brutalist-input">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="border-2 border-black rounded-none">
+                                    {communities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Tipo</Label>
+                                <Select onValueChange={(v) => setEditFormData({ ...editFormData, type: v })} value={editFormData.type}>
+                                    <SelectTrigger className="brutalist-input">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="border-2 border-black rounded-none">
+                                        <SelectItem value="general">General</SelectItem>
+                                        <SelectItem value="water">Agua</SelectItem>
+                                        <SelectItem value="power">Energía</SelectItem>
+                                        <SelectItem value="security">Seguridad</SelectItem>
+                                        <SelectItem value="construction">Obras</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Gravedad</Label>
+                                <Select onValueChange={(v) => setEditFormData({ ...editFormData, severity: v })} value={editFormData.severity}>
+                                    <SelectTrigger className="brutalist-input">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="border-2 border-black rounded-none">
+                                        <SelectItem value="info">Informativa</SelectItem>
+                                        <SelectItem value="warning">Advertencia</SelectItem>
+                                        <SelectItem value="critical">Crítica</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Título</Label>
+                            <Input
+                                value={editFormData.title}
+                                onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
+                                className="brutalist-input"
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Descripción</Label>
+                            <Textarea
+                                value={editFormData.description}
+                                onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
+                                rows={3}
+                                className="brutalist-input"
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                Fecha de Expiración (Opcional)
+                            </Label>
+                            <Input
+                                type="datetime-local"
+                                value={editFormData.ends_at}
+                                onChange={e => setEditFormData({ ...editFormData, ends_at: e.target.value })}
+                                className="brutalist-input"
+                            />
+                            <p className="text-[9px] text-black/40 italic">
+                                Dejar vacío para alerta sin expiración
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-2">
+                        <Button
+                            onClick={handleSaveEdit}
+                            disabled={submitting}
+                            className="brutalist-button bg-primary text-white"
+                        >
+                            {submitting ? <Loader2 className="animate-spin" /> : 'Guardar Cambios'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setEditingAlert(null)}
+                            className="brutalist-button"
+                        >
+                            Cancelar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
