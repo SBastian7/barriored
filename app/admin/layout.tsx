@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { Building2, Users, BarChart3, FolderTree, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { MobileNav } from '@/components/admin/mobile-nav'
 
 export default function AdminLayout({
   children,
@@ -18,38 +19,43 @@ export default function AdminLayout({
   ]
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 border-r-4 border-black bg-background p-6 hidden lg:block">
-        <div className="mb-8">
-          <h2 className="text-2xl font-black uppercase tracking-tighter italic">
-            Admin Panel
-          </h2>
-        </div>
-        <nav className="space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start brutalist-button"
-                >
-                  <Icon className="h-4 w-4 mr-3" />
-                  {item.label}
-                </Button>
-              </Link>
-            )
-          })}
-        </nav>
-      </aside>
+    <div className="flex min-h-screen flex-col">
+      {/* Mobile Navigation */}
+      <MobileNav />
 
-      {/* Main Content */}
-      <main className="flex-1">
-        <Suspense fallback={<div className="p-8">Cargando...</div>}>
-          {children}
-        </Suspense>
-      </main>
+      <div className="flex flex-1 pt-[72px] lg:pt-0">
+        {/* Desktop Sidebar */}
+        <aside className="w-64 border-r-4 border-black bg-background p-6 hidden lg:block">
+          <div className="mb-8">
+            <h2 className="text-2xl font-black uppercase tracking-tighter italic">
+              Admin Panel
+            </h2>
+          </div>
+          <nav className="space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start brutalist-button"
+                  >
+                    <Icon className="h-4 w-4 mr-3" />
+                    {item.label}
+                  </Button>
+                </Link>
+              )
+            })}
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1">
+          <Suspense fallback={<div className="p-8">Cargando...</div>}>
+            {children}
+          </Suspense>
+        </main>
+      </div>
     </div>
   )
 }
