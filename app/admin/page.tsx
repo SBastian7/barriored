@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
   const { data: community } = await supabase
     .from('communities')
     .select('id, name')
-    .single()
+    .single() as { data: { id: string; name: string } | null }
 
   if (!community) {
     return <div className="p-8">Error: No se encontró la comunidad</div>
