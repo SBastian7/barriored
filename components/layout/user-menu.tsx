@@ -35,11 +35,15 @@ export function UserMenu() {
         return
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single() as { data: any }
+        .single() as { data: { role: string } | null; error: any }
+
+      if (error) {
+        console.error('Error loading profile:', error)
+      }
 
       setUserState({
         email: user.email ?? '',
@@ -107,7 +111,7 @@ export function UserMenu() {
         </DropdownMenuItem>
         {userState.role === 'admin' && (
           <DropdownMenuItem asChild>
-            <Link href="/admin/businesses" className="flex items-center gap-2 w-full">
+            <Link href="/admin" className="flex items-center gap-2 w-full">
               <Shield className="h-4 w-4" />
               Administración
             </Link>
