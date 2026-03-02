@@ -73,8 +73,17 @@ export default function AdminAlertsPage() {
 
     async function fetchData() {
         setLoading(true)
+
+        // Auto-deactivate expired alerts before fetching
+        try {
+            await fetch('/api/admin/alerts/check-expired', { method: 'POST' })
+        } catch (error) {
+            console.error('Failed to check expired alerts:', error)
+            // Continue anyway
+        }
+
         const [alertsRes, communitiesRes] = await Promise.all([
-            supabase.from('community_alerts').select('*, communities(name)').order('created_at', { ascending: false }),
+            supabase.from('community_alerts').select('*, communities(name, slug)').order('created_at', { ascending: false }),
             supabase.from('communities').select('id, name').order('name')
         ])
 
@@ -328,6 +337,26 @@ export default function AdminAlertsPage() {
                                                     </div>
                                                     <h4 className="font-heading font-black uppercase text-lg italic leading-tight">{alert.title}</h4>
                                                     <p className="text-xs text-black/60 line-clamp-2 mt-1">{alert.description}</p>
+
+                                                    {/* Expiration info */}
+                                                    {alert.ends_at && (
+                                                        <div className="mt-2 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest">
+                                                            <Clock className="h-3 w-3 text-black/40" />
+                                                            <span className={new Date(alert.ends_at) < new Date() ? 'text-primary' : 'text-black/50'}>
+                                                                Expira: {new Date(alert.ends_at).toLocaleString('es-CO', {
+                                                                    day: 'numeric',
+                                                                    month: 'short',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                })}
+                                                            </span>
+                                                            {new Date(alert.ends_at) < new Date() && (
+                                                                <Badge className="bg-primary/20 text-primary border-black text-[9px] ml-auto">
+                                                                    ⏱️ EXPIRADA
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex flex-col divide-y-2 divide-black w-32">
                                                     <button
