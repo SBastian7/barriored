@@ -108,6 +108,55 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
         }
     }
 
+    async function handleDelete() {
+        if (!confirm('⚠️ ¿Eliminar esta publicación? Esta acción no se puede deshacer.')) {
+            return
+        }
+
+        setProcessing(true)
+        try {
+            const res = await fetch(`/api/community/posts/${id}/delete`, {
+                method: 'DELETE'
+            })
+
+            if (!res.ok) throw new Error('Error al eliminar')
+
+            toast.success('✅ Publicación eliminada')
+            router.push('/admin/community')
+        } catch (e) {
+            toast.error('❌ Error al eliminar publicación')
+            setProcessing(false)
+        }
+    }
+
+    async function handleTogglePin() {
+        setProcessing(true)
+        try {
+            const res = await fetch(`/api/community/posts/${id}/pin`, {
+                method: 'POST'
+            })
+
+            if (!res.ok) throw new Error('Error al cambiar fijado')
+
+            const result = await res.json()
+
+            toast.success(result.is_pinned ? '📌 Publicación fijada' : 'Publicación desfijada')
+
+            // Refresh post data
+            const { data } = await supabase
+                .from('community_posts')
+                .select('*, profiles(full_name, avatar_url), communities(name, slug)')
+                .eq('id', id)
+                .single()
+
+            if (data) setPost(data)
+        } catch (e) {
+            toast.error('❌ Error al cambiar estado de fijado')
+        } finally {
+            setProcessing(false)
+        }
+    }
+
     if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
 
     const typeMeta: any = {
@@ -231,6 +280,32 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
                             className="w-full h-14 bg-accent hover:bg-accent/90 text-white text-lg border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all font-black uppercase tracking-tighter italic"
                         >
                             <Edit className="mr-2 h-5 w-5" /> Editar Publicación
+                        </Button>
+
+                        <Button
+                            onClick={handleTogglePin}
+                            disabled={processing}
+                            className="w-full h-14 bg-secondary hover:bg-secondary/90 text-black text-lg border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all font-black uppercase tracking-tighter italic"
+                        >
+                            {processing ? <Loader2 className="animate-spin" /> : (
+                                <>
+                                    <Pin className="mr-2 h-5 w-5" />
+                                    {post?.is_pinned ? 'Desfijar' : 'Fijar'} Publicación
+                                </>
+                            )}
+                        </Button>
+
+                        <Button
+                            onClick={handleDelete}
+                            disabled={processing}
+                            variant="destructive"
+                            className="w-full h-14 text-lg border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all font-black uppercase tracking-tighter italic"
+                        >
+                            {processing ? <Loader2 className="animate-spin" /> : (
+                                <>
+                                    <Trash2 className="mr-2 h-5 w-5" /> Eliminar Publicación
+                                </>
+                            )}
                         </Button>
                     </div>
 
