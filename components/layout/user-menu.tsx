@@ -111,7 +111,7 @@ export function UserMenu() {
         </DropdownMenuItem>
         {userState.role === 'admin' && (
           <DropdownMenuItem asChild>
-            <Link href="/admin/businesses" className="flex items-center gap-2 w-full">
+            <Link href="/admin" className="flex items-center gap-2 w-full">
               <Shield className="h-4 w-4" />
               Administración
             </Link>
