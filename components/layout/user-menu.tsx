@@ -35,11 +35,15 @@ export function UserMenu() {
         return
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single() as { data: any }
+        .single()
+
+      if (error) {
+        console.error('Error loading profile:', error)
+      }
 
       setUserState({
         email: user.email ?? '',
