@@ -6,8 +6,12 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { CheckCircle, XCircle, ArrowLeft, User, Calendar, MapPin, Briefcase, DollarSign, MessageSquare, Phone, Mail, Pin, Megaphone, Loader2 } from 'lucide-react'
+import { CheckCircle, XCircle, ArrowLeft, User, Calendar, MapPin, Briefcase, DollarSign, MessageSquare, Phone, Mail, Pin, Megaphone, Loader2, Edit, Trash2 } from 'lucide-react'
 import type { CommunityPost } from '@/lib/types'
 
 export default function AdminPostReviewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +22,13 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
     const [post, setPost] = useState<any | null>(null)
     const [loading, setLoading] = useState(true)
     const [processing, setProcessing] = useState(false)
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editFormData, setEditFormData] = useState({
+        title: '',
+        content: '',
+        image_url: '',
+        metadata: {}
+    })
 
     useEffect(() => {
         async function fetchPost() {
@@ -51,6 +62,47 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
             router.refresh()
         } catch (e) {
             toast.error('Algo salió mal')
+        } finally {
+            setProcessing(false)
+        }
+    }
+
+    // Populate edit form when modal opens
+    useEffect(() => {
+        if (post && showEditModal) {
+            setEditFormData({
+                title: post.title,
+                content: post.content,
+                image_url: post.image_url || '',
+                metadata: post.metadata || {}
+            })
+        }
+    }, [showEditModal, post])
+
+    async function handleEdit() {
+        setProcessing(true)
+        try {
+            const res = await fetch(`/api/community/posts/${id}/edit`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editFormData)
+            })
+
+            if (!res.ok) throw new Error('Error al editar')
+
+            toast.success('✅ Publicación editada correctamente')
+            setShowEditModal(false)
+
+            // Refresh post data
+            const { data } = await supabase
+                .from('community_posts')
+                .select('*, profiles(full_name, avatar_url), communities(name, slug)')
+                .eq('id', id)
+                .single()
+
+            if (data) setPost(data)
+        } catch (e) {
+            toast.error('❌ Error al editar publicación')
         } finally {
             setProcessing(false)
         }
@@ -173,11 +225,149 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
                         </Button>
                     </div>
 
+                    <div className="space-y-4 pt-6 border-t-4 border-dashed border-black">
+                        <Button
+                            onClick={() => setShowEditModal(true)}
+                            className="w-full h-14 bg-accent hover:bg-accent/90 text-white text-lg border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all font-black uppercase tracking-tighter italic"
+                        >
+                            <Edit className="mr-2 h-5 w-5" /> Editar Publicación
+                        </Button>
+                    </div>
+
                     <p className="text-[10px] font-black uppercase tracking-widest text-black/40 text-center italic mt-10">
                         Al aprobar, la publicación será visible de inmediato en la comunidad de {post.communities.name}.
                     </p>
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+                <DialogContent className="border-4 border-black rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="font-heading font-black uppercase italic text-2xl">
+                            Editar Publicación
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                Título
+                            </Label>
+                            <Input
+                                value={editFormData.title}
+                                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                                className="brutalist-input"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                Contenido
+                            </Label>
+                            <Textarea
+                                value={editFormData.content}
+                                onChange={(e) => setEditFormData({ ...editFormData, content: e.target.value })}
+                                rows={6}
+                                className="brutalist-input"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                URL de Imagen (Opcional)
+                            </Label>
+                            <Input
+                                value={editFormData.image_url}
+                                onChange={(e) => setEditFormData({ ...editFormData, image_url: e.target.value })}
+                                className="brutalist-input"
+                                placeholder="https://..."
+                            />
+                        </div>
+
+                        {post?.type === 'event' && (
+                            <div className="grid grid-cols-2 gap-4 p-4 border-2 border-black bg-accent/5">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                        Ubicación
+                                    </Label>
+                                    <Input
+                                        value={editFormData.metadata?.location || ''}
+                                        onChange={(e) => setEditFormData({
+                                            ...editFormData,
+                                            metadata: { ...editFormData.metadata, location: e.target.value }
+                                        })}
+                                        className="brutalist-input"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                        Fecha
+                                    </Label>
+                                    <Input
+                                        type="datetime-local"
+                                        value={editFormData.metadata?.date || ''}
+                                        onChange={(e) => setEditFormData({
+                                            ...editFormData,
+                                            metadata: { ...editFormData.metadata, date: e.target.value }
+                                        })}
+                                        className="brutalist-input"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {post?.type === 'job' && (
+                            <div className="space-y-4 p-4 border-2 border-black bg-secondary/5">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                        Categoría
+                                    </Label>
+                                    <Input
+                                        value={editFormData.metadata?.category || ''}
+                                        onChange={(e) => setEditFormData({
+                                            ...editFormData,
+                                            metadata: { ...editFormData.metadata, category: e.target.value }
+                                        })}
+                                        className="brutalist-input"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                        Rango Salarial
+                                    </Label>
+                                    <Input
+                                        value={editFormData.metadata?.salary_range || ''}
+                                        onChange={(e) => setEditFormData({
+                                            ...editFormData,
+                                            metadata: { ...editFormData.metadata, salary_range: e.target.value }
+                                        })}
+                                        className="brutalist-input"
+                                        placeholder="Ej: $1.300.000 - $1.500.000"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="gap-2">
+                        <Button
+                            onClick={handleEdit}
+                            disabled={processing}
+                            className="brutalist-button bg-primary text-white"
+                        >
+                            {processing ? <Loader2 className="animate-spin" /> : 'Guardar Cambios'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowEditModal(false)}
+                            className="brutalist-button"
+                        >
+                            Cancelar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
