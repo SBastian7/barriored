@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2, Bell } from 'lucide-react'
+import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2, Bell, Clock } from 'lucide-react'
 import type { CommunityAlert } from '@/lib/types'
 
 export default function AdminAlertsPage() {
@@ -28,7 +28,8 @@ export default function AdminAlertsPage() {
         title: '',
         description: '',
         severity: 'info',
-        is_active: true
+        is_active: true,
+        ends_at: ''
     })
 
     useEffect(() => {
@@ -222,6 +223,21 @@ export default function AdminAlertsPage() {
                             <div className="space-y-1">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Descripción</Label>
                                 <Textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Detalles de la alerta..." rows={3} />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                    Fecha de Expiración (Opcional)
+                                </Label>
+                                <Input
+                                    type="datetime-local"
+                                    value={formData.ends_at}
+                                    onChange={e => setFormData({ ...formData, ends_at: e.target.value })}
+                                    className="brutalist-input"
+                                />
+                                <p className="text-[9px] text-black/40 italic">
+                                    Dejar vacío para alerta sin expiración
+                                </p>
                             </div>
 
                             <Button disabled={submitting} className="w-full border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all font-black uppercase tracking-widest text-xs h-12">
