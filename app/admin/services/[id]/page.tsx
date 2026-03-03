@@ -70,17 +70,18 @@ export default function AdminServiceDetailPage() {
       .single()
 
     if (data) {
-      setService(data)
+      const serviceData = data as any
+      setService(serviceData)
       setFormData({
-        community_id: data.community_id,
-        category: data.category,
-        name: data.name,
-        description: data.description || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        hours: data.hours || '',
-        is_active: data.is_active,
-        sort_order: data.sort_order || 10
+        community_id: serviceData.community_id,
+        category: serviceData.category,
+        name: serviceData.name,
+        description: serviceData.description || '',
+        phone: serviceData.phone || '',
+        address: serviceData.address || '',
+        hours: serviceData.hours || '',
+        is_active: serviceData.is_active,
+        sort_order: serviceData.sort_order || 10
       })
     }
     setLoading(false)
