@@ -77,3 +77,43 @@ USING (
 
 -- No public INSERT (only backend via service role)
 -- No INSERT policy means only service role can insert
+
+-- ============================================================================
+-- ERROR_LOGS: Capture runtime errors for debugging
+-- ============================================================================
+
+CREATE TABLE error_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  community_id uuid REFERENCES communities(id),  -- NULL for platform-wide errors
+  user_id uuid REFERENCES auth.users(id),        -- NULL for unauthenticated errors
+  error_type text NOT NULL,     -- 'api_error', 'validation_error', 'db_error', 'client_error'
+  error_message text,
+  stack_trace text,
+  request_url text,
+  request_method text,
+  request_body jsonb,
+  status_code integer,
+  metadata jsonb DEFAULT '{}',  -- Browser info, device type, etc.
+  created_at timestamptz DEFAULT now()
+);
+
+-- Indexes
+CREATE INDEX idx_error_logs_created
+  ON error_logs(created_at DESC);
+
+CREATE INDEX idx_error_logs_type_created
+  ON error_logs(error_type, created_at DESC);
+
+CREATE INDEX idx_error_logs_user
+  ON error_logs(user_id, created_at DESC)
+  WHERE user_id IS NOT NULL;
+
+-- Add comments
+COMMENT ON TABLE error_logs IS
+  'Runtime error logs for debugging production issues';
+
+COMMENT ON COLUMN error_logs.error_type IS
+  'api_error, validation_error, db_error, client_error';
+
+COMMENT ON COLUMN error_logs.metadata IS
+  'Browser info, device type, viewport size, etc.';
