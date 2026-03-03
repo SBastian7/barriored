@@ -55,7 +55,7 @@ export default function AdminReportsPage() {
           status: newStatus,
           reviewed_at: new Date().toISOString(),
           reviewed_by: user.id
-        })
+        } as any)
         .eq('id', reportId)
 
       if (error) throw error
