@@ -57,7 +57,7 @@ export async function GET(
 
   return NextResponse.json({
     community: {
-      ...community,
+      ...(community as any),
       staff: staff || [],
       stats: stats?.[0] || {},
     },
