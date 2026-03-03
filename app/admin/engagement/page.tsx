@@ -126,7 +126,7 @@ export default function AdminEngagementPage() {
       }, {} as Record<string, number>)
 
       const topAuthors = Object.entries(authorCounts)
-        .map(([name, count]) => ({ name, count }))
+        .map(([name, count]): { name: string; count: number } => ({ name, count: count as number }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5)
 
