@@ -158,3 +158,54 @@ COMMENT ON POLICY "community_alerts_update_staff" ON community_alerts IS
 
 COMMENT ON POLICY "community_alerts_delete_staff" ON community_alerts IS
   'Fixed: Added community_id check. Staff can only delete alerts in their community.';
+
+-- ============================================================================
+-- PUBLIC_SERVICES: Fix RLS policies (Admin-only, moderators excluded)
+-- ============================================================================
+
+-- Drop old broken policies
+DROP POLICY IF EXISTS "public_services_delete_admin" ON public_services;
+DROP POLICY IF EXISTS "public_services_insert_admin" ON public_services;
+DROP POLICY IF EXISTS "public_services_update_admin" ON public_services;
+
+-- SELECT: Public sees active services
+CREATE POLICY "public_services_select"
+ON public_services FOR SELECT
+USING (
+  is_active = true
+  OR is_super_admin()
+  OR is_community_admin_only(community_id)
+);
+
+-- INSERT: Admin only (not moderators)
+CREATE POLICY "public_services_insert_admin"
+ON public_services FOR INSERT
+WITH CHECK (
+  is_super_admin()
+  OR is_community_admin_only(community_id)
+);
+
+-- UPDATE: Admin only (not moderators)
+CREATE POLICY "public_services_update_admin"
+ON public_services FOR UPDATE
+USING (
+  is_super_admin()
+  OR is_community_admin_only(community_id)
+);
+
+-- DELETE: Admin only (not moderators)
+CREATE POLICY "public_services_delete_admin"
+ON public_services FOR DELETE
+USING (
+  is_super_admin()
+  OR is_community_admin_only(community_id)
+);
+
+COMMENT ON POLICY "public_services_insert_admin" ON public_services IS
+  'Fixed: Added community_id check. Only admins (not moderators) can create services in their community.';
+
+COMMENT ON POLICY "public_services_update_admin" ON public_services IS
+  'Fixed: Added community_id check. Only admins (not moderators) can update services in their community.';
+
+COMMENT ON POLICY "public_services_delete_admin" ON public_services IS
+  'Fixed: Added community_id check. Only admins (not moderators) can delete services in their community.';
