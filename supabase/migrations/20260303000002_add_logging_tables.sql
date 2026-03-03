@@ -41,3 +41,39 @@ COMMENT ON COLUMN audit_logs.community_id IS
 
 COMMENT ON COLUMN audit_logs.metadata IS
   'Additional context: IP address, user agent, request ID, etc.';
+
+-- Enable RLS on audit_logs
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- Super admin sees all logs
+CREATE POLICY "audit_logs_select_super_admin"
+ON audit_logs FOR SELECT
+USING (is_super_admin());
+
+-- Community admin sees logs for their community
+CREATE POLICY "audit_logs_select_community_admin"
+ON audit_logs FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid()
+      AND role = 'admin'
+      AND community_id = audit_logs.community_id
+  )
+);
+
+-- Moderators see logs for content they can moderate
+CREATE POLICY "audit_logs_select_moderator"
+ON audit_logs FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid()
+      AND role = 'moderator'
+      AND community_id = audit_logs.community_id
+  )
+  AND entity_type IN ('post', 'alert', 'report')
+);
+
+-- No public INSERT (only backend via service role)
+-- No INSERT policy means only service role can insert
