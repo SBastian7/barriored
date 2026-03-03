@@ -59,6 +59,35 @@ barriored.co/villasantana      -> Future expansion
 
 Each community has isolated data via `community_id` foreign keys. Community context is provided via `CommunityProvider` component.
 
+## Role-Based Access Control
+
+### Super Admin
+- Platform-wide access across ALL communities
+- Can manage all data in all communities
+- Flag: `profiles.is_super_admin = true`
+
+### Community Admin
+- Full access to their own community only
+- Can manage: businesses, users, posts, alerts, services, reports
+- Cannot access other communities' data
+- Flag: `profiles.role = 'admin'` AND `profiles.community_id = X`
+
+### Community Moderator
+- Limited to content moderation in their community only
+- Can manage: community posts, alerts, and reports
+- Cannot manage: businesses, users, or public services
+- Cannot access other communities' data
+- Flag: `profiles.role = 'moderator'` AND `profiles.community_id = X`
+
+### Regular User
+- Can view approved content
+- Can create businesses and community posts
+- Can edit/delete own content only
+- Flag: `profiles.role = 'user'`
+
+**RLS Security:** All database tables enforce community-level isolation via Row Level Security policies.
+Community admins/moderators can ONLY access data within their assigned community.
+
 ## Project Structure
 
 ```
