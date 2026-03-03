@@ -270,3 +270,26 @@ COMMENT ON POLICY "content_reports_select_staff" ON content_reports IS
 
 COMMENT ON POLICY "content_reports_update_staff" ON content_reports IS
   'Fixed: Added community check via JOIN. Staff can only update reports for entities in their community.';
+
+-- ============================================================================
+-- VERIFICATION: Existing policies already have community scoping
+-- ============================================================================
+
+-- BUSINESSES: Already has community_id checks in policies
+-- ✅ businesses_select_admin: EXISTS (... AND community_id = businesses.community_id)
+-- ✅ businesses_update_admin: EXISTS (... AND community_id = businesses.community_id)
+-- ✅ businesses_delete_admin: EXISTS (... AND community_id = businesses.community_id)
+-- No changes needed - already secure
+
+-- PROFILES: Already uses is_community_admin() helper
+-- ✅ profiles_select_admin: is_community_admin(community_id)
+-- ✅ profiles_admin_update_role: is_community_admin(community_id)
+-- ✅ profiles_delete_admin: Checks community_id match
+-- No changes needed - already secure
+
+-- CATEGORIES: Global table, admin-only (no community scoping needed)
+-- ✅ Already restricted to admins only
+-- No changes needed
+
+-- COMMUNITIES: Will be secured in Phase 3 (super admin only)
+-- Defer to Phase 3 migration
