@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { checkModeratorAccess } from '@/lib/supabase/admin'
+import { logAuditAction } from '@/lib/utils/audit-logger'
 
 export async function POST(
   request: Request,
@@ -41,6 +42,15 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    // Log audit action
+    await logAuditAction({
+      action: data.is_pinned ? 'pin_post' : 'unpin_post',
+      entityType: 'post',
+      entityId: id,
+      newData: { is_pinned: data.is_pinned },
+      communityId: data.community_id,
+    })
 
     return Response.json({
       success: true,
