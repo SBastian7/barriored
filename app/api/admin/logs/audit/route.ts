@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(request: Request) {
   const supabase = await createClient()
@@ -68,4 +69,59 @@ export async function GET(request: Request) {
     limit,
     offset,
   })
+}
+
+export async function POST(request: Request) {
+  const supabase = await createClient()
+
+  // Check authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json()
+  const { action, entity_type, entity_id, old_data, new_data, community_id } =
+    body
+
+  // Validate required fields
+  if (!action || !entity_type || !entity_id) {
+    return NextResponse.json(
+      { error: 'Missing required fields' },
+      { status: 400 }
+    )
+  }
+
+  // Get request metadata
+  const metadata = {
+    ip:
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip'),
+    user_agent: request.headers.get('user-agent'),
+    timestamp: new Date().toISOString(),
+  }
+
+  // Use service role client to bypass RLS for INSERT
+  const supabaseAdmin = createAdminClient()
+
+  const { error } = await supabaseAdmin.from('audit_logs').insert({
+    community_id,
+    user_id: user.id,
+    action,
+    entity_type,
+    entity_id,
+    old_data,
+    new_data,
+    metadata,
+  })
+
+  if (error) {
+    console.error('Failed to insert audit log:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }
