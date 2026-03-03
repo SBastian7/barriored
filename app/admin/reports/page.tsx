@@ -49,7 +49,6 @@ export default function AdminReportsPage() {
         return
       }
 
-      // @ts-expect-error - Supabase type inference issue with content_reports table
       const { error } = await supabase
         .from('content_reports')
         .update({
