@@ -20,7 +20,7 @@ export type Category = {
 }
 
 export type BusinessStatus = 'pending' | 'approved' | 'rejected'
-export type UserRole = 'neighbor' | 'merchant' | 'admin'
+export type UserRole = 'user' | 'moderator' | 'admin'
 
 // Phase 3: Community types
 export type PostType = 'announcement' | 'event' | 'job' | 'promotion'

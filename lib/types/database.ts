@@ -56,7 +56,7 @@ export type Database = {
           is_super_admin: boolean | null
           is_suspended: boolean | null
           phone: string | null
-          role: string | null
+          role: 'user' | 'moderator' | 'admin' | null
           suspended_at: string | null
           suspended_by: string | null
           suspension_reason: string | null
