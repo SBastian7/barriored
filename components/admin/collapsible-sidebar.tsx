@@ -13,7 +13,8 @@ import {
   ChevronRight,
   MessageSquare,
   Flag,
-  Briefcase
+  Briefcase,
+  Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -28,6 +29,7 @@ const navItems = [
   { href: '/admin/reports', label: 'Reportes', icon: Flag },
   { href: '/admin/services', label: 'Servicios', icon: Briefcase },
   { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3 },
+  { href: '/admin/engagement', label: 'Engagement', icon: Activity },
 ]
 
 export function CollapsibleSidebar() {
