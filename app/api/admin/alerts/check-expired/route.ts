@@ -9,7 +9,7 @@ export async function POST() {
     const supabase = await createClient()
 
     // Update alerts that are active, have an end date, and that end date has passed
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('community_alerts')
       .update({ is_active: false })
       .eq('is_active', true)
