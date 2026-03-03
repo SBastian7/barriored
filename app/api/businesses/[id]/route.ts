@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { updateBusinessSchema } from '@/lib/validations/business'
 import { getPermissions } from '@/lib/auth/permissions'
 import { requirePermission } from '@/lib/auth/api-protection'
+import { logAuditAction } from '@/lib/utils/audit-logger'
 
 export async function PATCH(
   request: Request,
@@ -82,10 +83,10 @@ export async function DELETE(
   const auth = await requirePermission('canDeleteBusinesses', supabase)
   if (!auth.authorized) return auth.error
 
-  // Get business photos for cleanup
+  // Get business data for cleanup and audit log
   const { data: business } = await supabase
     .from('businesses')
-    .select('photos')
+    .select('*')
     .eq('id', id)
     .single() as { data: any }
 
@@ -121,6 +122,15 @@ export async function DELETE(
     console.error('Error deleting business:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Log audit action
+  await logAuditAction({
+    action: 'delete_business',
+    entityType: 'business',
+    entityId: id,
+    oldData: business,
+    communityId: business?.community_id,
+  })
 
   return NextResponse.json({ success: true })
 }
