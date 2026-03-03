@@ -1,245 +1,321 @@
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Eye, Flag, AlertTriangle } from 'lucide-react'
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import Link from 'next/link'
+import { Flag, Store, MessageSquare, CheckCircle, XCircle, Clock, Eye, Filter, X, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
-const REASON_LABELS: Record<string, string> = {
-  inappropriate: 'Contenido inapropiado',
-  spam: 'Spam',
-  incorrect: 'Información incorrecta',
-  other: 'Otro',
-}
+export default function AdminReportsPage() {
+  const supabase = createClient()
+  const [reports, setReports] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [processing, setProcessing] = useState<string | null>(null)
+  const [filters, setFilters] = useState({
+    type: 'all',
+    status: 'all',
+    reason: 'all'
+  })
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pendiente',
-  reviewed: 'Revisado',
-  resolved: 'Resuelto',
-  dismissed: 'Descartado',
-}
+  useEffect(() => {
+    fetchReports()
+  }, [])
 
-export default async function AdminReportsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase.from('profiles').select('community_id').eq('id', user!.id).single()
+  async function fetchReports() {
+    setLoading(true)
+    const { data } = await supabase
+      .from('content_reports')
+      .select(`
+        *,
+        reporter:profiles!reporter_id(full_name, id),
+        reviewer:profiles!reviewed_by(full_name, id)
+      `)
+      .order('created_at', { ascending: false })
 
-  const { data: reports } = await supabase
-    .from('content_reports')
-    .select(`
-      *,
-      reporter:reporter_id(full_name),
-      business:reported_entity_id(name),
-      post:reported_entity_id(title)
-    `)
-    .order('created_at', { ascending: false })
-
-  const pending = reports?.filter((r: any) => r.status === 'pending') ?? []
-  const reviewed = reports?.filter((r: any) => r.status === 'reviewed') ?? []
-  const resolved = reports?.filter((r: any) => r.status === 'resolved') ?? []
-  const dismissed = reports?.filter((r: any) => r.status === 'dismissed') ?? []
-
-  // Helper to get entity name
-  const getEntityName = (report: any) => {
-    if (report.reported_entity_type === 'business') {
-      return report.business?.name || 'Negocio eliminado'
-    }
-    return report.post?.title || 'Publicación eliminada'
+    setReports(data || [])
+    setLoading(false)
   }
 
-  const getEntityTypeBadge = (type: string) => {
-    if (type === 'business') {
-      return (
-        <Badge className="bg-accent/20 text-black border-2 border-black text-[10px] font-black uppercase tracking-widest">
-          Negocio
-        </Badge>
-      )
+  async function updateReportStatus(reportId: string, newStatus: string) {
+    setProcessing(reportId)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error('No autenticado')
+        return
+      }
+
+      const { error } = await supabase
+        .from('content_reports')
+        .update({
+          status: newStatus,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user.id
+        })
+        .eq('id', reportId)
+
+      if (error) throw error
+
+      toast.success(`Reporte ${newStatus === 'resolved' ? 'resuelto' : newStatus === 'dismissed' ? 'descartado' : 'marcado como revisado'}`)
+      fetchReports()
+    } catch (error) {
+      console.error('Error updating report:', error)
+      toast.error('Error al actualizar reporte')
+    } finally {
+      setProcessing(null)
     }
+  }
+
+  const filteredReports = reports.filter(report => {
+    if (filters.type !== 'all' && report.reported_entity_type !== filters.type) return false
+    if (filters.status !== 'all' && report.status !== filters.status) return false
+    if (filters.reason !== 'all' && report.reason !== filters.reason) return false
+    return true
+  })
+
+  const pending = filteredReports.filter(r => r.status === 'pending')
+  const reviewed = filteredReports.filter(r => r.status === 'reviewed')
+  const resolved = filteredReports.filter(r => r.status === 'resolved')
+
+  const statusColors: any = {
+    pending: 'bg-yellow-200 text-black border-black',
+    reviewed: 'bg-blue-200 text-black border-black',
+    resolved: 'bg-emerald-500 text-white border-black',
+    dismissed: 'bg-gray-300 text-black border-black'
+  }
+
+  const reasonLabels: any = {
+    inappropriate: 'Inapropiado',
+    spam: 'Spam',
+    incorrect: 'Información incorrecta',
+    other: 'Otro'
+  }
+
+  const handleClearFilters = () => {
+    setFilters({ type: 'all', status: 'all', reason: 'all' })
+  }
+
+  if (loading) {
     return (
-      <Badge className="bg-primary/20 text-black border-2 border-black text-[10px] font-black uppercase tracking-widest">
-        Publicación
-      </Badge>
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      <Breadcrumbs
-        items={[
-          { label: 'Administración', href: '/admin/businesses' },
-          { label: 'Reportes', active: true }
-        ]}
-      />
-      <div className="flex items-end justify-between border-b-4 border-black pb-4">
+    <div className="space-y-12">
+      <header className="space-y-2">
         <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
-          Gestión de <span className="text-primary italic">Reportes</span>
+          Moderación de <span className="text-primary">Reportes</span>
         </h1>
+        <p className="font-bold text-black/60">Gestiona los reportes de contenido inapropiado de la comunidad.</p>
+      </header>
+
+      {/* Stats Strip */}
+      <div className="flex divide-x-4 divide-black border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex-1 p-6 text-center">
+          <p className="text-4xl font-black text-yellow-600">{pending.length}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mt-1">Pendientes</p>
+        </div>
+        <div className="flex-1 p-6 text-center">
+          <p className="text-4xl font-black text-blue-600">{reviewed.length}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mt-1">Revisados</p>
+        </div>
+        <div className="flex-1 p-6 text-center">
+          <p className="text-4xl font-black text-emerald-600">{resolved.length}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mt-1">Resueltos</p>
+        </div>
       </div>
 
-      {pending.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight italic mb-6 flex items-center gap-3">
-            <span className="bg-primary text-white px-3 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-              {pending.length}
-            </span>
-            Reportes Pendientes
-          </h2>
+      {/* Filter Controls */}
+      <section className="flex flex-wrap items-center gap-4 p-6 border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-primary" />
+          <span className="font-black uppercase tracking-widest text-[10px] text-black/40">Filtros:</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="font-black uppercase tracking-widest text-[10px] text-black/60">Tipo:</label>
+          <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>
+            <SelectTrigger className="brutalist-input w-40 h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-2 border-black rounded-none">
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="business">Negocios</SelectItem>
+              <SelectItem value="post">Publicaciones</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="font-black uppercase tracking-widest text-[10px] text-black/60">Estado:</label>
+          <Select value={filters.status} onValueChange={(v) => setFilters({ ...filters, status: v })}>
+            <SelectTrigger className="brutalist-input w-40 h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-2 border-black rounded-none">
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pending">Pendiente</SelectItem>
+              <SelectItem value="reviewed">Revisado</SelectItem>
+              <SelectItem value="resolved">Resuelto</SelectItem>
+              <SelectItem value="dismissed">Descartado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="font-black uppercase tracking-widest text-[10px] text-black/60">Razón:</label>
+          <Select value={filters.reason} onValueChange={(v) => setFilters({ ...filters, reason: v })}>
+            <SelectTrigger className="brutalist-input w-52 h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-2 border-black rounded-none">
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="inappropriate">Inapropiado</SelectItem>
+              <SelectItem value="spam">Spam</SelectItem>
+              <SelectItem value="incorrect">Información incorrecta</SelectItem>
+              <SelectItem value="other">Otro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {(filters.type !== 'all' || filters.status !== 'all' || filters.reason !== 'all') && (
+          <Button
+            onClick={handleClearFilters}
+            variant="outline"
+            size="sm"
+            className="brutalist-button h-10 gap-2"
+          >
+            <X className="h-4 w-4" /> Limpiar Filtros
+          </Button>
+        )}
+
+        <div className="ml-auto text-[10px] font-black uppercase tracking-widest text-black/40">
+          Mostrando {filteredReports.length} de {reports.length} reportes
+        </div>
+      </section>
+
+      {/* Reports List */}
+      <section className="space-y-6">
+        {filteredReports.length === 0 ? (
+          <Card className="border-4 border-black border-dashed bg-white shadow-none py-12 text-center">
+            <p className="font-bold text-black/30 uppercase tracking-widest">No hay reportes que coincidan con los filtros</p>
+          </Card>
+        ) : (
           <div className="grid gap-4">
-            {pending.map((report: any) => (
-              <Card
-                key={report.id}
-                className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white rounded-none hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden group"
-              >
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Flag className="h-5 w-5 text-primary" />
-                        <p className="text-2xl font-heading font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors">
-                          {getEntityName(report)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {getEntityTypeBadge(report.reported_entity_type)}
-                        <Badge className="bg-secondary/20 text-black border-2 border-black text-[10px] font-black uppercase tracking-widest">
-                          {REASON_LABELS[report.reason]}
-                        </Badge>
-                      </div>
-                      <p className="text-xs font-black uppercase tracking-widest text-black/50">
-                        Reportado por <span className="text-black">{(report.reporter as any)?.full_name}</span> el{' '}
-                        {new Date(report.created_at).toLocaleDateString('es-CO', {
-                          day: 'numeric',
-                          month: 'long',
-                        })}
-                      </p>
-                      {report.description && (
-                        <p className="text-sm text-black/70 italic border-l-4 border-black/20 pl-3 mt-2">
-                          "{report.description}"
-                        </p>
+            {filteredReports.map(report => (
+              <Card key={report.id} className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-white">
+                <CardContent className="p-0">
+                  <div className="flex flex-col md:flex-row divide-y-2 md:divide-y-0 md:divide-x-2 divide-black">
+                    {/* Icon */}
+                    <div className="p-4 md:w-16 bg-primary/10 flex items-center justify-center shrink-0">
+                      {report.reported_entity_type === 'business' ? (
+                        <Store className="h-6 w-6 text-black" />
+                      ) : (
+                        <MessageSquare className="h-6 w-6 text-black" />
                       )}
                     </div>
-                    <Link href={`/admin/reports/${report.id}`}>
-                      <Button
-                        size="lg"
-                        className="border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase tracking-widest text-xs h-12 px-6"
-                      >
-                        <Eye className="h-5 w-5 mr-2" /> Revisar
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {reviewed.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight italic mb-6 flex items-center gap-3 text-black/60">
-            Revisados ({reviewed.length})
-          </h2>
-          <div className="grid gap-3">
-            {reviewed.map((report: any) => (
-              <Card
-                key={report.id}
-                className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/50 rounded-none"
-              >
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <p className="text-lg font-heading font-black uppercase italic tracking-tighter">
-                        {getEntityName(report)}
-                      </p>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                        {REASON_LABELS[report.reason]} — {getEntityTypeBadge(report.reported_entity_type)}
-                      </p>
+                    {/* Content */}
+                    <div className="p-4 flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest text-black/40">
+                        <Badge variant="outline" className="text-[10px] rounded-none py-0 px-1 border-black">
+                          {report.reported_entity_type === 'business' ? 'Negocio' : 'Publicación'}
+                        </Badge>
+                        <Badge className={statusColors[report.status]}>
+                          {report.status === 'pending' && <Clock className="h-2.5 w-2.5 mr-0.5" />}
+                          {report.status === 'resolved' && <CheckCircle className="h-2.5 w-2.5 mr-0.5" />}
+                          {report.status === 'dismissed' && <XCircle className="h-2.5 w-2.5 mr-0.5" />}
+                          {report.status.toUpperCase()}
+                        </Badge>
+                        <span>•</span>
+                        <span>{new Date(report.created_at).toLocaleDateString()}</span>
+                      </div>
+
+                      <div>
+                        <p className="font-bold text-sm">
+                          <span className="text-primary">Razón:</span> {reasonLabels[report.reason]}
+                        </p>
+                        {report.description && (
+                          <p className="text-sm text-black/70 mt-1">{report.description}</p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-widest text-black/50">
+                        <span>Reportado por: {report.reporter?.full_name || 'Desconocido'}</span>
+                        {report.reviewed_by && (
+                          <>
+                            <span>•</span>
+                            <span>Revisado por: {report.reviewer?.full_name}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col divide-y-2 divide-black md:w-48">
+                      <Link
+                        href={report.reported_entity_type === 'business'
+                          ? `/admin/businesses/${report.reported_entity_id}`
+                          : `/admin/community/${report.reported_entity_id}`}
+                        className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-accent hover:bg-black/5 transition-colors p-4"
+                      >
+                        <Eye className="h-3 w-3" /> Ver Contenido
+                      </Link>
+
+                      {report.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => updateReportStatus(report.id, 'reviewed')}
+                            disabled={processing === report.id}
+                            className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 transition-colors p-4"
+                          >
+                            {processing === report.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+                            Revisar
+                          </button>
+                          <button
+                            onClick={() => updateReportStatus(report.id, 'resolved')}
+                            disabled={processing === report.id}
+                            className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-50 transition-colors p-4"
+                          >
+                            {processing === report.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3" />}
+                            Resolver
+                          </button>
+                          <button
+                            onClick={() => updateReportStatus(report.id, 'dismissed')}
+                            disabled={processing === report.id}
+                            className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-colors p-4"
+                          >
+                            {processing === report.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
+                            Descartar
+                          </button>
+                        </>
+                      )}
+
+                      {report.status !== 'pending' && (
+                        <button
+                          onClick={() => updateReportStatus(report.id, 'pending')}
+                          disabled={processing === report.id}
+                          className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors p-4"
+                        >
+                          {processing === report.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Clock className="h-3 w-3" />}
+                          Reabrir
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <Badge variant="outline" className="opacity-60">
-                    {STATUS_LABELS[report.status]}
-                  </Badge>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </div>
-      )}
-
-      {resolved.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight italic mb-6 flex items-center gap-3 text-black/40">
-            Resueltos ({resolved.length})
-          </h2>
-          <div className="grid gap-3">
-            {resolved.map((report: any) => (
-              <Card
-                key={report.id}
-                className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/30 rounded-none grayscale"
-              >
-                <CardContent className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="text-lg font-heading font-black uppercase italic tracking-tighter">
-                      {getEntityName(report)}
-                    </p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                      {REASON_LABELS[report.reason]}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="opacity-40">
-                    {STATUS_LABELS[report.status]}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {dismissed.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight italic mb-6 flex items-center gap-3 text-black/40">
-            Descartados ({dismissed.length})
-          </h2>
-          <div className="grid gap-3">
-            {dismissed.map((report: any) => (
-              <Card
-                key={report.id}
-                className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/30 rounded-none grayscale"
-              >
-                <CardContent className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="text-lg font-heading font-black uppercase italic tracking-tighter">
-                      {getEntityName(report)}
-                    </p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                      {REASON_LABELS[report.reason]}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="opacity-40">
-                    {STATUS_LABELS[report.status]}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!reports || reports.length === 0 && (
-        <Card className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-accent/5">
-          <CardContent className="p-12 text-center">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-black/20" />
-            <p className="text-xl font-black uppercase tracking-wide text-black/40">
-              No hay reportes aún
-            </p>
-            <p className="text-sm text-black/30 mt-2">
-              Los reportes de contenido aparecerán aquí
-            </p>
-          </CardContent>
-        </Card>
-      )}
+        )}
+      </section>
     </div>
   )
 }
