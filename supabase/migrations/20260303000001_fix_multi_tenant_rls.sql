@@ -61,3 +61,49 @@ $$;
 
 COMMENT ON FUNCTION is_community_admin_only(UUID) IS
   'Returns true if user is super admin or community admin (excludes moderators)';
+
+-- ============================================================================
+-- COMMUNITY_POSTS: Fix RLS policies to enforce community scoping
+-- ============================================================================
+
+-- Drop old policies that don't check community_id
+DROP POLICY IF EXISTS "community_posts_delete_admin" ON community_posts;
+DROP POLICY IF EXISTS "community_posts_select_admin" ON community_posts;
+DROP POLICY IF EXISTS "community_posts_update_admin" ON community_posts;
+
+-- SELECT: Super admin sees all, staff (admin/moderator) sees their community
+CREATE POLICY "community_posts_select_staff"
+ON community_posts FOR SELECT
+USING (
+  is_super_admin()
+  OR is_community_staff(community_id)
+  OR (status = 'approved' AND auth.uid() IS NOT NULL)  -- Authenticated users see approved
+  OR auth.uid() = author_id  -- Authors see their own
+);
+
+-- UPDATE: Staff can update posts in their community
+CREATE POLICY "community_posts_update_staff"
+ON community_posts FOR UPDATE
+USING (
+  is_super_admin()
+  OR is_community_staff(community_id)
+  OR (auth.uid() = author_id AND status = 'pending')  -- Authors can update pending posts
+);
+
+-- DELETE: Staff can delete in their community, authors can delete own pending
+CREATE POLICY "community_posts_delete_staff"
+ON community_posts FOR DELETE
+USING (
+  is_super_admin()
+  OR is_community_staff(community_id)
+  OR auth.uid() = author_id
+);
+
+COMMENT ON POLICY "community_posts_select_staff" ON community_posts IS
+  'Fixed: Added community_id check. Staff (admin/moderator) can only see posts in their community.';
+
+COMMENT ON POLICY "community_posts_update_staff" ON community_posts IS
+  'Fixed: Added community_id check. Staff can only update posts in their community.';
+
+COMMENT ON POLICY "community_posts_delete_staff" ON community_posts IS
+  'Fixed: Added community_id check. Staff can only delete posts in their community.';
