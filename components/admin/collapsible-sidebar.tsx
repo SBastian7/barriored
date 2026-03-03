@@ -14,7 +14,8 @@ import {
   MessageSquare,
   Flag,
   Briefcase,
-  Activity
+  Activity,
+  FileText
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ const navItems = [
   { href: '/admin/services', label: 'Servicios', icon: Briefcase },
   { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3 },
   { href: '/admin/engagement', label: 'Engagement', icon: Activity },
+  { href: '/admin/logs', label: 'Logs', icon: FileText },
 ]
 
 export function CollapsibleSidebar() {
