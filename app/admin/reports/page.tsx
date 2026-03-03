@@ -49,14 +49,15 @@ export default function AdminReportsPage() {
         return
       }
 
-      const { error } = (await supabase
+      // @ts-expect-error - Supabase type inference issue with content_reports table
+      const { error } = await supabase
         .from('content_reports')
         .update({
           status: newStatus,
           reviewed_at: new Date().toISOString(),
           reviewed_by: user.id
         })
-        .eq('id', reportId)) as any
+        .eq('id', reportId)
 
       if (error) throw error
 
