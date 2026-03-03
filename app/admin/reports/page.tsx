@@ -49,14 +49,14 @@ export default function AdminReportsPage() {
         return
       }
 
-      const { error } = await supabase
+      const { error } = (await supabase
         .from('content_reports')
         .update({
           status: newStatus,
           reviewed_at: new Date().toISOString(),
           reviewed_by: user.id
-        } as any)
-        .eq('id', reportId)
+        })
+        .eq('id', reportId)) as any
 
       if (error) throw error
 
