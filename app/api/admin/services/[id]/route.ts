@@ -52,7 +52,7 @@ export async function PATCH(
 
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('public_services')
       .update({
         community_id,

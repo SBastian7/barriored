@@ -18,7 +18,7 @@ export async function POST(
       .from('community_posts')
       .select('is_pinned')
       .eq('id', id)
-      .single()
+      .single<{ is_pinned: boolean }>()
 
     if (!currentPost) {
       return Response.json(
@@ -28,7 +28,7 @@ export async function POST(
     }
 
     // Toggle is_pinned
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('community_posts')
       .update({ is_pinned: !currentPost.is_pinned })
       .eq('id', id)

@@ -158,7 +158,7 @@ export async function DELETE(
   }
 
   // Soft delete (set is_active = false)
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('communities')
     .update({ is_active: false })
     .eq('id', id)

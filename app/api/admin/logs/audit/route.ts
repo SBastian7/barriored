@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     .from('profiles')
     .select('role, is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single<{ role: string; is_super_admin: boolean }>()
 
   if (!profile || !['admin', 'moderator'].includes(profile.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
   // Use service role client to bypass RLS for INSERT
   const supabaseAdmin = createAdminClient()
 
-  const { error } = await supabaseAdmin.from('audit_logs').insert({
+  const { error } = await (supabaseAdmin as any).from('audit_logs').insert({
     community_id,
     user_id: user.id,
     action,

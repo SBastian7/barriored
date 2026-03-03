@@ -54,7 +54,7 @@ export function CollapsibleSidebar() {
           .from('profiles')
           .select('is_super_admin')
           .eq('id', user.id)
-          .single()
+          .single<{ is_super_admin: boolean }>()
 
         setIsSuperAdmin(profile?.is_super_admin || false)
       }
