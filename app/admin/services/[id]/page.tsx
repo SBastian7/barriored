@@ -61,6 +61,7 @@ export default function AdminServiceDetailPage() {
   }, [params.id])
 
   async function fetchService() {
+    if (!params.id) return
     setLoading(true)
     const { data } = await supabase
       .from('public_services')
