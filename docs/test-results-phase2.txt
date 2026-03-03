@@ -1,0 +1,162 @@
+Phase 2 Testing Results (2026-03-03):
+
+========================================
+MANUAL TESTING CHECKLIST
+========================================
+
+## Test 1: Audit Log Creation - Business Approval
+[ ] Login as admin
+[ ] Navigate to /admin/businesses
+[ ] Approve a pending business
+[ ] Navigate to /admin/logs
+[ ] Verify "approve_business" action appears in audit logs
+[ ] Verify log shows: user, timestamp, entity_type=business, community_id
+
+## Test 2: Audit Log Creation - Business Rejection
+[ ] Login as admin
+[ ] Navigate to /admin/businesses
+[ ] Reject a pending business with reason
+[ ] Navigate to /admin/logs
+[ ] Verify "reject_business" action appears in audit logs
+[ ] Verify rejection_reason is captured in new_data
+
+## Test 3: Audit Log Creation - Business Deletion
+[ ] Login as admin
+[ ] Navigate to /admin/businesses
+[ ] Delete an existing business
+[ ] Navigate to /admin/logs
+[ ] Verify "delete_business" action appears in audit logs
+[ ] Verify old_data contains full business snapshot
+
+## Test 4: Audit Log Creation - Community Post Actions
+[ ] Login as admin or moderator
+[ ] Navigate to /admin/community
+[ ] Approve a pending post
+[ ] Reject a pending post
+[ ] Pin an approved post
+[ ] Delete a post
+[ ] Navigate to /admin/logs
+[ ] Verify all actions logged: approve_post, reject_post, pin_post, delete_post
+
+## Test 5: Audit Log RLS - Community Admin Access
+[ ] Login as community admin (not super admin)
+[ ] Navigate to /admin/logs
+[ ] Verify you ONLY see logs from your own community
+[ ] Verify you cannot see logs from other communities
+
+## Test 6: Audit Log RLS - Moderator Access
+[ ] Login as moderator
+[ ] Navigate to /admin/logs
+[ ] Verify you ONLY see logs for post, alert, and report entities
+[ ] Verify you cannot see logs for business or user actions
+
+## Test 7: Audit Log RLS - Super Admin Access
+[ ] Login as super admin
+[ ] Navigate to /admin/logs
+[ ] Verify you see logs from ALL communities
+[ ] Verify "Error Logs" tab is visible
+
+## Test 8: Error Log POST Endpoint
+[ ] Open browser console on any page
+[ ] Run the following code:
+    fetch('/api/admin/logs/error', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        error_type: 'client_error',
+        error_message: 'Test error from console',
+        stack_trace: new Error().stack,
+        request_url: window.location.href,
+        browser: navigator.userAgent,
+      }),
+    })
+[ ] Login as super admin
+[ ] Navigate to /admin/logs
+[ ] Click "Error Logs" tab
+[ ] Verify test error appears in the list
+
+## Test 9: Error Log Details Expansion
+[ ] On Error Logs tab, click on an error row
+[ ] Verify row expands to show:
+    - Full stack trace in black terminal-style box
+    - Metadata (user agent, device info, etc.)
+[ ] Click row again to collapse
+
+## Test 10: Audit Logs Pagination
+[ ] Navigate to /admin/logs
+[ ] If you have fewer than 50 logs, create more test actions
+[ ] Verify pagination controls appear at bottom
+[ ] Click "Siguiente" button
+[ ] Verify page loads next 50 logs
+[ ] Click "Anterior" button
+[ ] Verify page returns to previous 50 logs
+
+## Test 11: Sidebar Navigation
+[ ] Login as admin
+[ ] Verify "Logs" link appears in admin sidebar
+[ ] Click "Logs" link
+[ ] Verify navigation to /admin/logs works
+[ ] Verify "Logs" link is highlighted when on logs page
+
+## Test 12: Brutalist Design Consistency
+[ ] Review /admin/logs page
+[ ] Verify tabs have 2px black borders
+[ ] Verify table has hard borders and shadows
+[ ] Verify buttons use .brutalist-button class
+[ ] Verify badges are color-coded by action type:
+    - Green for approve actions
+    - Red for reject/delete actions
+    - Blue for create actions
+    - Yellow for update actions
+
+========================================
+TEST RESULTS
+========================================
+
+To be filled in after manual testing:
+
+Test 1: [ PASS / FAIL ] - Notes:
+
+Test 2: [ PASS / FAIL ] - Notes:
+
+Test 3: [ PASS / FAIL ] - Notes:
+
+Test 4: [ PASS / FAIL ] - Notes:
+
+Test 5: [ PASS / FAIL ] - Notes:
+
+Test 6: [ PASS / FAIL ] - Notes:
+
+Test 7: [ PASS / FAIL ] - Notes:
+
+Test 8: [ PASS / FAIL ] - Notes:
+
+Test 9: [ PASS / FAIL ] - Notes:
+
+Test 10: [ PASS / FAIL ] - Notes:
+
+Test 11: [ PASS / FAIL ] - Notes:
+
+Test 12: [ PASS / FAIL ] - Notes:
+
+========================================
+PRODUCTION DEPLOYMENT CHECKLIST
+========================================
+
+[ ] All tests passed
+[ ] No console errors on /admin/logs page
+[ ] Audit logs created for all admin actions
+[ ] RLS policies enforced (tested with different roles)
+[ ] Error logs can be created from client
+[ ] Error logs only visible to super admin
+[ ] Pagination works correctly
+[ ] Migration file ready for production
+[ ] Environment variables set (SUPABASE_SERVICE_ROLE_KEY)
+
+========================================
+KNOWN ISSUES / NOTES
+========================================
+
+(Add any issues discovered during testing)
+
+========================================
