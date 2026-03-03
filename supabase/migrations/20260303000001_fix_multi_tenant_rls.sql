@@ -107,3 +107,54 @@ COMMENT ON POLICY "community_posts_update_staff" ON community_posts IS
 
 COMMENT ON POLICY "community_posts_delete_staff" ON community_posts IS
   'Fixed: Added community_id check. Staff can only delete posts in their community.';
+
+-- ============================================================================
+-- COMMUNITY_ALERTS: Fix RLS policies to enforce community scoping
+-- ============================================================================
+
+-- Drop old broken policies
+DROP POLICY IF EXISTS "community_alerts_delete_admin" ON community_alerts;
+DROP POLICY IF EXISTS "community_alerts_insert_admin" ON community_alerts;
+DROP POLICY IF EXISTS "community_alerts_update_admin" ON community_alerts;
+
+-- SELECT: Everyone sees active alerts, staff sees all in their community
+CREATE POLICY "community_alerts_select"
+ON community_alerts FOR SELECT
+USING (
+  is_active = true  -- Public can see active alerts
+  OR is_super_admin()
+  OR is_community_staff(community_id)
+);
+
+-- INSERT: Staff can create alerts in their community
+CREATE POLICY "community_alerts_insert_staff"
+ON community_alerts FOR INSERT
+WITH CHECK (
+  is_super_admin()
+  OR is_community_staff(community_id)
+);
+
+-- UPDATE: Staff can update alerts in their community
+CREATE POLICY "community_alerts_update_staff"
+ON community_alerts FOR UPDATE
+USING (
+  is_super_admin()
+  OR is_community_staff(community_id)
+);
+
+-- DELETE: Staff can delete alerts in their community
+CREATE POLICY "community_alerts_delete_staff"
+ON community_alerts FOR DELETE
+USING (
+  is_super_admin()
+  OR is_community_staff(community_id)
+);
+
+COMMENT ON POLICY "community_alerts_insert_staff" ON community_alerts IS
+  'Fixed: Added community_id check. Staff can only create alerts in their community.';
+
+COMMENT ON POLICY "community_alerts_update_staff" ON community_alerts IS
+  'Fixed: Added community_id check. Staff can only update alerts in their community.';
+
+COMMENT ON POLICY "community_alerts_delete_staff" ON community_alerts IS
+  'Fixed: Added community_id check. Staff can only delete alerts in their community.';
