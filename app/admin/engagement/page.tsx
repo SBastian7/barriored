@@ -96,7 +96,7 @@ export default function AdminEngagementPage() {
       const approvalRate = total > 0 ? Math.round((approvedCount / total) * 100) : 0
 
       // Posts by type
-      const postsByType = (allPostsData || []).reduce((acc, post) => {
+      const postsByType = (allPostsData || []).reduce((acc, post: any) => {
         const existing = acc.find(item => item.type === post.type)
         if (existing) {
           existing.count++
