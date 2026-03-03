@@ -19,7 +19,7 @@ export default async function AdminLogsPage() {
     .from('profiles')
     .select('role, is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single<{ role: string; is_super_admin: boolean }>()
 
   if (!profile || !['admin', 'moderator'].includes(profile.role)) {
     redirect('/admin')
