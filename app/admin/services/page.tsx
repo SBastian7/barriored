@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { Siren, Plus, Trash2, HeartPulse, Landmark, Bus, Wrench, Edit, Loader2 } from 'lucide-react'
+import { Siren, Plus, Trash2, HeartPulse, Landmark, Bus, Wrench, Edit, Loader2, Eye } from 'lucide-react'
+import Link from 'next/link'
 import type { PublicService, ServiceCategory } from '@/lib/types'
 
 export default function AdminServicesPage() {
@@ -179,6 +180,12 @@ export default function AdminServicesPage() {
                                                         </div>
                                                         <Badge variant="outline" className="text-[9px] rounded-none border-black font-black uppercase">{svc.category}</Badge>
                                                     </div>
+                                                    <Link
+                                                        href={`/admin/services/${svc.id}`}
+                                                        className="p-3 text-accent hover:bg-accent/10 transition-colors flex items-center justify-center"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </Link>
                                                     <button
                                                         onClick={() => deleteService(svc.id)}
                                                         className="p-3 text-primary hover:bg-primary/10 transition-colors"
