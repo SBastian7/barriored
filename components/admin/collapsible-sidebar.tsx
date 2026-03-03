@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   BarChart3,
   Building2,
@@ -15,7 +16,8 @@ import {
   Flag,
   Briefcase,
   Activity,
-  FileText
+  FileText,
+  Globe,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -31,12 +33,41 @@ const navItems = [
   { href: '/admin/services', label: 'Servicios', icon: Briefcase },
   { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3 },
   { href: '/admin/engagement', label: 'Engagement', icon: Activity },
+  { href: '/admin/communities', label: 'Comunidades', icon: Globe, roles: ['super_admin'], divider: true },
   { href: '/admin/logs', label: 'Logs', icon: FileText },
 ]
 
 export function CollapsibleSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const pathname = usePathname()
+
+  useEffect(() => {
+    async function checkSuperAdmin() {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_super_admin')
+          .eq('id', user.id)
+          .single()
+
+        setIsSuperAdmin(profile?.is_super_admin || false)
+      }
+    }
+
+    checkSuperAdmin()
+  }, [])
+
+  // Filter nav items based on role
+  const visibleNavItems = navItems.filter((item) => {
+    if (!item.roles) return true // No role restriction
+    return item.roles.includes('super_admin') && isSuperAdmin
+  })
 
   return (
     <aside
@@ -72,29 +103,34 @@ export function CollapsibleSidebar() {
 
         {/* Navigation items */}
         <nav className="space-y-2">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
 
             return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant={isActive ? 'default' : 'ghost'}
-                  className={cn(
-                    'w-full brutalist-button transition-all duration-200',
-                    isCollapsed ? 'justify-center px-0' : 'justify-start',
-                    isActive && 'bg-primary text-white hover:bg-primary/90'
-                  )}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <Icon className={cn('h-4 w-4', !isCollapsed && 'mr-3')} />
-                  {!isCollapsed && (
-                    <span className="uppercase tracking-widest text-xs font-black">
-                      {item.label}
-                    </span>
-                  )}
-                </Button>
-              </Link>
+              <div key={item.href}>
+                {item.divider && (
+                  <div className="border-t-2 border-black my-2" />
+                )}
+                <Link href={item.href}>
+                  <Button
+                    variant={isActive ? 'default' : 'ghost'}
+                    className={cn(
+                      'w-full brutalist-button transition-all duration-200',
+                      isCollapsed ? 'justify-center px-0' : 'justify-start',
+                      isActive && 'bg-primary text-white hover:bg-primary/90'
+                    )}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    <Icon className={cn('h-4 w-4', !isCollapsed && 'mr-3')} />
+                    {!isCollapsed && (
+                      <span className="uppercase tracking-widest text-xs font-black">
+                        {item.label}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+              </div>
             )
           })}
         </nav>
