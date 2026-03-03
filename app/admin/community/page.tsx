@@ -193,7 +193,7 @@ export default function AdminCommunityPage() {
           {[...approved, ...rejected].slice(0, 5).map(post => {
             const Icon = typeIcons[post.type] || MessageSquare
             return (
-              <div key={post.id} className="flex items-center gap-4 p-4 border-2 border-black/10 bg-white/50">
+              <Link key={post.id} href={`/admin/community/${post.id}`} className="flex items-center gap-4 p-4 border-2 border-black/10 bg-white/50 hover:bg-white hover:opacity-100 transition-all cursor-pointer">
                 <Icon className="h-5 w-5 text-black/30" />
                 <div className="flex-1">
                   <h4 className="font-bold text-sm uppercase tracking-tight">{post.title}</h4>
@@ -204,7 +204,7 @@ export default function AdminCommunityPage() {
                 ) : (
                   <Badge variant="destructive" className="rounded-none border-black border"><XCircle className="h-3 w-3 mr-1" /> Rechazado</Badge>
                 )}
-              </div>
+              </Link>
             )
           })}
         </div>
