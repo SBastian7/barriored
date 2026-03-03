@@ -111,7 +111,7 @@ export default function AdminEngagementPage() {
       for (let i = 29; i >= 0; i--) {
         const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
         const dateStr = date.toISOString().split('T')[0]
-        const count = (allPostsData || []).filter(p => {
+        const count = (allPostsData || []).filter((p: any) => {
           const postDate = new Date(p.created_at).toISOString().split('T')[0]
           return postDate === dateStr
         }).length
@@ -119,7 +119,7 @@ export default function AdminEngagementPage() {
       }
 
       // Top authors
-      const authorCounts = (allPostsData || []).reduce((acc, post) => {
+      const authorCounts = (allPostsData || []).reduce((acc: any, post: any) => {
         const name = post.profiles?.full_name || 'Desconocido'
         acc[name] = (acc[name] || 0) + 1
         return acc
