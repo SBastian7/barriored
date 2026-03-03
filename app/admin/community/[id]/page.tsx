@@ -23,7 +23,12 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
     const [loading, setLoading] = useState(true)
     const [processing, setProcessing] = useState(false)
     const [showEditModal, setShowEditModal] = useState(false)
-    const [editFormData, setEditFormData] = useState({
+    const [editFormData, setEditFormData] = useState<{
+        title: string
+        content: string
+        image_url: string
+        metadata: Record<string, any>
+    }>({
         title: '',
         content: '',
         image_url: '',
