@@ -3,6 +3,8 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Edit, Trash2 } from 'lucide-react'
+import * as Icons from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Category } from '@/lib/types'
 
@@ -31,6 +33,9 @@ export function SortableCategoryItem({
     transition,
   }
 
+  // Get the icon component from lucide-react
+  const IconComponent = (category.icon && (Icons as unknown as Record<string, LucideIcon>)[category.icon]) || Icons.Store
+
   return (
     <div
       ref={setNodeRef}
@@ -52,7 +57,9 @@ export function SortableCategoryItem({
       </button>
 
       {/* Category Icon */}
-      <div className="flex-shrink-0 text-2xl">{category.icon}</div>
+      <div className="flex-shrink-0 p-2 border-2 border-black bg-secondary/20">
+        <IconComponent className="h-6 w-6 text-black" />
+      </div>
 
       {/* Category Info */}
       <div className="flex-1">

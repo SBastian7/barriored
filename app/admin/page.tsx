@@ -63,9 +63,9 @@ export default async function AdminDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="mb-8">
+      <div>
         <h1 className="text-3xl font-black uppercase tracking-tighter italic mb-2">
           Panel de Administración
         </h1>

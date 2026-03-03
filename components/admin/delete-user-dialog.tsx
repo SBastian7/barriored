@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +23,7 @@ interface DeleteUserDialogProps {
   userName: string
   businessCount: number
   postCount: number
+  onSuccess?: () => void
 }
 
 export function DeleteUserDialog({
@@ -31,47 +31,41 @@ export function DeleteUserDialog({
   userName,
   businessCount,
   postCount,
+  onSuccess,
 }: DeleteUserDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleDelete() {
     setLoading(true)
     try {
-      // Delete user's businesses first (cascade)
-      const { error: businessError } = await supabase
-        .from('businesses')
-        .delete()
-        .eq('owner_id', userId)
+      // Call server-side API to delete user properly
+      const response = await fetch(`/api/admin/users/${userId}/delete`, {
+        method: 'DELETE',
+      })
 
-      if (businessError) throw businessError
+      const data = await response.json()
 
-      // Delete user's posts
-      const { error: postsError } = await supabase
-        .from('community_posts')
-        .delete()
-        .eq('author_id', userId)
-
-      if (postsError) throw postsError
-
-      // Delete user profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
-
-      if (profileError) throw profileError
+      if (!response.ok) {
+        throw new Error(data.error || 'Error eliminando usuario')
+      }
 
       toast.success('Usuario eliminado exitosamente')
-      router.push('/admin/users')
+      setOpen(false)
+
+      // Call success callback or navigate
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push('/admin/users')
+        router.refresh()
+      }
     } catch (error) {
       console.error('Error deleting user:', error)
-      toast.error('Error al eliminar usuario')
+      toast.error(error instanceof Error ? error.message : 'Error al eliminar usuario')
     } finally {
       setLoading(false)
-      setOpen(false)
     }
   }
 

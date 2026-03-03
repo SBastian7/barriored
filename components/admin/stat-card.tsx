@@ -6,15 +6,24 @@ interface StatCardProps {
   label: string
   value: number | string
   bg?: string
+  iconColor?: string
+  iconBg?: string
 }
 
-export function StatCard({ icon: Icon, label, value, bg = 'bg-white' }: StatCardProps) {
+export function StatCard({
+  icon: Icon,
+  label,
+  value,
+  bg = 'bg-white',
+  iconColor = 'text-white',
+  iconBg = 'bg-primary'
+}: StatCardProps) {
   return (
     <Card className={`brutalist-card ${bg}`}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 border-2 border-black bg-white">
-            <Icon className="h-5 w-5" />
+          <div className={`p-2 border-2 border-black ${iconBg}`}>
+            <Icon className={`h-5 w-5 ${iconColor}`} />
           </div>
           <div>
             <p className="text-2xl font-black">{value}</p>

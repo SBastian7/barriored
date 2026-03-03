@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -47,11 +47,21 @@ type Post = {
 
 export default function AdminUserDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const router = useRouter()
   const [user, setUser] = useState<UserProfile | null>(null)
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  function handleDeleteSuccess() {
+    // Navigate back to users list
+    router.push('/admin/users')
+    // Force a hard refresh to ensure the list updates
+    setTimeout(() => {
+      router.refresh()
+    }, 100)
+  }
 
   useEffect(() => {
     fetchData()
@@ -210,6 +220,7 @@ export default function AdminUserDetailPage() {
           userName={user.full_name || 'Usuario'}
           businessCount={businesses.length}
           postCount={posts.length}
+          onSuccess={handleDeleteSuccess}
         />
       </div>
 

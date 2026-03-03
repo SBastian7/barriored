@@ -37,7 +37,10 @@ export default function AdminBusinessesPage() {
     setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        setLoading(false)
+        return
+      }
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -45,7 +48,10 @@ export default function AdminBusinessesPage() {
         .eq('id', user.id)
         .single<{ community_id: string | null }>()
 
-      if (!profile?.community_id) return
+      if (!profile?.community_id) {
+        setLoading(false)
+        return
+      }
 
       let query = supabase
         .from('businesses')
@@ -149,11 +155,12 @@ export default function AdminBusinessesPage() {
 
   useEffect(() => {
     fetchCategories()
+    fetchBusinesses()
   }, [])
 
   useEffect(() => {
     fetchBusinesses()
-  }, [statusFilter, categoryFilter])
+  }, [statusFilter, categoryFilter, searchQuery])
 
   const pending = businesses.filter((b) => b.status === 'pending')
   const approved = businesses.filter((b) => b.status === 'approved')
@@ -200,14 +207,26 @@ export default function AdminBusinessesPage() {
               ))}
             </SelectContent>
           </Select>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40" />
-            <Input
-              placeholder="Buscar por nombre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="brutalist-input pl-10"
-            />
+          <div className="relative flex-1 flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+              <Input
+                placeholder="Buscar por nombre..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && fetchBusinesses()}
+                className="brutalist-input pl-10 h-12 font-bold"
+              />
+            </div>
+            {searchQuery && (
+              <Button
+                variant="outline"
+                onClick={() => setSearchQuery('')}
+                className="brutalist-button h-12"
+              >
+                Limpiar
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -315,10 +334,10 @@ export default function AdminBusinessesPage() {
           </h2>
           <div className="grid gap-4">
             {approved.map((biz) => (
-              <Card key={biz.id} className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/50 rounded-none grayscale hover:grayscale-0 transition-all">
+              <Card key={biz.id} className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white/50 rounded-none hover:bg-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all group">
                 <CardContent className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="text-xl font-heading font-black uppercase italic tracking-tighter">
+                  <div className="flex-1">
+                    <p className="text-xl font-heading font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors">
                       {biz.name}
                       {biz.featured_requested && (
                         <Badge className="ml-2 bg-secondary text-black border-2 border-black text-[10px] font-black uppercase tracking-widest">
@@ -328,7 +347,14 @@ export default function AdminBusinessesPage() {
                     </p>
                     <p className="text-[10px] font-black uppercase tracking-widest text-black/40 italic">{biz.categories?.name}</p>
                   </div>
-                  <Badge variant="outline" className="opacity-50">Activo</Badge>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="opacity-50">Activo</Badge>
+                    <Link href={`/admin/businesses/${biz.id}`}>
+                      <Button size="sm" variant="outline" className="brutalist-button">
+                        <Eye className="h-4 w-4 mr-2" /> Ver Detalles
+                      </Button>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             ))}

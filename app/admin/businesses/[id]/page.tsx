@@ -44,30 +44,49 @@ export default function AdminBusinessReviewPage() {
   const router = useRouter()
   const supabase = createClient()
   const [business, setBusiness] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [currentProfile, setCurrentProfile] = useState<any>(null)
 
   useEffect(() => {
-    // Fetch business with featured fields
-    supabase
-      .from('businesses')
-      .select('*, categories(name), profiles(full_name, phone)')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => setBusiness(data))
+    async function fetchData() {
+      try {
+        setLoading(true)
 
-    // Fetch current user profile to determine permissions
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        supabase
-          .from('profiles')
-          .select('role, is_super_admin, community_id')
-          .eq('id', user.id)
+        // Fetch business with featured fields
+        const { data: businessData, error: businessError } = await supabase
+          .from('businesses')
+          .select('*, categories(name), profiles!businesses_owner_id_profiles_fkey(full_name, phone)')
+          .eq('id', id)
           .single()
-          .then(({ data }) => setCurrentProfile(data))
+
+        if (businessError) {
+          console.error('Error fetching business:', businessError)
+          toast.error('Error al cargar el negocio')
+        } else {
+          setBusiness(businessData)
+        }
+
+        // Fetch current user profile to determine permissions
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('role, is_super_admin, community_id')
+            .eq('id', user.id)
+            .single()
+
+          setCurrentProfile(profileData)
+        }
+      } catch (error) {
+        console.error('Error:', error)
+        toast.error('Error al cargar los datos')
+      } finally {
+        setLoading(false)
       }
-    })
+    }
+
+    fetchData()
   }, [id, supabase])
 
   async function handleApprove() {
@@ -101,7 +120,27 @@ export default function AdminBusinessReviewPage() {
     }
   }
 
-  if (!business) return <p>Cargando...</p>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-4"></div>
+          <p className="text-lg font-bold">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!business) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-xl font-bold text-red-600">Negocio no encontrado</p>
+        <Link href="/admin/businesses">
+          <Button className="brutalist-button mt-4">Volver a Negocios</Button>
+        </Link>
+      </div>
+    )
+  }
 
   const location = business.location as any
   const lat = location?.coordinates?.[1]
