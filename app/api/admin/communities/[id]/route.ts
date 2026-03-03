@@ -4,8 +4,9 @@ import { logAuditAction } from '@/lib/utils/audit-logger'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Check authentication
@@ -35,7 +36,7 @@ export async function GET(
   const { data: community, error } = await supabase
     .from('communities')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error) {
@@ -46,12 +47,12 @@ export async function GET(
   const { data: staff } = await supabase
     .from('profiles')
     .select('id, full_name, avatar_url, role, created_at')
-    .eq('community_id', params.id)
+    .eq('community_id', id)
     .in('role', ['admin', 'moderator'])
 
   // Get stats
   const { data: stats } = await supabase.rpc('get_community_stats', {
-    community_uuid: params.id,
+    community_uuid: id,
   })
 
   return NextResponse.json({
@@ -65,8 +66,9 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Check authentication
@@ -98,14 +100,14 @@ export async function PATCH(
   const { data: oldCommunity } = await supabase
     .from('communities')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   // Update community
   const { data: community, error } = await supabase
     .from('communities')
     .update(body)
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 
@@ -117,7 +119,7 @@ export async function PATCH(
   await logAuditAction({
     action: 'update_community',
     entityType: 'community',
-    entityId: params.id,
+    entityId: id,
     oldData: oldCommunity,
     newData: community,
   })
@@ -127,8 +129,9 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Check authentication
@@ -158,7 +161,7 @@ export async function DELETE(
   const { error } = await supabase
     .from('communities')
     .update({ is_active: false })
-    .eq('id', params.id)
+    .eq('id', id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -168,7 +171,7 @@ export async function DELETE(
   await logAuditAction({
     action: 'archive_community',
     entityType: 'community',
-    entityId: params.id,
+    entityId: id,
   })
 
   return NextResponse.json({ success: true })

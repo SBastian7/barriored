@@ -11,8 +11,9 @@ import { Edit, ArrowLeft } from 'lucide-react'
 export default async function CommunityDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const {
@@ -35,7 +36,7 @@ export default async function CommunityDetailPage({
 
   // Fetch community details
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/admin/communities/${params.id}`,
+    `${process.env.NEXT_PUBLIC_URL}/api/admin/communities/${id}`,
     {
       headers: {
         Cookie: `${(await supabase.auth.getSession()).data.session?.access_token}`,
@@ -69,7 +70,7 @@ export default async function CommunityDetailPage({
           </p>
         </div>
 
-        <Link href={`/admin/communities/${params.id}/edit`}>
+        <Link href={`/admin/communities/${id}/edit`}>
           <Button className="brutalist-button">
             <Edit className="h-4 w-4 mr-2" />
             Editar
@@ -99,7 +100,7 @@ export default async function CommunityDetailPage({
 
         <TabsContent value="staff">
           <CommunityStaffPanel
-            communityId={params.id}
+            communityId={id}
             staff={community.staff || []}
           />
         </TabsContent>

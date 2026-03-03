@@ -4,8 +4,9 @@ import { logAuditAction } from '@/lib/utils/audit-logger'
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Check authentication
@@ -43,7 +44,7 @@ export async function POST(
   const { error } = await supabase
     .from('profiles')
     .update({
-      community_id: params.id,
+      community_id: id,
       role,
     })
     .eq('id', user_id)
@@ -57,8 +58,8 @@ export async function POST(
     action: 'assign_role',
     entityType: 'user',
     entityId: user_id,
-    newData: { role, community_id: params.id },
-    communityId: params.id,
+    newData: { role, community_id: id },
+    communityId: id,
   })
 
   return NextResponse.json({ success: true })
@@ -66,8 +67,9 @@ export async function POST(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Check authentication
