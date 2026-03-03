@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Link from 'next/link'
-import { CheckCircle, XCircle, Clock, Eye, MessageSquare, Calendar, Briefcase, Filter, X } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Eye, MessageSquare, Calendar, Briefcase, Filter, X, Pin } from 'lucide-react'
 
 export default function AdminCommunityPage() {
   const supabase = createClient()
@@ -27,6 +27,7 @@ export default function AdminCommunityPage() {
     const { data } = await supabase
       .from('community_posts')
       .select('*, profiles(full_name), communities(name)')
+      .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false })
 
     setPosts(data || [])
@@ -152,6 +153,11 @@ export default function AdminCommunityPage() {
                       <div className="p-4 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest text-black/40 mb-1">
                           <Badge variant="outline" className="text-[10px] rounded-none py-0 px-1 border-black">{post.communities?.name}</Badge>
+                          {post.is_pinned && (
+                            <Badge className="text-[10px] rounded-none py-0 px-1 border-black bg-yellow-200 text-black">
+                              <Pin className="h-2.5 w-2.5 mr-0.5" /> Fijado
+                            </Badge>
+                          )}
                           <span>•</span>
                           <span>{post.profiles?.full_name}</span>
                           <span>•</span>
