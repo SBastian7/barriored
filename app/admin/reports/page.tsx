@@ -49,7 +49,7 @@ export default function AdminReportsPage() {
         return
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('content_reports')
         .update({
           status: newStatus,
