@@ -117,3 +117,16 @@ COMMENT ON COLUMN error_logs.error_type IS
 
 COMMENT ON COLUMN error_logs.metadata IS
   'Browser info, device type, viewport size, etc.';
+
+-- Enable RLS on error_logs
+ALTER TABLE error_logs ENABLE ROW LEVEL SECURITY;
+
+-- Only super admin can view error logs (contains sensitive data)
+CREATE POLICY "error_logs_select_super_admin"
+ON error_logs FOR SELECT
+USING (is_super_admin());
+
+-- Public can insert (for client-side error reporting)
+CREATE POLICY "error_logs_insert_public"
+ON error_logs FOR INSERT
+WITH CHECK (true);
