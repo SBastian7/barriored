@@ -85,12 +85,13 @@ export default function AdminStatisticsPage() {
       const date7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
       const date30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-      // Build base query
-      let businessQuery = supabase.from('businesses').select('*', { count: 'exact' })
-
-      // Filter by community for non-super-admins
-      if (!profile?.is_super_admin && profile?.community_id) {
-        businessQuery = businessQuery.eq('community_id', profile.community_id)
+      // Helper to build fresh business query
+      const buildBusinessQuery = () => {
+        let query = supabase.from('businesses').select('*', { count: 'exact' })
+        if (!profile?.is_super_admin && profile?.community_id) {
+          query = query.eq('community_id', profile.community_id)
+        }
+        return query
       }
 
       // Fetch business stats
@@ -104,14 +105,14 @@ export default function AdminStatisticsPage() {
         recent7d,
         recent30d,
       ] = await Promise.all([
-        businessQuery,
-        businessQuery.eq('status', 'pending'),
-        businessQuery.eq('status', 'approved'),
-        businessQuery.eq('status', 'rejected'),
-        businessQuery.eq('is_featured', true),
-        businessQuery.eq('deletion_requested', true),
-        businessQuery.gte('created_at', date7d.toISOString()),
-        businessQuery.gte('created_at', date30d.toISOString()),
+        buildBusinessQuery(),
+        buildBusinessQuery().eq('status', 'pending'),
+        buildBusinessQuery().eq('status', 'approved'),
+        buildBusinessQuery().eq('status', 'rejected'),
+        buildBusinessQuery().eq('is_featured', true),
+        buildBusinessQuery().eq('deletion_requested', true),
+        buildBusinessQuery().gte('created_at', date7d.toISOString()),
+        buildBusinessQuery().gte('created_at', date30d.toISOString()),
       ])
 
       // Fetch category breakdown
@@ -136,18 +137,20 @@ export default function AdminStatisticsPage() {
         return acc
       }, [] as { category: string; count: number }[]) || []
 
-      // Fetch user stats
-      let userQuery = supabase.from('profiles').select('*', { count: 'exact' })
-
-      if (!profile?.is_super_admin && profile?.community_id) {
-        userQuery = userQuery.eq('community_id', profile.community_id)
+      // Helper to build fresh user query
+      const buildUserQuery = () => {
+        let query = supabase.from('profiles').select('*', { count: 'exact' })
+        if (!profile?.is_super_admin && profile?.community_id) {
+          query = query.eq('community_id', profile.community_id)
+        }
+        return query
       }
 
       const [allUsers, newUsers7d, newUsers30d, suspended] = await Promise.all([
-        userQuery,
-        userQuery.gte('created_at', date7d.toISOString()),
-        userQuery.gte('created_at', date30d.toISOString()),
-        userQuery.eq('is_suspended', true),
+        buildUserQuery(),
+        buildUserQuery().gte('created_at', date7d.toISOString()),
+        buildUserQuery().gte('created_at', date30d.toISOString()),
+        buildUserQuery().eq('is_suspended', true),
       ])
 
       // Role distribution
@@ -170,19 +173,21 @@ export default function AdminStatisticsPage() {
         return acc
       }, [] as { role: string; count: number }[]) || []
 
-      // Fetch community stats
-      let postsQuery = supabase.from('community_posts').select('*', { count: 'exact' })
-
-      if (!profile?.is_super_admin && profile?.community_id) {
-        postsQuery = postsQuery.eq('community_id', profile.community_id)
+      // Helper to build fresh posts query
+      const buildPostsQuery = () => {
+        let query = supabase.from('community_posts').select('*', { count: 'exact' })
+        if (!profile?.is_super_admin && profile?.community_id) {
+          query = query.eq('community_id', profile.community_id)
+        }
+        return query
       }
 
       const [allPosts, announcements, events, jobs, recentPosts] = await Promise.all([
-        postsQuery,
-        postsQuery.eq('type', 'announcement'),
-        postsQuery.eq('type', 'event'),
-        postsQuery.eq('type', 'job'),
-        postsQuery.gte('created_at', date7d.toISOString()),
+        buildPostsQuery(),
+        buildPostsQuery().eq('type', 'announcement'),
+        buildPostsQuery().eq('type', 'event'),
+        buildPostsQuery().eq('type', 'job'),
+        buildPostsQuery().gte('created_at', date7d.toISOString()),
       ])
 
       // Fetch moderation stats
@@ -279,24 +284,32 @@ export default function AdminStatisticsPage() {
             label="Total Negocios"
             value={stats.businesses.total}
             bg="bg-white"
+            iconBg="bg-primary"
+            iconColor="text-white"
           />
           <StatCard
             icon={Clock}
             label="Pendientes"
             value={stats.businesses.pending}
             bg="bg-secondary/20"
+            iconBg="bg-secondary"
+            iconColor="text-black"
           />
           <StatCard
             icon={CheckCircle}
             label="Aprobados"
             value={stats.businesses.approved}
             bg="bg-green-50"
+            iconBg="bg-green-600"
+            iconColor="text-white"
           />
           <StatCard
             icon={XCircle}
             label="Rechazados"
             value={stats.businesses.rejected}
             bg="bg-red-50"
+            iconBg="bg-red-600"
+            iconColor="text-white"
           />
         </div>
 
@@ -310,18 +323,24 @@ export default function AdminStatisticsPage() {
                 : stats.businesses.recentRegistrations30d
             }
             bg="bg-accent/10"
+            iconBg="bg-accent"
+            iconColor="text-white"
           />
           <StatCard
             icon={Star}
             label="Destacados"
             value={stats.businesses.featured}
             bg="bg-yellow-50"
+            iconBg="bg-secondary"
+            iconColor="text-black"
           />
           <StatCard
             icon={AlertTriangle}
             label="Solicitudes Eliminación"
             value={stats.businesses.deletionRequests}
             bg="bg-red-100"
+            iconBg="bg-red-600"
+            iconColor="text-white"
           />
         </div>
 
@@ -358,24 +377,37 @@ export default function AdminStatisticsPage() {
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard icon={Users} label="Total Usuarios" value={stats.users.total} bg="bg-white" />
+          <StatCard
+            icon={Users}
+            label="Total Usuarios"
+            value={stats.users.total}
+            bg="bg-white"
+            iconBg="bg-primary"
+            iconColor="text-white"
+          />
           <StatCard
             icon={TrendingUp}
             label={`Nuevos (${period})`}
             value={period === '7d' ? stats.users.newUsers7d : stats.users.newUsers30d}
             bg="bg-accent/10"
+            iconBg="bg-accent"
+            iconColor="text-white"
           />
           <StatCard
             icon={Shield}
             label="Moderadores/Admins"
             value={stats.users.byRole.filter(r => r.role !== 'user').reduce((sum, r) => sum + r.count, 0)}
             bg="bg-secondary/20"
+            iconBg="bg-secondary"
+            iconColor="text-black"
           />
           <StatCard
             icon={AlertTriangle}
             label="Suspendidos"
             value={stats.users.suspended}
             bg="bg-red-50"
+            iconBg="bg-red-600"
+            iconColor="text-white"
           />
         </div>
 
@@ -411,20 +443,33 @@ export default function AdminStatisticsPage() {
             label="Total Publicaciones"
             value={stats.community.totalPosts}
             bg="bg-white"
+            iconBg="bg-primary"
+            iconColor="text-white"
           />
           <StatCard
             icon={Megaphone}
             label="Anuncios"
             value={stats.community.announcements}
             bg="bg-accent/10"
+            iconBg="bg-accent"
+            iconColor="text-white"
           />
           <StatCard
             icon={Calendar}
             label="Eventos"
             value={stats.community.events}
             bg="bg-secondary/20"
+            iconBg="bg-secondary"
+            iconColor="text-black"
           />
-          <StatCard icon={Briefcase} label="Empleos" value={stats.community.jobs} bg="bg-green-50" />
+          <StatCard
+            icon={Briefcase}
+            label="Empleos"
+            value={stats.community.jobs}
+            bg="bg-green-50"
+            iconBg="bg-green-600"
+            iconColor="text-white"
+          />
         </div>
 
         <div className="mt-4">
@@ -433,6 +478,8 @@ export default function AdminStatisticsPage() {
             label="Publicaciones (últimos 7 días)"
             value={stats.community.recentPosts7d}
             bg="bg-primary/10"
+            iconBg="bg-primary"
+            iconColor="text-white"
           />
         </div>
       </div>
@@ -449,18 +496,24 @@ export default function AdminStatisticsPage() {
             label="Total Reportes"
             value={stats.moderation.totalReports}
             bg="bg-white"
+            iconBg="bg-primary"
+            iconColor="text-white"
           />
           <StatCard
             icon={Clock}
             label="Pendientes"
             value={stats.moderation.pendingReports}
             bg="bg-yellow-50"
+            iconBg="bg-secondary"
+            iconColor="text-black"
           />
           <StatCard
             icon={CheckCircle}
             label="Resueltos"
             value={stats.moderation.resolvedReports}
             bg="bg-green-50"
+            iconBg="bg-green-600"
+            iconColor="text-white"
           />
         </div>
       </div>
