@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requirePermission } from '@/lib/auth/api-protection'
+import { logAuditAction } from '@/lib/utils/audit-logger'
 
 export async function POST(
   request: Request,
@@ -45,6 +46,16 @@ export async function POST(
     console.error('Error rejecting business:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Log audit action
+  await logAuditAction({
+    action: 'reject_business',
+    entityType: 'business',
+    entityId: id,
+    oldData: { status: 'pending' },
+    newData: { status: 'rejected', reason: rejection_reason },
+    communityId: data.community_id,
+  })
 
   // TODO: Send notification to business owner about rejection
 
