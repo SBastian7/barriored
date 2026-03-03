@@ -18,7 +18,7 @@ export async function DELETE(
       .from('community_posts')
       .select('*')
       .eq('id', id)
-      .single()
+      .single<{ community_id: string }>()
 
     const { error } = await supabase
       .from('community_posts')

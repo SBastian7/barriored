@@ -41,7 +41,7 @@ export async function POST(
   }
 
   // Update user's profile
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('profiles')
     .update({
       community_id: id,
@@ -110,7 +110,7 @@ export async function DELETE(
     .single()
 
   // Reset to regular user
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('profiles')
     .update({
       community_id: null,

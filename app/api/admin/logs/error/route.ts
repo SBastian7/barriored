@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     .from('profiles')
     .select('is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single<{ is_super_admin: boolean }>()
 
   if (!profile?.is_super_admin) {
     return NextResponse.json({ error: 'Forbidden - Super admin only' }, { status: 403 })
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       .from('profiles')
       .select('community_id')
       .eq('id', user.id)
-      .single()
+      .single<{ community_id: string | null }>()
 
     communityId = profile?.community_id || null
   }
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
   // TODO: Implement rate limiting (Redis or similar)
   // For now, just log it
 
-  const { error } = await supabase.from('error_logs').insert({
+  const { error } = await (supabase as any).from('error_logs').insert({
     community_id: communityId,
     user_id: user?.id || null,
     error_type,

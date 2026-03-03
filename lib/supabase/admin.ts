@@ -39,7 +39,7 @@ export async function checkModeratorAccess() {
     .from('profiles')
     .select('role, id, full_name')
     .eq('id', user.id)
-    .single()
+    .single<{ role: string; id: string; full_name: string }>()
 
   if (profileError || !profile) {
     throw new Error('Profile not found')

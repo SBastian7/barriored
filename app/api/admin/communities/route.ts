@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     .from('profiles')
     .select('is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single<{ is_super_admin: boolean }>()
 
   if (!profile?.is_super_admin) {
     return NextResponse.json(
@@ -45,8 +45,8 @@ export async function GET(request: Request) {
 
     // Get stats for each community manually
     const withStats = await Promise.all(
-      data.map(async (community) => {
-        const { data: stats } = await supabase.rpc(
+      data.map(async (community: any) => {
+        const { data: stats } = await (supabase as any).rpc(
           'get_community_stats',
           { community_uuid: community.id }
         )
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     .from('profiles')
     .select('is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single<{ is_super_admin: boolean }>()
 
   if (!profile?.is_super_admin) {
     return NextResponse.json(
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
   }
 
   // Create community
-  const { data: community, error } = await supabase
+  const { data: community, error } = await (supabase as any)
     .from('communities')
     .insert({
       name,
