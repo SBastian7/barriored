@@ -51,7 +51,7 @@ export async function GET(
     .in('role', ['admin', 'moderator'])
 
   // Get stats
-  const { data: stats } = await supabase.rpc('get_community_stats', {
+  const { data: stats } = await (supabase as any).rpc('get_community_stats', {
     community_uuid: id,
   })
 
