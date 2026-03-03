@@ -140,8 +140,8 @@ export default function AdminEngagementPage() {
       // Average response time (for approved posts)
       const approvedPosts = (allPostsData || []).filter((p: any) => p.status === 'approved')
       const responseTimes = approvedPosts
-        .filter(p => p.updated_at && p.created_at)
-        .map(p => {
+        .filter((p: any) => p.updated_at && p.created_at)
+        .map((p: any) => {
           const created = new Date(p.created_at).getTime()
           const updated = new Date(p.updated_at).getTime()
           return Math.abs(updated - created) / (1000 * 60 * 60) // hours
