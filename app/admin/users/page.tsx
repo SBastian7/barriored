@@ -35,6 +35,18 @@ export default function AdminUsersPage() {
     fetchUsers()
   }, [roleFilter])
 
+  // Re-fetch users when page becomes visible (after navigation back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUsers()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
   async function fetchUsers() {
     setLoading(true)
     try {

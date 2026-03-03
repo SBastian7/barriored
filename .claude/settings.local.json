@@ -21,7 +21,14 @@
       "Bash(gh pr review:*)",
       "Bash(gh pr merge:*)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(test:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git branch:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "mcp__supabase__list_tables",
+      "Bash(supabase migration:*)"
     ]
   }
 }

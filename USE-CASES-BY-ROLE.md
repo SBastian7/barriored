@@ -217,14 +217,7 @@
 - [ ] Add emergency contact
 - [ ] Edit emergency contact
 - [ ] Delete emergency contact
-- [ ] Add transport info
-- [ ] Edit transport info
-- [ ] Delete transport info
-- [ ] Add government procedure info
-- [ ] Edit government procedure info
-- [ ] Delete government procedure info
 - [ ] View community engagement metrics
-- [ ] Export community posts data
 
 ### Phase 4: Marketplace (Clasificados)
 - [ ] Access classifieds moderation panel
