@@ -104,7 +104,7 @@ export async function PATCH(
     .single()
 
   // Update community
-  const { data: community, error } = await supabase
+  const { data: community, error } = await (supabase as any)
     .from('communities')
     .update(body)
     .eq('id', id)
