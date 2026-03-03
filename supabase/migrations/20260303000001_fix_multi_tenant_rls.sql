@@ -293,3 +293,17 @@ COMMENT ON POLICY "content_reports_update_staff" ON content_reports IS
 
 -- COMMUNITIES: Will be secured in Phase 3 (super admin only)
 -- Defer to Phase 3 migration
+
+-- ============================================================================
+-- PROFILES: Update role constraint to ensure 'moderator' is valid
+-- ============================================================================
+
+-- Drop old constraint (only has 'user', 'moderator', 'admin')
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+
+-- Add new constraint with moderator included
+ALTER TABLE profiles ADD CONSTRAINT profiles_role_check
+  CHECK (role IN ('user', 'moderator', 'admin'));
+
+COMMENT ON COLUMN profiles.role IS
+  'User role: user (neighbor), moderator (content moderation only), admin (full community access)';
