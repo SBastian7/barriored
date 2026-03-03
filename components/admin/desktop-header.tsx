@@ -1,9 +1,37 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, LayoutDashboard } from 'lucide-react'
+import { ArrowLeft, LayoutDashboard, Shield } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { UserMenu } from '@/components/layout/user-menu'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 export function DesktopHeader() {
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+
+  useEffect(() => {
+    async function checkSuperAdmin() {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_super_admin')
+          .eq('id', user.id)
+          .single()
+
+        setIsSuperAdmin(profile?.is_super_admin || false)
+      }
+    }
+
+    checkSuperAdmin()
+  }, [])
+
   return (
     <header className="hidden lg:block sticky top-0 z-50 bg-background border-b-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between gap-4">
@@ -28,8 +56,14 @@ export function DesktopHeader() {
           </div>
         </div>
 
-        {/* Right: User menu */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right: Super admin badge + User menu */}
+        <div className="flex items-center gap-4 shrink-0">
+          {isSuperAdmin && (
+            <Badge className="bg-secondary text-foreground font-black uppercase tracking-widest rotate-[-2deg]">
+              <Shield className="h-3 w-3 mr-1" />
+              Super Admin
+            </Badge>
+          )}
           <UserMenu />
         </div>
       </div>
