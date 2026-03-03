@@ -133,12 +133,12 @@ export default function AdminEngagementPage() {
       // Active authors (unique authors in last 30 days)
       const recentAuthors = new Set(
         (allPostsData || [])
-          .filter(p => new Date(p.created_at) >= date30d)
-          .map(p => p.author_id)
+          .filter((p: any) => new Date(p.created_at) >= date30d)
+          .map((p: any) => p.author_id)
       )
 
       // Average response time (for approved posts)
-      const approvedPosts = (allPostsData || []).filter(p => p.status === 'approved')
+      const approvedPosts = (allPostsData || []).filter((p: any) => p.status === 'approved')
       const responseTimes = approvedPosts
         .filter(p => p.updated_at && p.created_at)
         .map(p => {
