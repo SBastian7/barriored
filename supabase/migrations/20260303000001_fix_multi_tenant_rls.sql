@@ -209,3 +209,64 @@ COMMENT ON POLICY "public_services_update_admin" ON public_services IS
 
 COMMENT ON POLICY "public_services_delete_admin" ON public_services IS
   'Fixed: Added community_id check. Only admins (not moderators) can delete services in their community.';
+
+-- ============================================================================
+-- CONTENT_REPORTS: Fix RLS policies (complex - needs JOIN to get community_id)
+-- ============================================================================
+
+-- Drop old broken policies
+DROP POLICY IF EXISTS "Admins can view all reports" ON content_reports;
+DROP POLICY IF EXISTS "Admins can update reports" ON content_reports;
+
+-- SELECT: Staff can see reports for entities in their community
+CREATE POLICY "content_reports_select_staff"
+ON content_reports FOR SELECT
+USING (
+  auth.uid() = reporter_id  -- Users see their own reports
+  OR is_super_admin()
+  OR (
+    reported_entity_type = 'business'
+    AND EXISTS (
+      SELECT 1 FROM businesses
+      WHERE id = reported_entity_id
+        AND is_community_staff(community_id)
+    )
+  )
+  OR (
+    reported_entity_type = 'post'
+    AND EXISTS (
+      SELECT 1 FROM community_posts
+      WHERE id = reported_entity_id
+        AND is_community_staff(community_id)
+    )
+  )
+);
+
+-- UPDATE: Staff can update reports for entities in their community
+CREATE POLICY "content_reports_update_staff"
+ON content_reports FOR UPDATE
+USING (
+  is_super_admin()
+  OR (
+    reported_entity_type = 'business'
+    AND EXISTS (
+      SELECT 1 FROM businesses
+      WHERE id = reported_entity_id
+        AND is_community_staff(community_id)
+    )
+  )
+  OR (
+    reported_entity_type = 'post'
+    AND EXISTS (
+      SELECT 1 FROM community_posts
+      WHERE id = reported_entity_id
+        AND is_community_staff(community_id)
+    )
+  )
+);
+
+COMMENT ON POLICY "content_reports_select_staff" ON content_reports IS
+  'Fixed: Added community check via JOIN. Staff can only see reports for entities in their community.';
+
+COMMENT ON POLICY "content_reports_update_staff" ON content_reports IS
+  'Fixed: Added community check via JOIN. Staff can only update reports for entities in their community.';
