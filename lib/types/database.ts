@@ -65,3 +65,31 @@ export type Database = {
     }
   }
 }
+
+export interface AuditLog {
+  id: string
+  community_id: string | null
+  user_id: string
+  action: string
+  entity_type: string
+  entity_id: string
+  old_data: any
+  new_data: any
+  metadata: any
+  created_at: string
+}
+
+export interface ErrorLog {
+  id: string
+  community_id: string | null
+  user_id: string | null
+  error_type: string
+  error_message: string | null
+  stack_trace: string | null
+  request_url: string | null
+  request_method: string | null
+  request_body: any
+  status_code: number | null
+  metadata: any
+  created_at: string
+}
