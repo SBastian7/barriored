@@ -28,7 +28,7 @@ export default async function CommunityDetailPage({
     .from('profiles')
     .select('is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single<{ is_super_admin: boolean }>()
 
   if (!profile?.is_super_admin) {
     redirect('/admin')
