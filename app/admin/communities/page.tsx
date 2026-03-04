@@ -26,16 +26,32 @@ export default async function CommunitiesPage() {
     redirect('/admin')
   }
 
-  // Fetch communities (server-side)
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/admin/communities`,
-    {
-      headers: {
-        Cookie: `${(await supabase.auth.getSession()).data.session?.access_token}`,
-      },
-    }
+  // Fetch communities with stats (server-side via Supabase)
+  const { data: communitiesData } = await supabase
+    .from('communities')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  // Get stats for each community
+  const communities = await Promise.all(
+    (communitiesData || []).map(async (community: any) => {
+      const { data: stats } = await (supabase as any).rpc(
+        'get_community_stats',
+        { community_uuid: community.id }
+      )
+
+      return {
+        ...community,
+        stats: stats?.[0] || {
+          businesses_count: 0,
+          users_count: 0,
+          admins_count: 0,
+          posts_count: 0,
+          alerts_count: 0,
+        },
+      }
+    })
   )
-  const { communities } = await response.json()
 
   return (
     <div className="space-y-8">
