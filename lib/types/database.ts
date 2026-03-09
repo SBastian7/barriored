@@ -23,6 +23,33 @@ export type Database = {
           is_active: boolean | null
           created_at: string | null
         }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          municipality: string
+          department: string
+          description?: string | null
+          logo_url?: string | null
+          primary_color?: string | null
+          cover_image_url?: string | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          municipality?: string
+          department?: string
+          description?: string | null
+          logo_url?: string | null
+          primary_color?: string | null
+          cover_image_url?: string | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: []
       }
       businesses: {
         Row: {

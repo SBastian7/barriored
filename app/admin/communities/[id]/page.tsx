@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CommunityStatsPanel } from '@/components/admin/community-stats-panel'
 import { CommunityStaffPanel } from '@/components/admin/community-staff-panel'
 import { Edit, ArrowLeft } from 'lucide-react'
+import type { Database } from '@/lib/types/database'
+
+type CommunityRow = Database['public']['Tables']['communities']['Row']
 
 export default async function CommunityDetailPage({
   params,
@@ -35,17 +38,18 @@ export default async function CommunityDetailPage({
   }
 
   // Fetch community details (server-side via Supabase)
-  const communityResult = await supabase
+  // TypeScript workaround: explicit cast to handle Supabase type inference issue
+  const { data: rawData, error } = await (supabase
     .from('communities')
     .select('*')
     .eq('id', id)
-    .single()
+    .single() as any)
 
-  if (!communityResult.data) {
+  if (error || !rawData) {
     redirect('/admin/communities')
   }
 
-  const communityData = communityResult.data
+  const communityData = rawData as CommunityRow
 
   // Get staff members
   const { data: staff } = await supabase
