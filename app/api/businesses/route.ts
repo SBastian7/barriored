@@ -20,6 +20,43 @@ export async function POST(request: Request) {
   const { latitude, longitude, ...rest } = parsed.data
   const slug = slugify(rest.name)
 
+  // Check if community has boundary and validate location
+  const { data: community } = await supabase
+    .from('communities')
+    .select('boundary')
+    .eq('id', rest.community_id)
+    .single()
+
+  if (community?.boundary) {
+    // Call PostGIS function to validate
+    const { data: isInside, error: validationError } = await supabase.rpc(
+      'is_location_in_community_boundary',
+      {
+        community_uuid: rest.community_id,
+        lat: latitude,
+        lng: longitude,
+      }
+    )
+
+    if (validationError) {
+      console.error('Boundary validation error:', validationError)
+      return NextResponse.json(
+        { error: 'Error al validar ubicación' },
+        { status: 500 }
+      )
+    }
+
+    if (!isInside) {
+      return NextResponse.json(
+        {
+          error: 'La ubicación está fuera de los límites de la comunidad',
+          code: 'LOCATION_OUTSIDE_BOUNDARY',
+        },
+        { status: 400 }
+      )
+    }
+  }
+
   const { data, error } = await (supabase as any)
     .from('businesses')
     .insert({

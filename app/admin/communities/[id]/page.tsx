@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CommunityStatsPanel } from '@/components/admin/community-stats-panel'
 import { CommunityStaffPanel } from '@/components/admin/community-staff-panel'
 import { Edit, ArrowLeft } from 'lucide-react'
+import type { Database } from '@/lib/types/database'
+
+type CommunityRow = Database['public']['Tables']['communities']['Row']
 
 export default async function CommunityDetailPage({
   params,
@@ -35,15 +38,18 @@ export default async function CommunityDetailPage({
   }
 
   // Fetch community details (server-side via Supabase)
-  const { data: communityData } = await supabase
+  // TypeScript workaround: explicit cast to handle Supabase type inference issue
+  const { data: rawData, error } = await (supabase
     .from('communities')
     .select('*')
     .eq('id', id)
-    .single()
+    .single() as any)
 
-  if (!communityData) {
+  if (error || !rawData) {
     redirect('/admin/communities')
   }
+
+  const communityData = rawData as CommunityRow
 
   // Get staff members
   const { data: staff } = await supabase
@@ -60,7 +66,17 @@ export default async function CommunityDetailPage({
   )
 
   const community = {
-    ...communityData,
+    id: communityData.id,
+    name: communityData.name,
+    slug: communityData.slug,
+    municipality: communityData.municipality,
+    department: communityData.department,
+    description: communityData.description,
+    logo_url: communityData.logo_url,
+    primary_color: communityData.primary_color,
+    cover_image_url: communityData.cover_image_url,
+    is_active: communityData.is_active,
+    created_at: communityData.created_at,
     staff: staff || [],
     stats: stats?.[0] || {
       businesses_count: 0,

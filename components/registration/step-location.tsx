@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { MapPin, LocateFixed, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
+import { booleanPointInPolygon, point, polygon } from '@turf/turf'
+import { useCommunity } from '@/components/community/community-provider'
+import { createClient } from '@/lib/supabase/client'
 
 const LocationPicker = dynamic(() => import('./location-picker'), { ssr: false })
 
@@ -31,8 +34,44 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
 }
 
 export function StepLocation({ form, update, errors }: Props) {
+  const community = useCommunity()
   const [geocoding, setGeocoding] = useState(false)
   const [requestedGeo, setRequestedGeo] = useState(false)
+  const [locationValid, setLocationValid] = useState<boolean | null>(null)
+  const [communityBoundary, setCommunityBoundary] = useState<any | null>(null)
+
+  // Fetch community boundary on mount
+  useEffect(() => {
+    async function fetchBoundary() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('communities')
+        .select('boundary')
+        .eq('slug', community.slug)
+        .single()
+
+      if (data?.boundary) {
+        setCommunityBoundary(data.boundary)
+      }
+    }
+    fetchBoundary()
+  }, [community.slug])
+
+  // Validate location when coordinates change
+  useEffect(() => {
+    if (!form.latitude || !form.longitude || !communityBoundary) {
+      setLocationValid(null)
+      return
+    }
+
+    const isInside = booleanPointInPolygon(
+      point([form.longitude, form.latitude]),
+      polygon(communityBoundary.coordinates)
+    )
+
+    setLocationValid(isInside)
+    update({ locationValid: isInside })
+  }, [form.latitude, form.longitude, communityBoundary, update])
 
   const handleMapChange = useCallback(async (lat: number, lng: number) => {
     update({ latitude: lat, longitude: lng })
@@ -105,6 +144,23 @@ export function StepLocation({ form, update, errors }: Props) {
           <span>Lat: {form.latitude.toFixed(5)}</span>
           <span>Lng: {form.longitude.toFixed(5)}</span>
         </div>
+
+        {/* Location validation feedback */}
+        {locationValid === false && communityBoundary && (
+          <div className="brutalist-card p-4 bg-red-50 border-red-500 mt-4">
+            <p className="text-sm text-red-700 font-bold">
+              ⚠️ Esta ubicación está fuera de los límites de {community.name}
+            </p>
+          </div>
+        )}
+
+        {locationValid === true && (
+          <div className="brutalist-card p-4 bg-green-50 border-green-500 mt-4">
+            <p className="text-sm text-green-700 font-bold">
+              ✅ Ubicación válida
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )
