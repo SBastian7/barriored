@@ -35,15 +35,17 @@ export default async function CommunityDetailPage({
   }
 
   // Fetch community details (server-side via Supabase)
-  const { data: communityData } = await supabase
+  const communityResult = await supabase
     .from('communities')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (!communityData) {
+  if (!communityResult.data) {
     redirect('/admin/communities')
   }
+
+  const communityData = communityResult.data
 
   // Get staff members
   const { data: staff } = await supabase
@@ -60,7 +62,17 @@ export default async function CommunityDetailPage({
   )
 
   const community = {
-    ...communityData,
+    id: communityData.id,
+    name: communityData.name,
+    slug: communityData.slug,
+    municipality: communityData.municipality,
+    department: communityData.department,
+    description: communityData.description,
+    logo_url: communityData.logo_url,
+    primary_color: communityData.primary_color,
+    cover_image_url: communityData.cover_image_url,
+    is_active: communityData.is_active,
+    created_at: communityData.created_at,
     staff: staff || [],
     stats: stats?.[0] || {
       businesses_count: 0,

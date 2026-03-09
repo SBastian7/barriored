@@ -9,6 +9,21 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      communities: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          municipality: string
+          department: string
+          description: string | null
+          logo_url: string | null
+          primary_color: string | null
+          cover_image_url: string | null
+          is_active: boolean | null
+          created_at: string | null
+        }
+      }
       businesses: {
         Row: {
           address: string | null
