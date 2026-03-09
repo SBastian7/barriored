@@ -28,7 +28,8 @@
       "Bash(python3:*)",
       "Bash(python:*)",
       "mcp__supabase__list_tables",
-      "Bash(supabase migration:*)"
+      "Bash(supabase migration:*)",
+      "Bash(git log:*)"
     ]
   }
 }
