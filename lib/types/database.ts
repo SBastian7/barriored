@@ -6,6 +6,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// GeoJSON Polygon type for PostGIS boundary storage
+export type GeoJSONPolygon = {
+  type: 'Polygon'
+  coordinates: number[][][]
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -21,6 +27,7 @@ export type Database = {
           primary_color: string | null
           cover_image_url: string | null
           is_active: boolean | null
+          boundary: GeoJSONPolygon | null
           created_at: string | null
         }
         Insert: {
@@ -34,6 +41,7 @@ export type Database = {
           primary_color?: string | null
           cover_image_url?: string | null
           is_active?: boolean | null
+          boundary?: GeoJSONPolygon | null
           created_at?: string | null
         }
         Update: {
@@ -47,6 +55,7 @@ export type Database = {
           primary_color?: string | null
           cover_image_url?: string | null
           is_active?: boolean | null
+          boundary?: GeoJSONPolygon | null
           created_at?: string | null
         }
         Relationships: []
