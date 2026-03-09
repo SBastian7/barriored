@@ -38,6 +38,10 @@ const FeatureGroup = dynamic(
   () => import('react-leaflet').then((mod) => mod.FeatureGroup),
   { ssr: false }
 )
+const GeoJSON = dynamic(
+  () => import('react-leaflet').then((mod) => mod.GeoJSON),
+  { ssr: false }
+)
 
 interface Props {
   communityId: string
@@ -219,6 +223,22 @@ export function BoundaryEditor({
                 remove: true,
               }}
             />
+
+            {initialBoundary && (
+              <GeoJSON
+                data={{
+                  type: 'Feature',
+                  properties: {},
+                  geometry: initialBoundary,
+                }}
+                style={{
+                  color: '#E53E3E',
+                  weight: 3,
+                  opacity: 0.8,
+                  fillOpacity: 0.1,
+                }}
+              />
+            )}
           </FeatureGroup>
         </MapContainer>
 
