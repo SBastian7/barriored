@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CommunityStatsPanel } from '@/components/admin/community-stats-panel'
 import { CommunityStaffPanel } from '@/components/admin/community-staff-panel'
 import { Edit, ArrowLeft } from 'lucide-react'
+import type { Database } from '@/lib/types/database'
+
+type CommunityRow = Database['public']['Tables']['communities']['Row']
 
 export default async function CommunityDetailPage({
   params,
@@ -34,16 +37,55 @@ export default async function CommunityDetailPage({
     redirect('/admin')
   }
 
-  // Fetch community details
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/admin/communities/${id}`,
-    {
-      headers: {
-        Cookie: `${(await supabase.auth.getSession()).data.session?.access_token}`,
-      },
-    }
+  // Fetch community details (server-side via Supabase)
+  // TypeScript workaround: explicit cast to handle Supabase type inference issue
+  const { data: rawData, error } = await (supabase
+    .from('communities')
+    .select('*')
+    .eq('id', id)
+    .single() as any)
+
+  if (error || !rawData) {
+    redirect('/admin/communities')
+  }
+
+  const communityData = rawData as CommunityRow
+
+  // Get staff members
+  const { data: staff } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url, role, created_at')
+    .eq('community_id', id)
+    .in('role', ['admin', 'moderator'])
+    .order('created_at', { ascending: false })
+
+  // Get stats
+  const { data: stats } = await (supabase as any).rpc(
+    'get_community_stats',
+    { community_uuid: id }
   )
-  const { community } = await response.json()
+
+  const community = {
+    id: communityData.id,
+    name: communityData.name,
+    slug: communityData.slug,
+    municipality: communityData.municipality,
+    department: communityData.department,
+    description: communityData.description,
+    logo_url: communityData.logo_url,
+    primary_color: communityData.primary_color,
+    cover_image_url: communityData.cover_image_url,
+    is_active: communityData.is_active,
+    created_at: communityData.created_at,
+    staff: staff || [],
+    stats: stats?.[0] || {
+      businesses_count: 0,
+      users_count: 0,
+      admins_count: 0,
+      posts_count: 0,
+      alerts_count: 0,
+    },
+  }
 
   return (
     <div className="space-y-8">

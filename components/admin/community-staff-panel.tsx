@@ -1,11 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, UserMinus } from 'lucide-react'
+import { Plus, Edit } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { AssignStaffModal } from '@/components/admin/assign-staff-modal'
+import { EditStaffModal } from '@/components/admin/edit-staff-modal'
 
 interface Props {
   communityId: string
@@ -13,13 +16,25 @@ interface Props {
 }
 
 export function CommunityStaffPanel({ communityId, staff }: Props) {
+  const router = useRouter()
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedStaff, setSelectedStaff] = useState<any | null>(null)
+
+  function handleSuccess() {
+    router.refresh()
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-2xl font-black uppercase tracking-tighter italic">
           Staff de la Comunidad
         </h3>
-        <Button className="brutalist-button">
+        <Button
+          className="brutalist-button"
+          onClick={() => setAssignModalOpen(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Asignar Staff
         </Button>
@@ -72,14 +87,38 @@ export function CommunityStaffPanel({ communityId, staff }: Props) {
                   variant="outline"
                   className="brutalist-button"
                   size="icon"
+                  onClick={() => {
+                    setSelectedStaff(member)
+                    setEditModalOpen(true)
+                  }}
                 >
-                  <UserMinus className="h-4 w-4" />
+                  <Edit className="h-4 w-4" />
                 </Button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <AssignStaffModal
+        communityId={communityId}
+        open={assignModalOpen}
+        onOpenChange={setAssignModalOpen}
+        onSuccess={handleSuccess}
+      />
+
+      {selectedStaff && (
+        <EditStaffModal
+          communityId={communityId}
+          staffMember={selectedStaff}
+          open={editModalOpen}
+          onOpenChange={(open) => {
+            setEditModalOpen(open)
+            if (!open) setSelectedStaff(null)
+          }}
+          onSuccess={handleSuccess}
+        />
+      )}
     </div>
   )
 }
