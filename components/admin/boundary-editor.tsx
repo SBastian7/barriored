@@ -219,8 +219,8 @@ export function BoundaryEditor({
                 },
               }}
               edit={{
-                edit: true,
-                remove: true,
+                edit: false,
+                remove: false,
               }}
             />
 
@@ -230,7 +230,7 @@ export function BoundaryEditor({
                   type: 'Feature',
                   properties: {},
                   geometry: initialBoundary,
-                }}
+                } as any}
                 style={{
                   color: '#E53E3E',
                   weight: 3,

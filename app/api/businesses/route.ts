@@ -21,15 +21,15 @@ export async function POST(request: Request) {
   const slug = slugify(rest.name)
 
   // Check if community has boundary and validate location
-  const { data: community } = await supabase
+  const { data: community } = await (supabase
     .from('communities')
     .select('boundary')
     .eq('id', rest.community_id)
-    .single()
+    .single() as any)
 
   if (community?.boundary) {
     // Call PostGIS function to validate
-    const { data: isInside, error: validationError } = await supabase.rpc(
+    const { data: isInside, error: validationError } = await (supabase as any).rpc(
       'is_location_in_community_boundary',
       {
         community_uuid: rest.community_id,

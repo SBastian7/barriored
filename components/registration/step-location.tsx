@@ -44,11 +44,11 @@ export function StepLocation({ form, update, errors }: Props) {
   useEffect(() => {
     async function fetchBoundary() {
       const supabase = createClient()
-      const { data } = await supabase
+      const { data } = await (supabase
         .from('communities')
         .select('boundary')
         .eq('slug', community.slug)
-        .single()
+        .single() as any)
 
       if (data?.boundary) {
         setCommunityBoundary(data.boundary)

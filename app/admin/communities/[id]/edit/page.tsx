@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { CommunityEditTabs } from '@/components/admin/community-edit-tabs'
+import type { Database } from '@/lib/types/database'
+
+type CommunityRow = Database['public']['Tables']['communities']['Row']
 
 export default async function CommunityEditPage({
   params,
@@ -32,15 +35,18 @@ export default async function CommunityEditPage({
   }
 
   // Fetch community details
-  const { data: community } = await supabase
+  // TypeScript workaround: explicit cast to handle Supabase type inference issue
+  const { data: rawData, error } = await (supabase
     .from('communities')
     .select('*')
     .eq('id', id)
-    .single()
+    .single() as any)
 
-  if (!community) {
+  if (error || !rawData) {
     redirect('/admin/communities')
   }
+
+  const community = rawData as CommunityRow
 
   return (
     <div className="space-y-8">
