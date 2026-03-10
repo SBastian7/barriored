@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { ImageUploadField } from '@/components/ui/image-upload-field'
 
 interface Props {
   mode: 'create' | 'edit'
@@ -21,7 +22,7 @@ export function CommunityForm({ mode, initialData }: Props) {
     municipality: initialData?.municipality || '',
     department: initialData?.department || '',
     description: initialData?.description || '',
-    logo_url: initialData?.logo_url || '',
+    logo_url: initialData?.logo_url || null,
   })
 
   // Auto-generate slug from name
@@ -156,21 +157,15 @@ export function CommunityForm({ mode, initialData }: Props) {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="logo_url" className="uppercase tracking-widest font-bold text-xs">
-          URL del Logo
-        </Label>
-        <Input
-          id="logo_url"
-          type="url"
-          value={formData.logo_url}
-          onChange={(e) =>
-            setFormData({ ...formData, logo_url: e.target.value })
-          }
-          placeholder="https://..."
-          className="brutalist-input"
-        />
-      </div>
+      <ImageUploadField
+        label="Logo de la Comunidad"
+        value={formData.logo_url}
+        onChange={(url) => setFormData({ ...formData, logo_url: url })}
+        bucket="community-images"
+        maxSizeMB={5}
+        aspectRatio="1/1"
+        maxWidth="200px"
+      />
 
       <div className="flex gap-4 pt-4 border-t-2 border-black">
         <Button

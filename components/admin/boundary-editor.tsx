@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast'
 import dynamic from 'next/dynamic'
 import { MapPin } from 'lucide-react'
 import type { GeoJSONPolygon } from '@/lib/types/database'
+import 'leaflet/dist/leaflet.css'
+import 'leaflet-draw/dist/leaflet.draw.css'
 
 // Type-only imports for Leaflet
 import type { Map as LeafletMap, Layer } from 'leaflet'
@@ -71,10 +73,6 @@ export function BoundaryEditor({
         shadowUrl: '/leaflet/marker-shadow.png',
       })
     })
-
-    // Import Leaflet CSS
-    import('leaflet/dist/leaflet.css')
-    import('leaflet-draw/dist/leaflet.draw.css')
   }, [])
 
   // Geocode municipality to get center
