@@ -22,7 +22,7 @@ export function CommunityForm({ mode, initialData }: Props) {
     municipality: initialData?.municipality || '',
     department: initialData?.department || '',
     description: initialData?.description || '',
-    logo_url: initialData?.logo_url || '',
+    logo_url: initialData?.logo_url || null,
   })
 
   // Auto-generate slug from name
