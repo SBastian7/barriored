@@ -54,7 +54,6 @@ export function CommunityEditTabs({ communityId, initialData }: Props) {
           initialSettings={{
             is_active: initialData.is_active,
             primary_color: initialData.primary_color,
-            logo_url: initialData.logo_url,
           }}
         />
       </TabsContent>
