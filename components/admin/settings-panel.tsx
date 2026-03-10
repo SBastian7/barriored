@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { ColorPickerField } from '@/components/ui/color-picker-field'
 import { useToast } from '@/hooks/use-toast'
 
 interface Props {
@@ -13,7 +13,6 @@ interface Props {
   initialSettings: {
     is_active: boolean
     primary_color: string | null
-    logo_url: string | null
   }
 }
 
@@ -25,7 +24,6 @@ export function SettingsPanel({ communityId, initialSettings }: Props) {
   const [primaryColor, setPrimaryColor] = useState(
     initialSettings.primary_color || '#1E40AF'
   )
-  const [logoUrl, setLogoUrl] = useState(initialSettings.logo_url || '')
 
   async function handleSave() {
     setLoading(true)
@@ -37,7 +35,6 @@ export function SettingsPanel({ communityId, initialSettings }: Props) {
         body: JSON.stringify({
           is_active: isActive,
           primary_color: primaryColor,
-          logo_url: logoUrl || null,
         }),
       })
 
@@ -86,48 +83,12 @@ export function SettingsPanel({ communityId, initialSettings }: Props) {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="primary-color"
-            className="uppercase tracking-widest font-bold text-xs"
-          >
-            Color Primario
-          </Label>
-          <div className="flex items-center gap-4">
-            <Input
-              id="primary-color"
-              type="text"
-              value={primaryColor}
-              onChange={(e) => setPrimaryColor(e.target.value)}
-              placeholder="#1E40AF"
-              className="brutalist-input flex-1"
-            />
-            <div
-              className="w-12 h-12 border-2 border-black rounded-md"
-              style={{ backgroundColor: primaryColor }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Formato hexadecimal (ej: #1E40AF)
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label
-            htmlFor="logo-url"
-            className="uppercase tracking-widest font-bold text-xs"
-          >
-            URL del Logo
-          </Label>
-          <Input
-            id="logo-url"
-            type="url"
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="https://..."
-            className="brutalist-input"
-          />
-        </div>
+        <ColorPickerField
+          label="Color Primario"
+          value={primaryColor}
+          onChange={setPrimaryColor}
+          defaultColor="#1E40AF"
+        />
       </div>
 
       <div className="pt-6 border-t-2 border-black">
