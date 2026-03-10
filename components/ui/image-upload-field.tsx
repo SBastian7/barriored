@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Upload, X, ImagePlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+
+const BYTES_PER_MB = 1024 * 1024
 
 interface ImageUploadFieldProps {
   label: string
@@ -28,14 +30,22 @@ export function ImageUploadField({
   maxWidth = '200px',
 }: ImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
     // Validate file size
-    if (file.size > maxSizeMB * 1024 * 1024) {
+    if (file.size > maxSizeMB * BYTES_PER_MB) {
       toast.error(`La imagen es muy grande (máximo ${maxSizeMB}MB)`)
+      e.target.value = ''
       return
     }
 
@@ -43,6 +53,7 @@ export function ImageUploadField({
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
       toast.error('Solo se permiten imágenes (JPG, PNG, WebP)')
+      e.target.value = ''
       return
     }
 
@@ -74,7 +85,9 @@ export function ImageUploadField({
       console.error('Upload error:', error)
       toast.error('Error de conexión al subir imagen')
     } finally {
-      setUploading(false)
+      if (mountedRef.current) {
+        setUploading(false)
+      }
     }
   }
 
