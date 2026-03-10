@@ -6,26 +6,12 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import dynamic from 'next/dynamic'
 import { MapPin } from 'lucide-react'
-import { EditControl } from 'react-leaflet-draw'
-import 'leaflet/dist/leaflet.css'
-import 'leaflet-draw/dist/leaflet.draw.css'
-
-// Import Leaflet types
-import type { Map as LeafletMap, Layer } from 'leaflet'
 import type { GeoJSONPolygon } from '@/lib/types/database'
 
-// Import Leaflet and fix icon paths
-import L from 'leaflet'
+// Type-only imports for Leaflet
+import type { Map as LeafletMap, Layer } from 'leaflet'
 
-// Fix Leaflet default icon paths
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: '/leaflet/marker-icon-2x.png',
-  iconUrl: '/leaflet/marker-icon.png',
-  shadowUrl: '/leaflet/marker-shadow.png',
-})
-
-// Dynamically import map to avoid SSR issues
+// Dynamically import all Leaflet-related modules to avoid SSR issues
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
   { ssr: false }
@@ -40,6 +26,10 @@ const FeatureGroup = dynamic(
 )
 const GeoJSON = dynamic(
   () => import('react-leaflet').then((mod) => mod.GeoJSON),
+  { ssr: false }
+)
+const EditControl = dynamic(
+  () => import('react-leaflet-draw').then((mod) => mod.EditControl),
   { ssr: false }
 )
 
@@ -61,11 +51,31 @@ export function BoundaryEditor({
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const [center, setCenter] = useState<[number, number]>([4.8133, -75.6881]) // Default Pereira
   const [boundary, setBoundary] = useState<GeoJSONPolygon | null>(
     initialBoundary
   )
   const mapRef = useRef<LeafletMap | null>(null)
+
+  // Initialize Leaflet on client side only
+  useEffect(() => {
+    setIsMounted(true)
+
+    // Import and configure Leaflet on client side
+    import('leaflet').then((L) => {
+      delete (L.Icon.Default.prototype as any)._getIconUrl
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+        iconUrl: '/leaflet/marker-icon.png',
+        shadowUrl: '/leaflet/marker-shadow.png',
+      })
+    })
+
+    // Import Leaflet CSS
+    import('leaflet/dist/leaflet.css')
+    import('leaflet-draw/dist/leaflet.draw.css')
+  }, [])
 
   // Geocode municipality to get center
   useEffect(() => {
@@ -166,6 +176,30 @@ export function BoundaryEditor({
       title: 'Límite eliminado',
       description: 'El límite ha sido eliminado',
     })
+  }
+
+  // Don't render map until client-side mounted
+  if (!isMounted) {
+    return (
+      <div className="space-y-6">
+        <div className="brutalist-card p-6">
+          <div className="flex items-start gap-4 mb-4">
+            <MapPin className="h-5 w-5 text-primary mt-1" />
+            <div>
+              <h3 className="font-bold text-lg mb-1">
+                Dibuja el límite de {communityName}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Cargando mapa...
+              </p>
+            </div>
+          </div>
+          <div className="h-[600px] border-2 border-black bg-muted flex items-center justify-center">
+            <p className="text-muted-foreground">Inicializando mapa...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
