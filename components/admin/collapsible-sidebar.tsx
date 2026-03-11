@@ -19,6 +19,7 @@ import {
   FileText,
   Globe,
   Settings,
+  ShoppingBag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/admin/alerts', label: 'Alertas', icon: Bell },
   { href: '/admin/reports', label: 'Reportes', icon: Flag },
   { href: '/admin/services', label: 'Servicios', icon: Briefcase },
+  { href: '/admin/marketplace', label: 'Marketplace', icon: ShoppingBag },
   { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3 },
   { href: '/admin/engagement', label: 'Engagement', icon: Activity },
   { href: '/admin/communities', label: 'Comunidades', icon: Globe, roles: ['super_admin'], divider: true },
