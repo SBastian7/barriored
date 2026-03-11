@@ -30,8 +30,8 @@ export async function GET(
 
   try {
     // Fetch SEO settings
-    const { data: settings, error } = await supabase
-      .from('community_seo_settings')
+    const { data: settings, error } = await (supabase
+      .from('community_seo_settings') as any)
       .select('*')
       .eq('community_id', communityId)
       .single()
@@ -108,8 +108,8 @@ export async function PUT(
     }
 
     // Upsert settings
-    const { data, error } = await supabase
-      .from('community_seo_settings')
+    const { data, error } = await (supabase
+      .from('community_seo_settings') as any)
       .upsert({
         community_id: communityId,
         meta_title,
