@@ -178,9 +178,20 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [x] **Auto-deactivation of expired alerts** on page load
 - [x] **Enhanced navigation** with Community/Reports/Services links
 
-### Phase 4: Marketplace (Clasificados - NEXT)
-- [ ] `/{community}/marketplace` - Buy/sell classifieds between neighbors
-- [ ] Featured classified listings (paid)
+### Phase 4: Marketplace (Clasificados - ADMIN COMPLETE)
+- [x] Database schema (marketplace_categories, classifieds, marketplace_user_bans)
+- [x] RLS policies for community isolation
+- [x] Admin API routes (list, detail, update, delete, flag, ban)
+- [x] Admin moderation panel (`/admin/marketplace`)
+- [x] Admin classified detail/edit page
+- [x] Filters (category, status)
+- [x] Stats dashboard (active, sold, flagged, banned)
+- [x] Flag/unflag classifieds
+- [x] Ban users from marketplace
+- [x] Audit logging for all admin actions
+- [x] Marketplace navigation in admin sidebar
+- [ ] **Next:** User-facing marketplace (browse, create listings)
+- [ ] Featured classified listings (paid monetization)
 
 ### Phase 5: Services Info (COMPLETE)
 - [x] `/{community}/services` - Emergency contacts, transport, government procedures
