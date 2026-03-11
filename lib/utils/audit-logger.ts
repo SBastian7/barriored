@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export type AuditAction =
   | 'approve_business'
@@ -42,21 +43,35 @@ export async function logAuditAction(params: LogAuditParams) {
   const { action, entityType, entityId, oldData, newData, communityId } = params
 
   try {
-    const response = await fetch('/api/admin/logs/audit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action,
-        entity_type: entityType,
-        entity_id: entityId,
-        old_data: oldData,
-        new_data: newData,
-        community_id: communityId,
-      }),
+    // Get current user
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      console.error('No authenticated user for audit log')
+      return
+    }
+
+    // Use admin client to bypass RLS for audit log insert
+    const supabaseAdmin = createAdminClient()
+
+    const { error } = await (supabaseAdmin.from('audit_logs') as any).insert({
+      community_id: communityId,
+      user_id: user.id,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      old_data: oldData,
+      new_data: newData,
+      metadata: {
+        timestamp: new Date().toISOString(),
+      },
     })
 
-    if (!response.ok) {
-      console.error('Failed to log audit action:', await response.text())
+    if (error) {
+      console.error('Failed to insert audit log:', error)
     }
   } catch (error) {
     console.error('Error logging audit action:', error)
