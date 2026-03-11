@@ -31,11 +31,11 @@ export async function GET(request: Request) {
 
   try {
     // Fetch config
-    const { data: config, error } = await supabase
-      .from('push_notification_config')
+    const { data: config, error } = await (supabase
+      .from('push_notification_config') as any)
       .select('*')
       .eq('community_id', communityId)
-      .single() as { data: any }
+      .single()
 
     // If no config exists, return defaults
     if (error && error.code === 'PGRST116') {
@@ -106,8 +106,8 @@ export async function PUT(request: Request) {
     }
 
     // Upsert config
-    const { data, error } = await supabase
-      .from('push_notification_config')
+    const { data, error } = await (supabase
+      .from('push_notification_config') as any)
       .upsert({
         community_id,
         is_enabled: is_enabled ?? true,
@@ -115,7 +115,7 @@ export async function PUT(request: Request) {
         updated_at: new Date().toISOString()
       }, { onConflict: 'community_id' })
       .select()
-      .single() as { data: any }
+      .single()
 
     if (error) throw error
 
