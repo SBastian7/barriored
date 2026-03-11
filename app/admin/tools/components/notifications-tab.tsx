@@ -1,27 +1,28 @@
 'use client'
 
 import { PushStatsDashboard } from './push-stats-dashboard'
+import { PushTestSender } from './push-test-sender'
+import { PushConfigPanel } from './push-config-panel'
 
 export function NotificationsTab() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* Statistics Section */}
       <section>
-        <h2 className="text-2xl font-heading font-black uppercase italic mb-4">
-          Estadísticas
+        <h2 className="text-2xl font-heading font-black uppercase italic mb-4 border-b-2 border-black pb-2">
+          📊 Estadísticas
         </h2>
         <PushStatsDashboard />
       </section>
 
-      {/* Configuration Section (Phase 3) */}
-      <section className="mt-12">
-        <h2 className="text-2xl font-heading font-black uppercase italic mb-4">
-          Configuración
+      {/* Configuration Section */}
+      <section>
+        <h2 className="text-2xl font-heading font-black uppercase italic mb-4 border-b-2 border-black pb-2">
+          ⚙️ Configuración y Pruebas
         </h2>
-        <div className="p-8 border-4 border-black rounded-none bg-white">
-          <p className="text-center text-black/40 font-bold uppercase">
-            Próximamente: Configuración y pruebas
-          </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PushTestSender />
+          <PushConfigPanel />
         </div>
       </section>
     </div>
