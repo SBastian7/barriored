@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     .from('profiles')
     .select('role, is_super_admin, community_id')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any }
 
   const canAccess = profile?.is_super_admin ||
     (profile?.role === 'admin' && profile?.community_id === communityId)
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       .from('push_notification_config')
       .select('*')
       .eq('community_id', communityId)
-      .single()
+      .single() as { data: any }
 
     // If no config exists, return defaults
     if (error && error.code === 'PGRST116') {
@@ -96,7 +96,7 @@ export async function PUT(request: Request) {
       .from('profiles')
       .select('role, is_super_admin, community_id')
       .eq('id', user.id)
-      .single()
+      .single() as { data: any }
 
     const canAccess = profile?.is_super_admin ||
       (profile?.role === 'admin' && profile?.community_id === community_id)
@@ -115,7 +115,7 @@ export async function PUT(request: Request) {
         updated_at: new Date().toISOString()
       }, { onConflict: 'community_id' })
       .select()
-      .single()
+      .single() as { data: any }
 
     if (error) throw error
 

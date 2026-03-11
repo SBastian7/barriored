@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       .from('profiles')
       .select('role, is_super_admin, community_id')
       .eq('id', user.id)
-      .single()
+      .single() as { data: any }
 
     const canAccess = profile?.is_super_admin ||
       (profile?.role === 'admin' && profile?.community_id === community_id)
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       .from('push_notification_config')
       .select('is_enabled, max_per_day')
       .eq('community_id', community_id)
-      .single()
+      .single() as { data: any }
 
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
