@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     .from('profiles')
     .select('role, is_super_admin')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any }
 
   if (!profile?.is_super_admin && profile?.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -54,8 +54,8 @@ export async function POST(request: Request) {
     }
 
     // Insert snapshot into analytics table
-    const { error: insertError } = await supabase
-      .from('image_storage_analytics')
+    const { error: insertError } = await (supabase
+      .from('image_storage_analytics') as any)
       .insert(storageData)
 
     if (insertError) {

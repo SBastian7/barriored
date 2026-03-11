@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     .from('profiles')
     .select('role, is_super_admin, community_id')
     .eq('id', user.id)
-    .single()
+    .single() as { data: any }
 
   if (!profile?.is_super_admin && profile?.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
