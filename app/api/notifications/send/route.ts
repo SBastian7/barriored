@@ -105,8 +105,8 @@ export async function POST(request: Request) {
   await Promise.allSettled(sendPromises)
 
   // Log notification send to database
-  const { error: logError } = await supabase
-    .from('push_notification_logs')
+  const { error: logError } = await (supabase
+    .from('push_notification_logs') as any)
     .insert({
       community_id,
       alert_id: alert_id || null,
