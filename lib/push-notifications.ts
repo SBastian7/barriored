@@ -39,7 +39,18 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
     if (!vapidPublicKey) {
+      console.error('VAPID public key not configured in environment')
       throw new Error('VAPID public key not configured')
+    }
+
+    console.log('VAPID key found, length:', vapidPublicKey.length)
+    console.log('Service Worker state:', registration.active?.state)
+
+    // Check for existing subscription first
+    const existingSubscription = await registration.pushManager.getSubscription()
+    if (existingSubscription) {
+      console.log('Existing subscription found, unsubscribing first')
+      await existingSubscription.unsubscribe()
     }
 
     const subscription = await registration.pushManager.subscribe({
@@ -47,17 +58,23 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
     })
 
+    console.log('Push subscription successful')
+
     // Save subscription to backend
-    await fetch('/api/notifications/subscribe', {
+    const response = await fetch('/api/notifications/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscription }),
     })
 
+    if (!response.ok) {
+      console.error('Failed to save subscription to backend:', await response.text())
+    }
+
     return subscription
   } catch (error) {
     console.error('Failed to subscribe to push:', error)
-    return null
+    throw error
   }
 }
 
