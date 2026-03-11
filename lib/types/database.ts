@@ -113,6 +113,192 @@ export type Database = {
           suspension_reason: string | null
         }
       }
+      marketplace_categories: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          icon: string
+          description: string | null
+          display_order: number
+          is_active: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          icon: string
+          description?: string | null
+          display_order?: number
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          icon?: string
+          description?: string | null
+          display_order?: number
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      classifieds: {
+        Row: {
+          id: string
+          community_id: string
+          user_id: string
+          category_id: string
+          title: string
+          description: string
+          price: string | null
+          images: string[] | null
+          whatsapp: string
+          status: 'active' | 'sold' | 'archived' | 'flagged' | 'removed'
+          is_featured: boolean | null
+          featured_until: string | null
+          last_activity_at: string | null
+          archived_at: string | null
+          sold_at: string | null
+          flagged_at: string | null
+          flagged_by: string | null
+          flagged_reason: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          community_id: string
+          user_id: string
+          category_id: string
+          title: string
+          description: string
+          price?: string | null
+          images?: string[] | null
+          whatsapp: string
+          status?: 'active' | 'sold' | 'archived' | 'flagged' | 'removed'
+          is_featured?: boolean | null
+          featured_until?: string | null
+          last_activity_at?: string | null
+          archived_at?: string | null
+          sold_at?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          flagged_reason?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          community_id?: string
+          user_id?: string
+          category_id?: string
+          title?: string
+          description?: string
+          price?: string | null
+          images?: string[] | null
+          whatsapp?: string
+          status?: 'active' | 'sold' | 'archived' | 'flagged' | 'removed'
+          is_featured?: boolean | null
+          featured_until?: string | null
+          last_activity_at?: string | null
+          archived_at?: string | null
+          sold_at?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          flagged_reason?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'classifieds_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'classifieds_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'classifieds_category_id_fkey'
+            columns: ['category_id']
+            isOneToOne: false
+            referencedRelation: 'marketplace_categories'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'classifieds_flagged_by_fkey'
+            columns: ['flagged_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      marketplace_user_bans: {
+        Row: {
+          id: string
+          community_id: string
+          user_id: string
+          banned_by: string
+          reason: string
+          banned_at: string | null
+          expires_at: string | null
+          is_active: boolean | null
+        }
+        Insert: {
+          id?: string
+          community_id: string
+          user_id: string
+          banned_by: string
+          reason: string
+          banned_at?: string | null
+          expires_at?: string | null
+          is_active?: boolean | null
+        }
+        Update: {
+          id?: string
+          community_id?: string
+          user_id?: string
+          banned_by?: string
+          reason?: string
+          banned_at?: string | null
+          expires_at?: string | null
+          is_active?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'marketplace_user_bans_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'marketplace_user_bans_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'marketplace_user_bans_banned_by_fkey'
+            columns: ['banned_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
   }
 }
@@ -143,4 +329,55 @@ export interface ErrorLog {
   status_code: number | null
   metadata: any
   created_at: string
+}
+
+// Classified with relations
+export interface ClassifiedWithRelations {
+  id: string
+  community_id: string
+  user_id: string
+  category_id: string
+  title: string
+  description: string
+  price: string | null
+  images: string[] | null
+  whatsapp: string
+  status: 'active' | 'sold' | 'archived' | 'flagged' | 'removed'
+  is_featured: boolean
+  featured_until: string | null
+  last_activity_at: string
+  archived_at: string | null
+  sold_at: string | null
+  flagged_at: string | null
+  flagged_by: string | null
+  flagged_reason: string | null
+  created_at: string
+  updated_at: string
+  profiles: {
+    id: string
+    full_name: string | null
+    avatar_url: string | null
+  }
+  marketplace_categories: {
+    id: string
+    name: string
+    slug: string
+    icon: string
+  }
+  communities: {
+    id: string
+    name: string
+    slug: string
+  }
+}
+
+export interface MarketplaceBan {
+  id: string
+  community_id: string
+  user_id: string
+  banned_by: string
+  reason: string
+  banned_at: string
+  expires_at: string | null
+  is_active: boolean
 }
