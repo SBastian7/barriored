@@ -22,8 +22,8 @@ export async function GET(request: Request) {
 
   try {
     // Fetch most recent storage snapshot
-    let query = supabase
-      .from('image_storage_analytics')
+    let query = (supabase
+      .from('image_storage_analytics') as any)
       .select('*')
       .order('recorded_at', { ascending: false })
       .limit(100)
