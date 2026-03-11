@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
-  const { community_id, title, body, url } = await request.json()
+  const { community_id, title, body, url, alert_id } = await request.json()
 
   if (!community_id || !title || !body) {
     return NextResponse.json(
@@ -75,6 +75,7 @@ export async function POST(request: Request) {
   })
 
   let sentCount = 0
+  let failedCount = 0
   const sendPromises = subscriptions.map(async (sub: any) => {
     try {
       await webpush.sendNotification(
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
       sentCount++
     } catch (error: any) {
       console.error('Failed to send notification:', error)
+      failedCount++
       // If subscription is invalid (410), delete it
       if (error.statusCode === 410) {
         await supabase
@@ -102,8 +104,27 @@ export async function POST(request: Request) {
 
   await Promise.allSettled(sendPromises)
 
+  // Log notification send to database
+  const { error: logError } = await supabase
+    .from('push_notification_logs')
+    .insert({
+      community_id,
+      alert_id: alert_id || null,
+      title,
+      body,
+      sent_count: sentCount,
+      failed_count: failedCount,
+      test_mode: false
+    })
+
+  if (logError) {
+    console.error('Failed to log notification:', logError)
+    // Don't fail the request, just log error
+  }
+
   return NextResponse.json({
     success: true,
     sent: sentCount,
+    failed: failedCount,
   })
 }
