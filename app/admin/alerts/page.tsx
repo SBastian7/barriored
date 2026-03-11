@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2, Bell, Clock, Edit } from 'lucide-react'
+import { AlertTriangle, Plus, Trash2, Power, Droplets, Shield, Construction, Info, Loader2, Bell, Clock, Edit, Settings } from 'lucide-react'
+import Link from 'next/link'
 import type { CommunityAlert } from '@/lib/types'
 
 export default function AdminAlertsPage() {
@@ -218,11 +219,19 @@ export default function AdminAlertsPage() {
 
     return (
         <div className="space-y-12 pb-24">
-            <header className="space-y-2">
-                <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
-                    Gestión de <span className="text-primary">Alertas</span>
-                </h1>
-                <p className="font-bold text-black/60 text-sm">Crea avisos críticos o de servicios públicos para las comunidades.</p>
+            <header className="flex items-center justify-between">
+                <div className="space-y-2">
+                    <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
+                        Gestión de <span className="text-primary">Alertas</span>
+                    </h1>
+                    <p className="font-bold text-black/60 text-sm">Crea avisos críticos o de servicios públicos para las comunidades.</p>
+                </div>
+                <Link href="/admin/tools?tab=notifications">
+                    <Button className="brutalist-button">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Configurar Notificaciones
+                    </Button>
+                </Link>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
