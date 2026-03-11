@@ -46,7 +46,7 @@ export async function GET(
         .from('communities')
         .select('name, slug')
         .eq('id', communityId)
-        .single()
+        .single() as { data: any }
 
       return NextResponse.json({
         meta_title: `${community?.name || 'Comunidad'} - BarrioRed`,
