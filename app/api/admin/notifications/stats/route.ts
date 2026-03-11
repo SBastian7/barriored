@@ -43,8 +43,8 @@ export async function GET(request: Request) {
     if (error) throw error
 
     // Calculate overview stats
-    const totalSent = logs?.reduce((sum, log) => sum + log.sent_count, 0) || 0
-    const totalFailed = logs?.reduce((sum, log) => sum + log.failed_count, 0) || 0
+    const totalSent = logs?.reduce((sum: number, log: any) => sum + log.sent_count, 0) || 0
+    const totalFailed = logs?.reduce((sum: number, log: any) => sum + log.failed_count, 0) || 0
     const deliveryRate = totalSent > 0 ? (totalSent - totalFailed) / totalSent : 0
     const avgPerDay = totalSent / days
 
