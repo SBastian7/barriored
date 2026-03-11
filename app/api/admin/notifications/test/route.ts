@@ -72,8 +72,8 @@ export async function POST(request: Request) {
     }
 
     // Fetch subscriptions
-    let subscriptionsQuery = supabase
-      .from('push_subscriptions')
+    let subscriptionsQuery = (supabase
+      .from('push_subscriptions') as any)
       .select('*')
       .eq('community_id', community_id)
       .not('endpoint', 'is', null)
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
     if (!subscriptions || subscriptions.length === 0) {
       // Still log as successful send with 0 count
-      await supabase.from('push_notification_logs').insert({
+      await (supabase.from('push_notification_logs') as any).insert({
         community_id,
         title,
         body: message,
