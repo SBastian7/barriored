@@ -28,8 +28,8 @@ export async function GET(request: Request) {
     startDate.setDate(startDate.getDate() - days)
 
     // Build query
-    let logsQuery = supabase
-      .from('push_notification_logs')
+    let logsQuery = (supabase
+      .from('push_notification_logs') as any)
       .select('*')
       .gte('sent_at', startDate.toISOString())
 

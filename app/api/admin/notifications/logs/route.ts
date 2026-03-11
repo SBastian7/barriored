@@ -25,8 +25,8 @@ export async function GET(request: Request) {
 
   try {
     // Build query with join to communities
-    let logsQuery = supabase
-      .from('push_notification_logs')
+    let logsQuery = (supabase
+      .from('push_notification_logs') as any)
       .select('*, communities(id, name, slug)', { count: 'exact' })
       .order('sent_at', { ascending: false })
       .range(offset, offset + limit - 1)
