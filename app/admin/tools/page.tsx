@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { HardDrive, Bell } from 'lucide-react'
+import { ImagesTab } from './components/images-tab'
 
 export default function AdminToolsPage() {
   return (
@@ -35,11 +36,7 @@ export default function AdminToolsPage() {
         </TabsList>
 
         <TabsContent value="images">
-          <div className="p-8 border-4 border-black rounded-none">
-            <p className="text-center text-black/40 font-bold uppercase">
-              Próximamente: Análisis de almacenamiento
-            </p>
-          </div>
+          <ImagesTab />
         </TabsContent>
 
         <TabsContent value="notifications">
