@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CommunityForm } from '@/components/admin/community-form'
 import { BoundaryEditor } from '@/components/admin/boundary-editor'
 import { SettingsPanel } from '@/components/admin/settings-panel'
+import { SEOSettingsTab } from '@/components/admin/communities/seo-settings-tab'
 
 interface Props {
   communityId: string
@@ -32,6 +33,12 @@ export function CommunityEditTabs({ communityId, initialData }: Props) {
         >
           Configuración
         </TabsTrigger>
+        <TabsTrigger
+          value="seo"
+          className="uppercase tracking-widest font-bold text-xs"
+        >
+          SEO
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="info">
@@ -55,6 +62,13 @@ export function CommunityEditTabs({ communityId, initialData }: Props) {
             is_active: initialData.is_active,
             primary_color: initialData.primary_color,
           }}
+        />
+      </TabsContent>
+
+      <TabsContent value="seo">
+        <SEOSettingsTab
+          communityId={communityId}
+          communityName={initialData.name}
         />
       </TabsContent>
     </Tabs>
