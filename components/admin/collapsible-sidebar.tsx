@@ -18,6 +18,7 @@ import {
   Activity,
   FileText,
   Globe,
+  Settings,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -35,6 +36,7 @@ const navItems = [
   { href: '/admin/engagement', label: 'Engagement', icon: Activity },
   { href: '/admin/communities', label: 'Comunidades', icon: Globe, roles: ['super_admin'], divider: true },
   { href: '/admin/logs', label: 'Logs', icon: FileText },
+  { href: '/admin/tools', label: 'Herramientas', icon: Settings },
 ]
 
 export function CollapsibleSidebar() {
