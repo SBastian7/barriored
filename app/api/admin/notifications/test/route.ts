@@ -132,7 +132,7 @@ export async function POST(request: Request) {
     }
 
     // Log
-    await supabase.from('push_notification_logs').insert({
+    await (supabase.from('push_notification_logs') as any).insert({
       community_id,
       title,
       body: message,
