@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const bucketMap = new Map<string, { bytes: number, count: number }>()
     let totalBytes = 0
 
-    snapshots?.forEach(snap => {
+    snapshots?.forEach((snap: any) => {
       const existing = bucketMap.get(snap.bucket_name) || { bytes: 0, count: 0 }
       bucketMap.set(snap.bucket_name, {
         bytes: existing.bytes + snap.total_size_bytes,
