@@ -7,9 +7,16 @@ import type { ClassifiedWithRelations } from '@/lib/types/database'
 interface ClassifiedGridProps {
   classifieds: ClassifiedWithRelations[]
   communitySlug: string
+  userId?: string | null
+  favoritedIds?: string[]
 }
 
-export function ClassifiedGrid({ classifieds, communitySlug }: ClassifiedGridProps) {
+export function ClassifiedGrid({
+  classifieds,
+  communitySlug,
+  userId,
+  favoritedIds = []
+}: ClassifiedGridProps) {
   if (classifieds.length === 0) {
     return (
       <div className="brutalist-card p-12 text-center space-y-4">
@@ -31,6 +38,8 @@ export function ClassifiedGrid({ classifieds, communitySlug }: ClassifiedGridPro
           key={classified.id}
           classified={classified}
           variant="public"
+          userId={userId}
+          isFavorited={favoritedIds.includes(classified.id)}
         />
       ))}
     </div>

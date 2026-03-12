@@ -11,9 +11,16 @@ import type { ClassifiedWithRelations } from '@/lib/types/database'
 interface MarketplaceHubProps {
   classifieds: ClassifiedWithRelations[]
   communitySlug: string
+  userId?: string | null
+  favoritedIds?: string[]
 }
 
-export function MarketplaceHub({ classifieds, communitySlug }: MarketplaceHubProps) {
+export function MarketplaceHub({
+  classifieds,
+  communitySlug,
+  userId,
+  favoritedIds = []
+}: MarketplaceHubProps) {
   const [filters, setFilters] = useState({
     category: 'all',
     search: ''
@@ -65,6 +72,8 @@ export function MarketplaceHub({ classifieds, communitySlug }: MarketplaceHubPro
                 key={classified.id}
                 classified={classified}
                 variant="public"
+                userId={userId}
+                isFavorited={favoritedIds.includes(classified.id)}
               />
             ))}
           </div>
@@ -132,6 +141,8 @@ export function MarketplaceHub({ classifieds, communitySlug }: MarketplaceHubPro
       <ClassifiedGrid
         classifieds={filteredClassifieds}
         communitySlug={communitySlug}
+        userId={userId}
+        favoritedIds={favoritedIds}
       />
     </div>
   )

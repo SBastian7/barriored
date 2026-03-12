@@ -4,6 +4,7 @@ import { Eye, Check, Archive, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ClassifiedStatusBadge } from './classified-status-badge'
+import { FavoriteButton } from './favorite-button'
 import type { ClassifiedWithRelations } from '@/lib/types/database'
 
 interface ClassifiedCardProps {
@@ -12,6 +13,8 @@ interface ClassifiedCardProps {
   onMarkSold?: (id: string) => void
   onArchive?: (id: string) => void
   onDelete?: (id: string) => void
+  userId?: string | null
+  isFavorited?: boolean
 }
 
 export function ClassifiedCard({
@@ -20,6 +23,8 @@ export function ClassifiedCard({
   onMarkSold,
   onArchive,
   onDelete,
+  userId,
+  isFavorited = false,
 }: ClassifiedCardProps) {
   const isPublicView = variant === 'public'
   const detailHref = isPublicView
@@ -43,6 +48,16 @@ export function ClassifiedCard({
               fill
               className="object-cover"
             />
+            {isPublicView && (
+              <div className="absolute top-2 right-2">
+                <FavoriteButton
+                  classifiedId={classified.id}
+                  initialFavorited={isFavorited}
+                  size="sm"
+                  userId={userId}
+                />
+              </div>
+            )}
           </div>
 
           {/* Content */}

@@ -52,6 +52,19 @@ export default async function MarketplacePage({
     .order('created_at', { ascending: false })
     .limit(50)
 
+  // Check which classifieds user has favorited
+  const { data: { user } } = await supabase.auth.getUser()
+  let favoritedIds: string[] = []
+
+  if (user) {
+    const { data: favorites } = await supabase
+      .from('classified_favorites')
+      .select('classified_id')
+      .eq('user_id', user.id)
+
+    favoritedIds = favorites?.map(f => f.classified_id) || []
+  }
+
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 pb-24">
       <Breadcrumbs
@@ -73,6 +86,8 @@ export default async function MarketplacePage({
       <MarketplaceHub
         classifieds={(classifieds ?? []) as ClassifiedWithRelations[]}
         communitySlug={slug}
+        userId={user?.id}
+        favoritedIds={favoritedIds}
       />
     </div>
   )
