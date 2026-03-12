@@ -244,6 +244,42 @@ export type Database = {
           }
         ]
       }
+      classified_favorites: {
+        Row: {
+          id: string
+          user_id: string
+          classified_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          classified_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          classified_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'classified_favorites_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'classified_favorites_classified_id_fkey'
+            columns: ['classified_id']
+            isOneToOne: false
+            referencedRelation: 'classifieds'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       marketplace_user_bans: {
         Row: {
           id: string
