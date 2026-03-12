@@ -2,14 +2,27 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import webpush from 'web-push'
 
-// Configure VAPID keys
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY!
-const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@barriored.co'
+// Configure VAPID keys (lazy initialization)
+function configureVapid() {
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
+  const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@barriored.co'
 
-webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey)
+  if (vapidPublicKey && vapidPrivateKey) {
+    webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey)
+    return true
+  }
+  return false
+}
 
 export async function POST(request: Request) {
+  // Configure VAPID if not already done
+  if (!configureVapid()) {
+    return NextResponse.json({
+      error: 'Push notifications not configured. VAPID keys missing.'
+    }, { status: 500 })
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
