@@ -118,6 +118,21 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
   // Type cast to ClassifiedWithRelations
   const classifiedWithRelations = classified as ClassifiedWithRelations;
 
+  // Check if user has favorited
+  const { data: { user } } = await supabase.auth.getUser()
+  let isFavorited = false
+
+  if (user) {
+    const { data: favorite } = await supabase
+      .from('classified_favorites')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('classified_id', classified.id)
+      .maybeSingle()
+
+    isFavorited = !!favorite
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="container mx-auto px-4 py-8">
@@ -135,6 +150,8 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
 
         <ClassifiedDetailView
           classified={classifiedWithRelations}
+          userId={user?.id}
+          isFavorited={isFavorited}
         />
       </div>
     </div>

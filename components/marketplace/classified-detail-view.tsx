@@ -6,13 +6,20 @@ import { Badge } from '@/components/ui/badge'
 import { MessageCircle, ChevronLeft, ChevronRight, User, Calendar, ImageOff } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { FavoriteButton } from './favorite-button'
 import type { ClassifiedWithRelations } from '@/lib/types/database'
 
 interface ClassifiedDetailViewProps {
   classified: ClassifiedWithRelations
+  userId?: string | null
+  isFavorited?: boolean
 }
 
-export function ClassifiedDetailView({ classified }: ClassifiedDetailViewProps) {
+export function ClassifiedDetailView({
+  classified,
+  userId,
+  isFavorited = false
+}: ClassifiedDetailViewProps) {
   const images = classified.images || []
   const hasImages = images.length > 0
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -196,6 +203,17 @@ export function ClassifiedDetailView({ classified }: ClassifiedDetailViewProps) 
             <MessageCircle className="h-5 w-5" />
             CONTACTAR POR WHATSAPP
           </a>
+
+          {/* Favorite Button */}
+          {userId && (
+            <FavoriteButton
+              classifiedId={classified.id}
+              initialFavorited={isFavorited}
+              size="lg"
+              showLabel
+              userId={userId}
+            />
+          )}
         </div>
       </div>
     </div>
