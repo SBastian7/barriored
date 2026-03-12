@@ -201,3 +201,97 @@ export async function updateClassifiedAction(
 
   return { success: true }
 }
+
+export async function deleteClassifiedAction(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'No autenticado' }
+  }
+
+  // RLS will prevent deleting if not owner, but check anyway for better error message
+  const { data: existing } = await supabase
+    .from('classifieds')
+    .select('user_id')
+    .eq('id', id)
+    .single()
+
+  if (!existing || existing.user_id !== user.id) {
+    return { success: false, error: 'No tienes permiso para eliminar este clasificado' }
+  }
+
+  const { error } = await supabase
+    .from('classifieds')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Delete error:', error)
+    return { success: false, error: 'Error al eliminar clasificado' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/[community]/marketplace', 'page')
+
+  return { success: true }
+}
+
+export async function markAsSoldAction(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'No autenticado' }
+  }
+
+  const { error } = await supabase
+    .from('classifieds')
+    .update({
+      status: 'sold',
+      sold_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Mark sold error:', error)
+    return { success: false, error: 'Error al marcar como vendido' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/[community]/marketplace', 'page')
+
+  return { success: true }
+}
+
+export async function reactivateClassifiedAction(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'No autenticado' }
+  }
+
+  const { error } = await supabase
+    .from('classifieds')
+    .update({
+      status: 'active',
+      last_activity_at: new Date().toISOString(),
+      sold_at: null,
+      archived_at: null
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Reactivate error:', error)
+    return { success: false, error: 'Error al reactivar clasificado' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/[community]/marketplace', 'page')
+
+  return { success: true }
+}
