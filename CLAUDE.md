@@ -178,7 +178,7 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [x] **Auto-deactivation of expired alerts** on page load
 - [x] **Enhanced navigation** with Community/Reports/Services links
 
-### Phase 4: Marketplace (Clasificados - ADMIN COMPLETE)
+### Phase 4: Marketplace (Clasificados - PUBLIC VIEW COMPLETE)
 - [x] Database schema (marketplace_categories, classifieds, marketplace_user_bans)
 - [x] RLS policies for community isolation
 - [x] Admin API routes (list, detail, update, delete, flag, ban)
@@ -190,7 +190,16 @@ Business statuses: `pending` -> `approved` / `rejected`
 - [x] Ban users from marketplace
 - [x] Audit logging for all admin actions
 - [x] Marketplace navigation in admin sidebar
-- [ ] **Next:** User-facing marketplace (browse, create listings)
+- [x] **Public marketplace hub** (`/{community}/marketplace`)
+- [x] **Browse active classifieds** with category filtering
+- [x] **Search classifieds** by title/description
+- [x] **Featured section** showing 3 newest items
+- [x] **Client-side filtering** for instant results
+- [x] **Classified detail page** with image gallery
+- [x] **WhatsApp contact button** with pre-filled message
+- [x] **Responsive design** (mobile & desktop)
+- [x] **Empty state** handling and placeholder icons
+- [ ] **Next:** User listing creation (authenticated users)
 - [ ] Featured classified listings (paid monetization)
 
 ### Phase 5: Services Info (COMPLETE)
@@ -199,13 +208,13 @@ Business statuses: `pending` -> `approved` / `rejected`
 
 ## Navigation Structure
 
-**TopBar (Desktop):** Logo | Directorio | Comunidad (pronto) | Marketplace (pronto) | Servicios (pronto) | UserMenu
+**TopBar (Desktop):** Logo | Directorio | Comunidad | Marketplace | Servicios | UserMenu
 
-**BottomNav (Mobile):** Inicio | Directorio | Comunidad (pronto) | Marketplace (pronto) | Servicios (pronto)
+**BottomNav (Mobile):** Inicio | Directorio | Comunidad | Marketplace | Servicios
 
 **Homepage QuickNav:** 4 large cards for each platform pillar (Directorio, Comunidad, Marketplace, Servicios)
 
-Sections marked "pronto" / "Proximamente" are disabled with a yellow badge. Enable them as each phase is implemented by setting `enabled: true` / `active: true` in the respective nav component.
+All platform sections are now active and accessible. Navigation components can be disabled by setting `enabled: false` / `active: false`, which adds a "Pronto" badge.
 
 ### Homepage Structure
 1. **HeroBanner** - Community name, location, description, stats (businesses, vecinos, 100% local)
