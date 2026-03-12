@@ -295,3 +295,54 @@ export async function reactivateClassifiedAction(id: string): Promise<ActionResu
 
   return { success: true }
 }
+
+export async function toggleFavoriteAction(
+  classifiedId: string
+): Promise<ActionResult<{ favorited: boolean }>> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'Debes iniciar sesión para guardar favoritos' }
+  }
+
+  // Check if already favorited
+  const { data: existing } = await supabase
+    .from('classified_favorites')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('classified_id', classifiedId)
+    .maybeSingle()
+
+  if (existing) {
+    // Remove favorite
+    const { error } = await supabase
+      .from('classified_favorites')
+      .delete()
+      .eq('id', existing.id)
+
+    if (error) {
+      console.error('Remove favorite error:', error)
+      return { success: false, error: 'Error al eliminar favorito' }
+    }
+
+    revalidatePath('/dashboard')
+    return { success: true, data: { favorited: false } }
+  } else {
+    // Add favorite
+    const { error } = await supabase
+      .from('classified_favorites')
+      .insert({
+        user_id: user.id,
+        classified_id: classifiedId
+      })
+
+    if (error) {
+      console.error('Add favorite error:', error)
+      return { success: false, error: 'Error al guardar favorito' }
+    }
+
+    revalidatePath('/dashboard')
+    return { success: true, data: { favorited: true } }
+  }
+}
