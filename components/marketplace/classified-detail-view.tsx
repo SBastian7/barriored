@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
-import { MessageCircle, ChevronLeft, ChevronRight, User, Calendar } from 'lucide-react'
+import { MessageCircle, ChevronLeft, ChevronRight, User, Calendar, ImageOff } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { ClassifiedWithRelations } from '@/lib/types/database'
@@ -106,14 +106,8 @@ export function ClassifiedDetailView({ classified }: ClassifiedDetailViewProps) 
         ) : (
           <div className="aspect-square border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-gray-50 flex items-center justify-center">
             <div className="text-center text-black/40">
-              <Image
-                src="/placeholder-image.png"
-                alt="Sin fotos"
-                width={200}
-                height={200}
-                className="mx-auto opacity-20"
-              />
-              <p className="mt-4 font-black uppercase text-sm">Sin fotos</p>
+              <ImageOff className="h-24 w-24 mx-auto mb-4" strokeWidth={1.5} />
+              <p className="font-black uppercase text-sm">Sin fotos</p>
             </div>
           </div>
         )}
