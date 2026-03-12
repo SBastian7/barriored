@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { ClassifiedDetailView } from '@/components/marketplace/classified-detail-view';
-import type { ClassifiedWithRelations } from '@/lib/types';
+import type { ClassifiedWithRelations } from '@/lib/types/database';
 import type { Metadata } from 'next';
 
 interface PageProps {
