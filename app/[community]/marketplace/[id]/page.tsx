@@ -14,24 +14,22 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { community: communitySlug, id } = await params;
+  const { id } = await params;
   const supabase = await createClient();
 
   const { data: classified } = await supabase
     .from('classifieds')
-    .select(`
-      *,
-      profiles!classifieds_user_id_fkey(full_name, avatar_url),
-      marketplace_categories(name, slug, icon),
-      communities(name, slug)
-    `)
+    .select('title, description, images')
     .eq('id', id)
-    .eq('communities.slug', communitySlug)
-    .single();
+    .maybeSingle<{
+      title: string;
+      description: string;
+      images: string[] | null;
+    }>();
 
   if (!classified) {
     return {
-      title: 'Clasificado no encontrado',
+      title: 'Clasificado no encontrado | Marketplace BarrioRed',
     };
   }
 
@@ -55,7 +53,11 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
     .from('communities')
     .select('id, name, slug')
     .eq('slug', communitySlug)
-    .single();
+    .maybeSingle<{
+      id: string;
+      name: string;
+      slug: string;
+    }>();
 
   if (!community) {
     notFound();
@@ -72,7 +74,7 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
     `)
     .eq('id', id)
     .eq('community_id', community.id)
-    .single();
+    .maybeSingle<ClassifiedWithRelations>();
 
   if (!classified) {
     notFound();
