@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${classified.title} - Marketplace ${classified.communities?.name}`,
+    title: `${classified.title} | Marketplace BarrioRed`,
     description: classified.description.substring(0, 160),
     openGraph: {
       title: classified.title,
@@ -97,7 +97,8 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
                 Clasificado no disponible
               </h1>
               <p className="text-muted-foreground mb-6">
-                Este clasificado ya no está disponible. Puede que haya sido vendido, archivado o eliminado.
+                Este clasificado ya no está activo o ha sido{' '}
+                {classified.status === 'sold' ? 'vendido' : 'eliminado'}
               </p>
               <Link
                 href={`/${communitySlug}/marketplace`}
