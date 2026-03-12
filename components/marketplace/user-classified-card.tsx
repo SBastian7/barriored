@@ -49,7 +49,9 @@ export function UserClassifiedCard({
   const [isUpdating, setIsUpdating] = useState(false)
 
   const thumbnail = classified.images?.[0] || '/placeholder-classified.png'
-  const timeAgo = new Date(classified.created_at).toLocaleDateString('es-CO')
+  const timeAgo = classified.created_at
+    ? new Date(classified.created_at).toLocaleDateString('es-CO')
+    : 'Fecha desconocida'
 
   const handleMarkSold = async () => {
     setIsUpdating(true)
@@ -108,7 +110,7 @@ export function UserClassifiedCard({
           className="object-cover"
         />
         <div className="absolute top-1 left-1">
-          <ClassifiedStatusBadge status={classified.status} size="sm" />
+          <ClassifiedStatusBadge status={classified.status as 'active' | 'sold' | 'archived' | 'flagged' | 'removed'} />
         </div>
       </div>
 

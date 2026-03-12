@@ -28,7 +28,7 @@ export function ClassifiedCard({
 }: ClassifiedCardProps) {
   const isPublicView = variant === 'public'
   const detailHref = isPublicView
-    ? `/${classified.communities.slug}/marketplace/${classified.id}`
+    ? `/${classified.communities?.slug || 'default'}/marketplace/${classified.id}`
     : `/admin/marketplace/${classified.id}`
   const thumbnail = classified.images?.[0] || '/placeholder-image.png'
 
@@ -67,13 +67,13 @@ export function ClassifiedCard({
                 variant="outline"
                 className="text-[10px] rounded-none py-0 px-1 border-black"
               >
-                {classified.marketplace_categories.name}
+                {classified.marketplace_categories?.name || 'Sin categoría'}
               </Badge>
-              {!isPublicView && <ClassifiedStatusBadge status={classified.status} />}
+              {!isPublicView && <ClassifiedStatusBadge status={classified.status as 'active' | 'sold' | 'archived' | 'flagged' | 'removed'} />}
               <span>•</span>
-              <span>{classified.profiles.full_name}</span>
+              <span>{classified.profiles?.full_name || 'Anónimo'}</span>
               <span>•</span>
-              <span>{new Date(classified.created_at).toLocaleDateString()}</span>
+              <span>{classified.created_at ? new Date(classified.created_at).toLocaleDateString() : ''}</span>
             </div>
 
             <h3 className="font-heading font-black uppercase text-lg leading-tight">

@@ -40,7 +40,16 @@ export function FavoriteButton({
     startTransition(async () => {
       const result = await toggleFavoriteAction(classifiedId)
 
-      if (result.success && result.data) {
+      if (!result.success) {
+        // Revert optimistic update on error
+        setFavorited(favorited)
+        toast.error('Error', {
+          description: result.error || 'Intenta nuevamente'
+        })
+        return
+      }
+
+      if (result.data) {
         // Update with server response
         setFavorited(result.data.favorited)
         toast.success(
@@ -48,12 +57,6 @@ export function FavoriteButton({
             ? 'Agregado a favoritos'
             : 'Eliminado de favoritos'
         )
-      } else {
-        // Revert optimistic update on error
-        setFavorited(favorited)
-        toast.error('Error', {
-          description: result.error || 'Intenta nuevamente'
-        })
       }
     })
   }

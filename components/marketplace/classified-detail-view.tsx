@@ -37,10 +37,12 @@ export function ClassifiedDetailView({
   )
   const whatsappUrl = `https://wa.me/${classified.whatsapp}?text=${whatsappMessage}`
 
-  const timeAgo = formatDistanceToNow(new Date(classified.created_at), {
-    addSuffix: true,
-    locale: es
-  })
+  const timeAgo = classified.created_at
+    ? formatDistanceToNow(new Date(classified.created_at), {
+        addSuffix: true,
+        locale: es
+      })
+    : 'Fecha desconocida'
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mt-8">
@@ -129,7 +131,7 @@ export function ClassifiedDetailView({
               variant="outline"
               className="text-[10px] rounded-none py-1 px-2 border-black font-black uppercase tracking-widest"
             >
-              {classified.marketplace_categories.name}
+              {classified.marketplace_categories?.name || 'Sin categoría'}
             </Badge>
           </div>
 
@@ -167,7 +169,7 @@ export function ClassifiedDetailView({
               Vendedor
             </h2>
             <div className="flex items-center gap-3">
-              {classified.profiles.avatar_url ? (
+              {classified.profiles?.avatar_url ? (
                 <Image
                   src={classified.profiles.avatar_url}
                   alt={classified.profiles.full_name || 'Usuario'}
@@ -181,7 +183,7 @@ export function ClassifiedDetailView({
                 </div>
               )}
               <div>
-                <p className="font-bold">{classified.profiles.full_name || 'Usuario'}</p>
+                <p className="font-bold">{classified.profiles?.full_name || 'Usuario'}</p>
                 <p className="text-sm text-black/60 flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   Publicado {timeAgo}

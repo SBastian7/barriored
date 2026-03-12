@@ -37,7 +37,7 @@ export function MarketplaceHub({
     // Filter by category
     if (filters.category !== 'all') {
       filtered = filtered.filter(c =>
-        c.marketplace_categories.slug === filters.category
+        c.marketplace_categories?.slug === filters.category
       )
     }
 
