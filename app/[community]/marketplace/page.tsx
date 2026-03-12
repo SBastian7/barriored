@@ -44,7 +44,8 @@ export default async function MarketplacePage({
     .select(`
       *,
       profiles!classifieds_user_id_fkey(full_name, avatar_url),
-      marketplace_categories(name, slug, icon)
+      marketplace_categories(name, slug, icon),
+      communities(name, slug)
     `)
     .eq('community_id', community.id)
     .eq('status', 'active')
