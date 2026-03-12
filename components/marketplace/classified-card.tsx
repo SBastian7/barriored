@@ -8,6 +8,7 @@ import type { ClassifiedWithRelations } from '@/lib/types/database'
 
 interface ClassifiedCardProps {
   classified: ClassifiedWithRelations
+  variant?: 'admin' | 'public'
   onMarkSold?: (id: string) => void
   onArchive?: (id: string) => void
   onDelete?: (id: string) => void
@@ -15,10 +16,15 @@ interface ClassifiedCardProps {
 
 export function ClassifiedCard({
   classified,
+  variant = 'admin',
   onMarkSold,
   onArchive,
   onDelete,
 }: ClassifiedCardProps) {
+  const isPublicView = variant === 'public'
+  const detailHref = isPublicView
+    ? `/${classified.communities.slug}/marketplace/${classified.id}`
+    : `/admin/marketplace/${classified.id}`
   const thumbnail = classified.images?.[0] || '/placeholder-image.png'
 
   return (
@@ -48,7 +54,7 @@ export function ClassifiedCard({
               >
                 {classified.marketplace_categories.name}
               </Badge>
-              <ClassifiedStatusBadge status={classified.status} />
+              {!isPublicView && <ClassifiedStatusBadge status={classified.status} />}
               <span>•</span>
               <span>{classified.profiles.full_name}</span>
               <span>•</span>
@@ -73,13 +79,13 @@ export function ClassifiedCard({
           {/* Actions */}
           <div className="flex flex-col divide-y-2 divide-black md:w-48">
             <Link
-              href={`/admin/marketplace/${classified.id}`}
+              href={detailHref}
               className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-accent hover:bg-black/5 transition-colors p-4"
             >
               <Eye className="h-3 w-3" /> Ver Detalle
             </Link>
 
-            {classified.status === 'active' && onMarkSold && (
+            {!isPublicView && classified.status === 'active' && onMarkSold && (
               <button
                 onClick={() => onMarkSold(classified.id)}
                 className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 transition-colors p-4"
@@ -88,7 +94,7 @@ export function ClassifiedCard({
               </button>
             )}
 
-            {classified.status === 'active' && onArchive && (
+            {!isPublicView && classified.status === 'active' && onArchive && (
               <button
                 onClick={() => onArchive(classified.id)}
                 className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-colors p-4"
@@ -97,7 +103,7 @@ export function ClassifiedCard({
               </button>
             )}
 
-            {onDelete && (
+            {!isPublicView && onDelete && (
               <button
                 onClick={() => onDelete(classified.id)}
                 className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 transition-colors p-4"
