@@ -10,7 +10,7 @@ const navItems = [
   { label: 'Inicio', icon: Home, path: '', enabled: true },
   { label: 'Directorio', icon: Store, path: '/directory', enabled: true },
   { label: 'Comunidad', icon: Users, path: '/community', enabled: true },
-  { label: 'Marketplace', icon: ShoppingBag, path: '/marketplace', enabled: false },
+  { label: 'Marketplace', icon: ShoppingBag, path: '/marketplace', enabled: true },
   { label: 'Servicios', icon: Info, path: '/services', enabled: true },
 ]
 

@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 const navSections = [
   { label: 'Directorio', icon: Store, path: '/directory', active: true },
   { label: 'Comunidad', icon: Users, path: '/community', active: true },
-  { label: 'Marketplace', icon: ShoppingBag, path: '/marketplace', active: false },
+  { label: 'Marketplace', icon: ShoppingBag, path: '/marketplace', active: true },
   { label: 'Servicios', icon: Info, path: '/services', active: true },
 ]
 
