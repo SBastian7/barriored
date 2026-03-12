@@ -124,3 +124,80 @@ export async function createClassifiedAction(formData: FormData) {
 
   redirect('/dashboard?tab=marketplace')
 }
+
+export async function updateClassifiedAction(
+  id: string,
+  formData: FormData
+): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  // Check authentication
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'No autenticado' }
+  }
+
+  // Verify ownership
+  const { data: existing } = await supabase
+    .from('classifieds')
+    .select('user_id, community_id')
+    .eq('id', id)
+    .single()
+
+  if (!existing || existing.user_id !== user.id) {
+    return { success: false, error: 'No tienes permiso para modificar este clasificado' }
+  }
+
+  // Extract form data
+  const title = formData.get('title') as string
+  const description = formData.get('description') as string
+  const price = (formData.get('price') as string) || null
+  const whatsapp = formData.get('whatsapp') as string
+  const category_id = formData.get('category_id') as string
+  const images = formData.getAll('images') as string[]
+
+  // Validation (same as create)
+  if (!title || title.length < 10 || title.length > 100) {
+    return { success: false, error: 'Título debe tener entre 10 y 100 caracteres' }
+  }
+
+  if (!description || description.length < 20 || description.length > 1000) {
+    return { success: false, error: 'Descripción debe tener entre 20 y 1000 caracteres' }
+  }
+
+  if (!whatsapp || !/^\+?57[0-9]{10}$/.test(whatsapp.replace(/\s/g, ''))) {
+    return { success: false, error: 'WhatsApp debe ser un número colombiano válido' }
+  }
+
+  if (!images || images.length === 0) {
+    return { success: false, error: 'Debes tener al menos 1 imagen' }
+  }
+
+  if (images.length > 5) {
+    return { success: false, error: 'Máximo 5 imágenes permitidas' }
+  }
+
+  // Update classified
+  const { error } = await supabase
+    .from('classifieds')
+    .update({
+      title,
+      description,
+      price,
+      whatsapp,
+      category_id,
+      images,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Update error:', error)
+    return { success: false, error: 'Error al actualizar clasificado' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath(`/[community]/marketplace/${id}`, 'page')
+
+  return { success: true }
+}
