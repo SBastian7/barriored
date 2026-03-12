@@ -133,7 +133,6 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
 
         <ClassifiedDetailView
           classified={classifiedWithRelations}
-          communitySlug={communitySlug}
         />
       </div>
     </div>

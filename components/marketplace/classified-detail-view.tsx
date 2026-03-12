@@ -10,10 +10,9 @@ import type { ClassifiedWithRelations } from '@/lib/types/database'
 
 interface ClassifiedDetailViewProps {
   classified: ClassifiedWithRelations
-  communitySlug: string
 }
 
-export function ClassifiedDetailView({ classified, communitySlug }: ClassifiedDetailViewProps) {
+export function ClassifiedDetailView({ classified }: ClassifiedDetailViewProps) {
   const images = classified.images || []
   const hasImages = images.length > 0
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
