@@ -73,8 +73,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Update user role to merchant if not already
-  await (supabase as any).from('profiles').update({ role: 'merchant' }).eq('id', user.id)
+  // Note: Users maintain 'user' role regardless of business ownership
+  // Role changes are only for admin/moderator assignments
 
   return NextResponse.json(data, { status: 201 })
 }

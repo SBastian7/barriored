@@ -44,7 +44,7 @@ export function SignupForm() {
         await (supabase as any).from('profiles').update({
           community_id: form.community_id,
           phone: form.phone,
-          role: 'merchant',
+          role: 'user',
         }).eq('id', user.id)
       }
       toast.success('Cuenta creada exitosamente')
