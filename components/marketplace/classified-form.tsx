@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { CategorySelector } from './category-selector'
 import { ImageGalleryUpload } from './image-gallery-upload'
 import { createClassifiedAction, updateClassifiedAction } from '@/app/actions/classified-actions'
 import { toast } from 'sonner'
-import { Loader2, Send } from 'lucide-react'
+import { Loader2, Send, DollarSign } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { Database } from '@/lib/types/database'
 
 type MarketplaceCategory = Database['public']['Tables']['marketplace_categories']['Row']
@@ -180,13 +182,20 @@ export function ClassifiedForm({
         <Label className="uppercase tracking-widest font-bold text-xs">
           Precio <span className="text-black/60">(opcional)</span>
         </Label>
-        <Input
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="$50,000 o 'Negociable' o 'Gratis'"
-        />
+        <div className="flex border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all focus-within:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus-within:translate-x-[-1px] focus-within:translate-y-[-1px]">
+          <div className="flex items-center gap-2 px-3 border-r-2 border-black bg-secondary/20">
+            <DollarSign className="h-5 w-5 text-black/60 shrink-0" strokeWidth={3} />
+          </div>
+          <input
+            type="text"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="50,000 o 'Negociable' o 'Gratis'"
+            className="w-full px-3 py-3 bg-transparent outline-none font-bold text-base tracking-wide placeholder:text-black/30 placeholder:font-normal"
+          />
+        </div>
         <p className="text-xs text-black/60">
-          Puedes dejar en blanco, poner un precio, o escribir "Negociable"
+          Puedes dejar en blanco, poner un precio (COP), o escribir "Negociable"
         </p>
       </div>
 
@@ -209,20 +218,15 @@ export function ClassifiedForm({
         <Label className="uppercase tracking-widest font-bold text-xs">
           WhatsApp <span className="text-primary">*</span>
         </Label>
-        <Input
+        <PhoneInput
           value={whatsapp}
-          onChange={(e) => setWhatsapp(e.target.value)}
-          placeholder="+57 300 123 4567"
-          className={errors.whatsapp ? "border-primary bg-primary/5" : ""}
+          onChange={setWhatsapp}
+          placeholder="300 123 4567"
+          error={errors.whatsapp}
         />
         <p className="text-xs text-black/60">
           Los interesados te contactarán por WhatsApp
         </p>
-        {errors.whatsapp && (
-          <p className="text-xs font-bold text-primary uppercase tracking-widest">
-            {errors.whatsapp}
-          </p>
-        )}
       </div>
 
       {/* Submit */}

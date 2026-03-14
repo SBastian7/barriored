@@ -39,8 +39,8 @@ export function DashboardTabs({
   ]
 
   return (
-    <div className="border-b-4 border-black mb-8 overflow-x-auto">
-      <div className="flex gap-2 min-w-max">
+    <div className="border-b-4 border-black mb-8 overflow-x-auto overflow-y-hidden pb-1">
+      <div className="flex gap-2 min-w-max ">
         {tabs.map(tab => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key

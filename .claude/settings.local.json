@@ -30,7 +30,9 @@
       "mcp__supabase__list_tables",
       "Bash(supabase migration:*)",
       "Bash(git log:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
