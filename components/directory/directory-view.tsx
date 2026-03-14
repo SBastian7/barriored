@@ -35,6 +35,9 @@ type Business = {
   location?: any
   created_at?: string | null
   categories: { name: string; slug: string } | null
+  is_featured?: boolean | null
+  average_rating?: number | null
+  review_count?: number | null
 }
 
 type Category = {

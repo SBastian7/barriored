@@ -5,12 +5,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
 import { whatsappUrl } from '@/lib/utils'
+import { BusinessRating } from '@/components/reviews/business-rating'
+import { PremiumBadge } from '@/components/business/premium-badge'
 
 type BusinessCardProps = {
   business: {
     id: string; name: string; slug: string; description: string | null
     photos: string[] | null; whatsapp: string | null; address: string | null
     categories: { name: string; slug: string } | null
+    is_featured?: boolean | null
+    average_rating?: number | null
+    review_count?: number | null
   }
   communitySlug: string
 }
@@ -33,6 +38,14 @@ export function BusinessCard({ business, communitySlug }: BusinessCardProps) {
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground font-bold uppercase tracking-widest text-xs">Sin foto</div>
           )}
+
+          {/* Premium Badge */}
+          {business.is_featured && (
+            <div className="absolute top-2 left-2 z-10">
+              <PremiumBadge />
+            </div>
+          )}
+
           <div className="absolute top-2 right-2 bg-black text-white p-1 border border-white opacity-0 group-hover:opacity-100 transition-opacity">
             <ArrowUpRight className="h-4 w-4" />
           </div>
@@ -52,6 +65,17 @@ export function BusinessCard({ business, communitySlug }: BusinessCardProps) {
             <Badge className="bg-secondary text-black border-2 border-black hover:bg-secondary mb-3 rounded-none font-bold uppercase text-[10px] tracking-widest">
               {business.categories.name}
             </Badge>
+          )}
+
+          {/* Business Rating */}
+          {business.review_count && business.review_count > 0 && business.average_rating && (
+            <div className="mb-3">
+              <BusinessRating
+                averageRating={business.average_rating}
+                reviewCount={business.review_count}
+                size="sm"
+              />
+            </div>
           )}
 
           {business.description && (

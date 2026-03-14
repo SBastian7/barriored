@@ -35,7 +35,7 @@ export default async function DirectoryPage({
       const ids = data.map((b: any) => b.id)
       const { data: full } = await supabase
         .from('businesses')
-        .select('id, name, slug, description, photos, whatsapp, address, location, created_at, categories(name, slug)')
+        .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
         .in('id', ids)
         .eq('status', 'approved')
       businesses = full ?? []
@@ -45,7 +45,7 @@ export default async function DirectoryPage({
   } else {
     const { data } = await supabase
       .from('businesses')
-      .select('id, name, slug, description, photos, whatsapp, address, location, created_at, categories(name, slug)')
+      .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
       .eq('community_id', community.id)
       .eq('status', 'approved')
       .order('created_at', { ascending: false })

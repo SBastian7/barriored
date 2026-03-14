@@ -24,7 +24,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
 
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('id, name, slug, description, photos, whatsapp, address, location, created_at, categories(name, slug)')
+    .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
     .eq('community_id', communityRes.data.id)
     .eq('category_id', categoryRes.data.id)
     .eq('status', 'approved')

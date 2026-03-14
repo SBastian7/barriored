@@ -7,6 +7,9 @@ type Business = {
   id: string; name: string; slug: string; description: string | null
   photos: string[] | null; whatsapp: string | null; address: string | null
   categories: { name: string; slug: string } | null
+  is_featured?: boolean | null
+  average_rating?: number | null
+  review_count?: number | null
 }
 
 type BusinessSectionProps = {

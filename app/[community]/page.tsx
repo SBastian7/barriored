@@ -32,7 +32,7 @@ export default async function CommunityHomePage({ params }: { params: Promise<{ 
       .eq('community_id', community.id).eq('status', 'approved'),
 
     // Featured businesses query
-    supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, categories(name, slug)')
+    supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
       .eq('community_id', community.id)
       .eq('status', 'approved')
       .eq('is_featured', true)
@@ -40,7 +40,7 @@ export default async function CommunityHomePage({ params }: { params: Promise<{ 
       .limit(3),
 
     // Recent businesses query (will exclude featured in next step)
-    supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, categories(name, slug)')
+    supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
       .eq('community_id', community.id)
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
