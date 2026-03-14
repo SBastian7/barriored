@@ -130,19 +130,18 @@ export async function GET(request: NextRequest) {
 
     // 1. Validate required business_id parameter
     const businessId = searchParams.get('business_id');
-    if (!businessId) {
+
+    // Validate UUID format
+    if (!businessId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(businessId)) {
       return NextResponse.json(
-        { error: 'business_id is required' },
+        { error: 'ID de negocio inválido.' },
         { status: 400 }
       );
     }
 
-    // 2. Parse pagination and sort parameters
-    const limit = Math.min(
-      parseInt(searchParams.get('limit') || '10', 10),
-      50
-    );
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    // 2. Parse pagination and sort parameters with bounds checking
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '10', 10) || 10), 50);
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10) || 0);
     const sort = searchParams.get('sort') || 'newest';
 
     // 3. Build query with relations
