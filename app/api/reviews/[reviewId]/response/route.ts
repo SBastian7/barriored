@@ -4,6 +4,15 @@ import { z } from 'zod'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+// Type for review with business owner relation
+type ReviewWithBusiness = {
+  id: string
+  business_id: string
+  businesses: {
+    owner_id: string
+  }
+}
+
 const responseSchema = z.object({
   response_text: z.string().min(10, 'La respuesta debe tener al menos 10 caracteres').max(500),
 })
@@ -67,7 +76,12 @@ export async function POST(
 
     const { response_text } = validationResult.data
 
-    // Verify the review exists and get business ownership info
+    // Explicit ownership verification before upsert
+    // This adds one extra DB call but provides better UX:
+    // - Returns specific 404 if review doesn't exist
+    // - Returns specific 403 if user doesn't own business
+    // - Prevents unnecessary upsert attempts for unauthorized users
+    // Trade-off: ~20-50ms latency for clearer error messages
     const { data: review, error: reviewError } = await supabase
       .from('business_reviews')
       .select('id, business_id, businesses!inner(owner_id)')
@@ -82,7 +96,7 @@ export async function POST(
     }
 
     // Verify user owns the business
-    const businessOwnerId = (review.businesses as any).owner_id
+    const businessOwnerId = (review as ReviewWithBusiness).businesses.owner_id
     if (businessOwnerId !== user.id) {
       return NextResponse.json(
         { error: 'Solo el dueño del negocio puede responder.' },
@@ -181,7 +195,12 @@ export async function DELETE(
       )
     }
 
-    // Verify the review exists and get business ownership info
+    // Explicit ownership verification before delete
+    // This adds one extra DB call but provides better UX:
+    // - Returns specific 404 if review doesn't exist
+    // - Returns specific 403 if user doesn't own business
+    // - Prevents unnecessary delete attempts for unauthorized users
+    // Trade-off: ~20-50ms latency for clearer error messages
     const { data: review, error: reviewError } = await supabase
       .from('business_reviews')
       .select('id, business_id, businesses!inner(owner_id)')
@@ -196,7 +215,7 @@ export async function DELETE(
     }
 
     // Verify user owns the business
-    const businessOwnerId = (review.businesses as any).owner_id
+    const businessOwnerId = (review as ReviewWithBusiness).businesses.owner_id
     if (businessOwnerId !== user.id) {
       return NextResponse.json(
         { error: 'No tienes permiso para eliminar esta respuesta.' },
