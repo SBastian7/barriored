@@ -10,6 +10,9 @@ import { ReportButton } from '@/components/shared/report-button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Briefcase } from 'lucide-react'
+import { BusinessRating } from '@/components/reviews/business-rating'
+import { ReviewList } from '@/components/reviews/review-list'
+import { WriteReviewButton } from '@/components/reviews/write-review-button'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; slug: string }> }) {
   const { community: commSlug, slug } = await params
@@ -45,6 +48,20 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
     .single<{ id: string; [key: string]: any }>()
 
   if (!business) notFound()
+
+  // Fetch current user
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Fetch review stats
+  const { data: reviewStats } = await supabase
+    .from('business_reviews')
+    .select('rating')
+    .eq('business_id', business.id)
+
+  const reviewCount = reviewStats?.length || 0
+  const averageRating = reviewCount > 0 && reviewStats
+    ? reviewStats.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+    : 0
 
   // Fetch linked events and jobs
   const [linkedEventsRes, linkedJobsRes] = await Promise.all([
@@ -101,6 +118,27 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
         <ReportButton entityType="business" entityId={business.id} variant="outline" />
       </div>
 
+      {/* Write Review Button */}
+      <div className="flex justify-end mb-6">
+        <WriteReviewButton
+          businessId={business.id}
+          businessName={business.name}
+          businessOwnerId={business.owner_id}
+          currentUserId={user?.id || null}
+        />
+      </div>
+
+      {/* Average Rating Summary */}
+      {reviewCount > 0 && (
+        <div className="mb-6">
+          <BusinessRating
+            averageRating={averageRating}
+            reviewCount={reviewCount}
+            size="lg"
+          />
+        </div>
+      )}
+
       <BusinessInfo
         address={business.address}
         phone={business.phone}
@@ -110,6 +148,16 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
         description={business.description}
       />
       {lat && lng && <LocationMap lat={lat} lng={lng} name={business.name} address={business.address} />}
+
+      {/* Reviews Section */}
+      <div className="mt-8">
+        <ReviewList
+          businessId={business.id}
+          businessName={business.name}
+          currentUserId={user?.id || null}
+          businessOwnerId={business.owner_id}
+        />
+      </div>
 
       {/* Linked Events */}
       {linkedEvents.length > 0 && (
