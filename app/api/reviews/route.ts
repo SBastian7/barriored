@@ -122,3 +122,105 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { searchParams } = new URL(request.url);
+
+    // 1. Validate required business_id parameter
+    const businessId = searchParams.get('business_id');
+    if (!businessId) {
+      return NextResponse.json(
+        { error: 'business_id es requerido.' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Parse pagination and sort parameters
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '10', 10),
+      50
+    );
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const sort = searchParams.get('sort') || 'newest';
+
+    // 3. Build query with relations
+    let query = supabase
+      .from('business_reviews')
+      .select(
+        `
+        id,
+        rating,
+        review_text,
+        created_at,
+        updated_at,
+        user:profiles!business_reviews_user_id_fkey (
+          id,
+          full_name,
+          avatar_url
+        ),
+        responses:business_review_responses (
+          response_text,
+          created_at,
+          updated_at
+        )
+      `,
+        { count: 'exact' }
+      )
+      .eq('business_id', businessId);
+
+    // 4. Apply sorting
+    switch (sort) {
+      case 'highest':
+        query = query.order('rating', { ascending: false });
+        break;
+      case 'lowest':
+        query = query.order('rating', { ascending: true });
+        break;
+      case 'newest':
+      default:
+        query = query.order('created_at', { ascending: false });
+    }
+
+    // 5. Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: reviews, error: reviewsError, count } = await query;
+
+    if (reviewsError) {
+      console.error('Error fetching reviews:', reviewsError);
+      return NextResponse.json(
+        { error: 'Error al cargar reseñas.' },
+        { status: 500 }
+      );
+    }
+
+    // 6. Calculate average rating (separate query for all ratings)
+    const { data: allRatings } = await supabase
+      .from('business_reviews')
+      .select('rating')
+      .eq('business_id', businessId);
+
+    const averageRating =
+      allRatings && allRatings.length > 0
+        ? Math.round(
+            (allRatings.reduce((sum, r) => sum + r.rating, 0) /
+              allRatings.length) *
+              10
+          ) / 10
+        : 0;
+
+    return NextResponse.json({
+      reviews: reviews || [],
+      total_count: count || 0,
+      average_rating: averageRating,
+    });
+  } catch (error) {
+    console.error('Unexpected error in GET /api/reviews:', error);
+    return NextResponse.json(
+      { error: 'Error al cargar reseñas.' },
+      { status: 500 }
+    );
+  }
+}
