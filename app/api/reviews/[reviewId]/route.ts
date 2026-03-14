@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import type { User } from '@supabase/supabase-js'
 
 const updateReviewSchema = z.object({
   rating: z.number().int().min(1).max(5).optional(),
@@ -10,6 +11,71 @@ const updateReviewSchema = z.object({
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+// Shared validation for review operations
+async function validateUserAccessToReview(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  reviewId: string
+): Promise<{ error: NextResponse } | { user: User }> {
+  // Validate UUID format
+  if (!reviewId || !UUID_REGEX.test(reviewId)) {
+    return {
+      error: NextResponse.json(
+        { error: 'ID de reseña inválido.' },
+        { status: 400 }
+      ),
+    }
+  }
+
+  // Check authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return {
+      error: NextResponse.json(
+        { error: 'No autenticado.' },
+        { status: 401 }
+      ),
+    }
+  }
+
+  // Check user suspension
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('is_suspended')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError) {
+    console.error('Error fetching user profile:', profileError)
+    return {
+      error: NextResponse.json(
+        { error: 'Error al verificar usuario.' },
+        { status: 500 }
+      ),
+    }
+  }
+
+  // Explicit NULL check
+  if (!profile) {
+    return {
+      error: NextResponse.json(
+        { error: 'Error al verificar usuario.' },
+        { status: 500 }
+      ),
+    }
+  }
+
+  if (profile.is_suspended) {
+    return {
+      error: NextResponse.json(
+        { error: 'Tu cuenta está suspendida.' },
+        { status: 403 }
+      ),
+    }
+  }
+
+  return { user }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }
@@ -18,43 +84,10 @@ export async function PATCH(
     const { reviewId } = await params
     const supabase = await createClient()
 
-    // Validate UUID format
-    if (!UUID_REGEX.test(reviewId)) {
-      return NextResponse.json(
-        { error: 'ID de reseña inválido.' },
-        { status: 400 }
-      )
-    }
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'No autenticado.' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is suspended
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_suspended')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError) {
-      console.error('Error fetching profile:', profileError)
-      return NextResponse.json(
-        { error: 'Error al verificar usuario.' },
-        { status: 500 }
-      )
-    }
-
-    if (profile?.is_suspended) {
-      return NextResponse.json(
-        { error: 'Tu cuenta está suspendida y no puedes editar reseñas.' },
-        { status: 403 }
-      )
+    // Validate user access
+    const validation = await validateUserAccessToReview(supabase, reviewId)
+    if ('error' in validation) {
+      return validation.error
     }
 
     // Parse and validate request body
@@ -130,49 +163,16 @@ export async function DELETE(
     const { reviewId } = await params
     const supabase = await createClient()
 
-    // Validate UUID format
-    if (!UUID_REGEX.test(reviewId)) {
-      return NextResponse.json(
-        { error: 'ID de reseña inválido.' },
-        { status: 400 }
-      )
-    }
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'No autenticado.' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is suspended
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_suspended')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError) {
-      console.error('Error fetching profile:', profileError)
-      return NextResponse.json(
-        { error: 'Error al verificar usuario.' },
-        { status: 500 }
-      )
-    }
-
-    if (profile?.is_suspended) {
-      return NextResponse.json(
-        { error: 'Tu cuenta está suspendida y no puedes eliminar reseñas.' },
-        { status: 403 }
-      )
+    // Validate user access
+    const validation = await validateUserAccessToReview(supabase, reviewId)
+    if ('error' in validation) {
+      return validation.error
     }
 
     // Delete review (RLS will enforce ownership, CASCADE will delete response)
-    const { error: deleteError } = await supabase
+    const { error: deleteError, count } = await supabase
       .from('business_reviews')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('id', reviewId)
 
     if (deleteError) {
@@ -188,6 +188,14 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Error al eliminar reseña.' },
         { status: 500 }
+      )
+    }
+
+    // Check if deletion actually occurred
+    if (count === 0) {
+      return NextResponse.json(
+        { error: 'Esta reseña ya no existe o no tienes permiso.' },
+        { status: 404 }
       )
     }
 
