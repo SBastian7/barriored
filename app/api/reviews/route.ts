@@ -26,20 +26,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse and validate request body
+    // 2. Check if user is suspended
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_suspended')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.is_suspended) {
+      return NextResponse.json(
+        { error: 'Cuenta suspendida.' },
+        { status: 403 }
+      );
+    }
+
+    // 3. Parse and validate request body
     const body = await request.json();
     const validation = reviewSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Datos inválidos.', details: validation.error.errors },
+        { error: 'Datos inválidos.', details: validation.error.format() },
         { status: 400 }
       );
     }
 
     const { business_id, rating, review_text } = validation.data;
 
-    // 3. Check if business exists and is approved
+    // 4. Check if business exists and is approved
     const { data: business, error: businessError } = await supabase
       .from('businesses')
       .select('id, owner_id, status')
@@ -60,7 +74,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Prevent self-review
+    // 5. Prevent self-review
     if (business.owner_id === user.id) {
       return NextResponse.json(
         { error: 'No puedes dejar reseñas en tu propio negocio.' },
@@ -68,7 +82,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Create review
+    // 6. Create review
     const { data: review, error: insertError } = await supabase
       .from('business_reviews')
       .insert({
