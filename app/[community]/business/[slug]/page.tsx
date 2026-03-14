@@ -116,10 +116,6 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
           description={business.description || `${business.name} en BarrioRed`}
         />
         <ReportButton entityType="business" entityId={business.id} variant="outline" />
-      </div>
-
-      {/* Write Review Button */}
-      <div className="flex justify-end mb-6">
         <WriteReviewButton
           businessId={business.id}
           businessName={business.name}
