@@ -31,7 +31,7 @@ CREATE POLICY "Community admins can view community analytics"
       SELECT 1 FROM profiles p
       JOIN businesses b ON b.id = business_analytics_daily.business_id
       WHERE p.id = auth.uid()
-        AND p.role IN ('admin', 'moderator')
+        AND p.role = 'admin'
         AND p.community_id = b.community_id
     )
   );
@@ -46,14 +46,20 @@ CREATE POLICY "Super admins can view all analytics"
     )
   );
 
--- Analytics tracking can insert/update (public, rate-limited in API)
+-- Analytics tracking can insert/update (restricted to existing businesses in user's community)
 CREATE POLICY "Allow analytics tracking inserts"
   ON business_analytics_daily FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (
+    business_id IN (
+      SELECT b.id FROM businesses b
+      JOIN profiles p ON p.community_id = b.community_id
+      WHERE p.id = auth.uid()
+    )
+  );
 
 CREATE POLICY "Allow analytics tracking updates"
   ON business_analytics_daily FOR UPDATE
-  USING (true);
+  USING (date = CURRENT_DATE);
 
 -- ============================================================================
 -- BUSINESS_SUBSCRIPTIONS POLICIES
@@ -146,9 +152,11 @@ CREATE POLICY "Admins can create payment records"
   ON subscription_payments FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid()
-        AND (role = 'admin' OR is_super_admin = true)
+      SELECT 1 FROM profiles p
+      JOIN business_subscriptions s ON s.id = subscription_payments.subscription_id
+      JOIN businesses b ON b.id = s.business_id
+      WHERE p.id = auth.uid()
+        AND (p.is_super_admin = true OR (p.role = 'admin' AND p.community_id = b.community_id))
     )
   );
 
@@ -201,7 +209,10 @@ CREATE POLICY "Business owners can view their banners"
 -- Public can read active banners (for display)
 CREATE POLICY "Public can view active banners"
   ON banner_ads FOR SELECT
-  USING (status = 'active');
+  USING (
+    status = 'active'
+    AND community_id IN (SELECT id FROM communities WHERE is_active = true)
+  );
 
 -- Admins can view all banners in their community
 CREATE POLICY "Admins can view community banners"
@@ -257,9 +268,10 @@ CREATE POLICY "Admins can create banner payment records"
   ON banner_payments FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid()
-        AND (role = 'admin' OR is_super_admin = true)
+      SELECT 1 FROM profiles p
+      JOIN banner_ads ba ON ba.id = banner_payments.banner_id
+      WHERE p.id = auth.uid()
+        AND (p.is_super_admin = true OR (p.role = 'admin' AND p.community_id = ba.community_id))
     )
   );
 
