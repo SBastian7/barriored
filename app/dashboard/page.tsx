@@ -110,11 +110,14 @@ async function BusinessTabContent({
     .eq('author_id', userId)
     .order('created_at', { ascending: false }) as { data: any }
 
+  // Find first approved business
+  const firstApprovedBusiness = businesses?.find(b => b.status === 'approved')
+
   // Check promotion eligibility
   let canPromote = false
   let nextPromotionDate: Date | null = null
 
-  if (businesses && businesses.length > 0 && businesses[0].status === 'approved') {
+  if (firstApprovedBusiness) {
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
@@ -122,7 +125,7 @@ async function BusinessTabContent({
       .from('community_posts')
       .select('created_at')
       .eq('type', 'promotion')
-      .eq('metadata->>linked_business_id', businesses[0].id)
+      .eq('metadata->>linked_business_id', firstApprovedBusiness.id)
       .gte('created_at', oneWeekAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
@@ -188,28 +191,28 @@ async function BusinessTabContent({
         )}
 
         {/* Business Analytics */}
-        {businesses && businesses.length > 0 && businesses[0].status === 'approved' && (
+        {firstApprovedBusiness && (
           <div className="mt-8">
-            <BusinessAnalytics businessId={businesses[0].id} />
+            <BusinessAnalytics businessId={firstApprovedBusiness.id} />
           </div>
         )}
 
         {/* Premium Status Widget */}
-        {businesses && businesses.length > 0 && businesses[0].status === 'approved' && (
+        {firstApprovedBusiness && (
           <div className="mt-8">
-            <PremiumStatusWidget businessId={businesses[0].id} />
+            <PremiumStatusWidget businessId={firstApprovedBusiness.id} />
           </div>
         )}
 
         {/* Banner Ads Manager */}
-        {businesses && businesses.length > 0 && businesses[0].status === 'approved' && (
+        {firstApprovedBusiness && (
           <div className="mt-8">
-            <BannerAdsManager businessId={businesses[0].id} />
+            <BannerAdsManager businessId={firstApprovedBusiness.id} />
           </div>
         )}
 
         {/* Promotion Widget */}
-        {businesses && businesses.length > 0 && businesses[0].status === 'approved' && (
+        {firstApprovedBusiness && (
           <Card className="brutalist-card border-secondary bg-secondary/5 mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -250,7 +253,7 @@ async function BusinessTabContent({
         )}
 
         {/* Deletion Request Section */}
-        {businesses && businesses.length > 0 && businesses[0] && !businesses[0].deletion_requested && (
+        {firstApprovedBusiness && !firstApprovedBusiness.deletion_requested && (
           <Card className="brutalist-card border-red-600 mt-8">
             <CardHeader>
               <CardTitle className="text-red-600">Zona de Peligro</CardTitle>
@@ -264,14 +267,14 @@ async function BusinessTabContent({
                 administrador revise tu solicitud. Esta acción es reversible por el equipo.
               </p>
               <DeletionRequestButton
-                businessId={businesses[0].id}
-                businessName={businesses[0].name}
+                businessId={firstApprovedBusiness.id}
+                businessName={firstApprovedBusiness.name}
               />
             </CardContent>
           </Card>
         )}
 
-        {businesses && businesses.length > 0 && businesses[0]?.deletion_requested && (
+        {firstApprovedBusiness?.deletion_requested && (
           <Card className="brutalist-card border-secondary bg-secondary/10 mt-8">
             <CardHeader>
               <CardTitle>Eliminación Pendiente</CardTitle>
@@ -280,9 +283,9 @@ async function BusinessTabContent({
               <p className="text-sm">
                 Tu solicitud de eliminación está siendo revisada por un administrador.
               </p>
-              {businesses[0].deletion_reason && (
+              {firstApprovedBusiness.deletion_reason && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  Razón: {businesses[0].deletion_reason}
+                  Razón: {firstApprovedBusiness.deletion_reason}
                 </p>
               )}
             </CardContent>
