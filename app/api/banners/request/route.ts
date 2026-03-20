@@ -7,6 +7,7 @@ type BannerPlacement = 'homepage' | 'directory'
 
 const VALID_PLACEMENTS: BannerPlacement[] = ['homepage', 'directory']
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,9 +67,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. Validate image file type
-    if (!imageFile.type.startsWith('image/')) {
+    if (!ALLOWED_IMAGE_TYPES.includes(imageFile.type)) {
       return NextResponse.json(
-        { error: 'El archivo debe ser una imagen.' },
+        { error: 'Solo se permiten imágenes JPG, PNG o WebP.' },
         { status: 400 }
       )
     }
@@ -110,7 +111,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 11. Upload image to Supabase Storage
+    // 11. Check for existing pending banner for this placement
+    const { data: pendingBanner } = await supabase
+      .from('banner_ads')
+      .select('id')
+      .eq('business_id', businessId)
+      .eq('placement', placement)
+      .eq('status', 'requested')
+      .maybeSingle()
+
+    if (pendingBanner) {
+      return NextResponse.json(
+        { error: 'Ya tienes una solicitud de banner pendiente para esta ubicación.' },
+        { status: 400 }
+      )
+    }
+
+    // 12. Upload image to Supabase Storage
     const fileExt = imageFile.name.split('.').pop() || 'jpg'
     const fileName = `${businessId}/${Date.now()}.${fileExt}`
 
@@ -129,12 +146,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 12. Get public URL for the uploaded image
+    // 13. Get public URL for the uploaded image
     const {
       data: { publicUrl },
     } = supabase.storage.from('banners').getPublicUrl(uploadData.path)
 
-    // 13. Create banner record
+    // 14. Create banner record
     const { data: banner, error: insertError } = await supabase
       .from('banner_ads')
       .insert({
