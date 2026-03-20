@@ -11,6 +11,7 @@ import { JobFilledToggle } from '@/components/community/job-filled-toggle'
 import { PostDeleteButton } from '@/components/community/post-delete-button'
 import { DeletionRequestButton } from '@/components/business/deletion-request-button'
 import { BusinessAnalytics } from '@/components/business/business-analytics'
+import { PremiumStatusWidget } from '@/components/subscription/premium-status-widget'
 import type { JobMetadata } from '@/lib/types'
 import Link from 'next/link'
 
@@ -189,6 +190,13 @@ async function BusinessTabContent({
         {businesses && businesses.length > 0 && businesses[0].status === 'approved' && (
           <div className="mt-8">
             <BusinessAnalytics businessId={businesses[0].id} />
+          </div>
+        )}
+
+        {/* Premium Status Widget */}
+        {businesses && businesses.length > 0 && businesses[0].status === 'approved' && (
+          <div className="mt-8">
+            <PremiumStatusWidget businessId={businesses[0].id} />
           </div>
         )}
 
