@@ -49,7 +49,8 @@ export function PhoneInput({ value, onChange, placeholder = '300 123 4567', erro
     const newParsed = parseValue(value)
     setPrefix(newParsed.prefix)
     setLocalNumber(newParsed.local)
-  }, [value, parseValue])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
 
   const selectedCountry = COUNTRY_PREFIXES.find(p => p.code === prefix) ?? COUNTRY_PREFIXES[0]
 
