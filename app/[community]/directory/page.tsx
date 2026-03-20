@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DirectoryView } from '@/components/directory/directory-view'
+import { BannerRotator } from '@/components/banners/banner-rotator'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string }> }) {
   const { community: slug } = await params
@@ -70,6 +71,10 @@ export default async function DirectoryPage({
             <>Directorio <span className="text-primary italic">Local</span></>
           )}
         </h1>
+      </div>
+
+      <div className="mb-8">
+        <BannerRotator placement="directory" communityId={community.id} />
       </div>
 
       <DirectoryView

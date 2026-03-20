@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DirectoryView } from '@/components/directory/directory-view'
+import { BannerRotator } from '@/components/banners/banner-rotator'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; category: string }> }) {
   const { category: catSlug } = await params
@@ -44,6 +45,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
       <h1 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter italic text-shadow-md mb-8">
         {categoryRes.data.name}
       </h1>
+
+      <div className="mb-8">
+        <BannerRotator placement="directory" communityId={communityRes.data.id} />
+      </div>
 
       <DirectoryView
         businesses={businesses ?? []}
