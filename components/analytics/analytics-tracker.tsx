@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 
 interface AnalyticsTrackerProps {
   businessId: string
+  // Note: For WhatsApp clicks, use trackWhatsAppClick() helper function
   eventType?: 'profile_view' | 'whatsapp_click'
 }
 
@@ -54,11 +55,15 @@ export function AnalyticsTracker({ businessId, eventType = 'profile_view' }: Ana
 // Helper function for WhatsApp click tracking
 export async function trackWhatsAppClick(businessId: string): Promise<void> {
   try {
-    await fetch('/api/analytics/track', {
+    const response = await fetch('/api/analytics/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ businessId, eventType: 'whatsapp_click' })
     })
+
+    if (!response.ok) {
+      console.warn('WhatsApp click tracking failed with status:', response.status)
+    }
   } catch (error) {
     console.error('Failed to track WhatsApp click:', error)
   }
