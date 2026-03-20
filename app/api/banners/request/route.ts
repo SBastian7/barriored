@@ -7,7 +7,6 @@ type BannerPlacement = 'homepage' | 'directory'
 
 const VALID_PLACEMENTS: BannerPlacement[] = ['homepage', 'directory']
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,9 +66,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. Validate image file type
-    if (!ALLOWED_IMAGE_TYPES.includes(imageFile.type)) {
+    if (!imageFile.type.startsWith('image/')) {
       return NextResponse.json(
-        { error: 'Solo se permiten imágenes JPG, PNG o WebP.' },
+        { error: 'El archivo debe ser una imagen.' },
         { status: 400 }
       )
     }
