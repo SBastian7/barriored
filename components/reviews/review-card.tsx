@@ -8,11 +8,14 @@ import { ReviewWithRelations } from '@/lib/types/database'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { FlagReviewButton } from './flag-review-button'
 
 interface ReviewCardProps {
   review: ReviewWithRelations
   isOwner: boolean
   canRespond: boolean
+  canFlag?: boolean
+  businessId?: string
   onEdit?: () => void
   onDelete?: () => void
   onRespond?: () => void
@@ -22,6 +25,8 @@ export function ReviewCard({
   review,
   isOwner,
   canRespond,
+  canFlag,
+  businessId,
   onEdit,
   onDelete,
   onRespond,
@@ -29,21 +34,24 @@ export function ReviewCard({
   const userName = review.user?.full_name || 'Usuario eliminado'
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase()
 
+  // DEBUG
+  console.log('ReviewCard:', { isOwner, userId: review.user_id })
+
   return (
     <Card className="brutalist-card">
       <CardContent className="p-4 space-y-3">
         {/* Header: User info + Actions */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-black">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Avatar className="h-10 w-10 border-2 border-black shrink-0">
               <AvatarImage src={review.user?.avatar_url || undefined} alt={userName} />
               <AvatarFallback className="bg-secondary text-black font-bold">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
 
-            <div>
-              <p className="font-bold text-sm uppercase tracking-tight">{userName}</p>
+            <div className="min-w-0">
+              <p className="font-bold text-sm uppercase tracking-tight truncate">{userName}</p>
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(review.created_at), {
                   addSuffix: true,
@@ -53,27 +61,34 @@ export function ReviewCard({
             </div>
           </div>
 
-          {/* Action buttons */}
-          {isOwner && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onEdit}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          {/* Action buttons - MADE MORE VISIBLE */}
+          <div className="flex gap-2 shrink-0 ml-2">
+            {isOwner && onEdit && onDelete && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 border-2 border-black bg-white hover:bg-accent hover:text-white"
+                  onClick={onEdit}
+                  title="Editar reseña"
+                >
+                  <Pencil className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 border-2 border-black bg-white hover:bg-red-600 hover:text-white"
+                  onClick={onDelete}
+                  title="Eliminar reseña"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              </>
+            )}
+            {canFlag && businessId && !isOwner && (
+              <FlagReviewButton reviewId={review.id} businessId={businessId} />
+            )}
+          </div>
         </div>
 
         {/* Star rating */}

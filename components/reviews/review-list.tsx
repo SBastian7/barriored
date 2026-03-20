@@ -138,19 +138,39 @@ export function ReviewList({
 
       {/* Reviews */}
       <div className="space-y-4">
-        {reviews.map((review) => (
-          <ReviewCard
-            key={review.id}
-            review={review}
-            isOwner={currentUserId === review.user_id}
-            canRespond={currentUserId === businessOwnerId && !review.response}
-            onEdit={() => {
-              setReviewToEdit(review)
-              setIsFormOpen(true)
-            }}
-            onDelete={() => setReviewToDelete(review.id)}
-          />
-        ))}
+        {reviews.map((review) => {
+          const isOwner = currentUserId === review.user_id
+          const isBusinessOwner = currentUserId === businessOwnerId
+          const canFlag = isBusinessOwner && !isOwner
+
+          // DEBUG: Log ownership check
+          console.log('ReviewList ownership check:', {
+            currentUserId,
+            reviewUserId: review.user_id,
+            isOwner,
+            isBusinessOwner,
+            canFlag,
+            areEqual: currentUserId === review.user_id,
+            typeOfCurrent: typeof currentUserId,
+            typeOfReview: typeof review.user_id
+          })
+
+          return (
+            <ReviewCard
+              key={review.id}
+              review={review}
+              isOwner={isOwner}
+              canRespond={isBusinessOwner && !review.response}
+              canFlag={canFlag}
+              businessId={businessId}
+              onEdit={() => {
+                setReviewToEdit(review)
+                setIsFormOpen(true)
+              }}
+              onDelete={() => setReviewToDelete(review.id)}
+            />
+          )
+        })}
       </div>
 
       {/* Pagination */}
