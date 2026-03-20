@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { JobFilledToggle } from '@/components/community/job-filled-toggle'
 import { PostDeleteButton } from '@/components/community/post-delete-button'
 import { DeletionRequestButton } from '@/components/business/deletion-request-button'
+import { BusinessAnalytics } from '@/components/business/business-analytics'
 import type { JobMetadata } from '@/lib/types'
 import Link from 'next/link'
 
@@ -181,6 +182,13 @@ async function BusinessTabContent({
                 </Card>
               )
             })}
+          </div>
+        )}
+
+        {/* Business Analytics */}
+        {businesses && businesses.length > 0 && businesses[0].status === 'approved' && (
+          <div className="mt-8">
+            <BusinessAnalytics businessId={businesses[0].id} />
           </div>
         )}
 
