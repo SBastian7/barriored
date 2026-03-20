@@ -1,63 +1,105 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { z } from 'zod'
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Type for review with business owner relation
+type ReviewWithBusiness = {
+  id: string
+  business_id: string
+  businesses: {
+    owner_id: string
+  }
+}
+
+// Zod schema for request body validation
+const FlagReviewSchema = z.object({
+  reason: z.enum(['spam', 'offensive', 'fake', 'irrelevant', 'other'], {
+    errorMap: () => ({ message: 'Motivo inválido.' })
+  }),
+  description: z.string().optional()
+})
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
     const { reviewId } = await params
+    const supabase = await createClient()
 
-    if (!user) {
+    // Validate UUID format
+    if (!UUID_REGEX.test(reviewId)) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'ID de reseña inválido.' },
+        { status: 400 }
+      )
+    }
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'No autenticado.' },
         { status: 401 }
       )
     }
 
+    // Check if user is suspended
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_suspended')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'Error al verificar usuario.' },
+        { status: 500 }
+      )
+    }
+
+    if (profile.is_suspended) {
+      return NextResponse.json(
+        { error: 'Tu cuenta está suspendida y no puede reportar reseñas.' },
+        { status: 403 }
+      )
+    }
+
+    // Parse and validate request body
     const body = await request.json()
-    const { reason, description } = body as {
-      reason: 'spam' | 'offensive' | 'fake' | 'irrelevant' | 'other'
-      description?: string
-    }
+    const validationResult = FlagReviewSchema.safeParse(body)
 
-    if (!reason) {
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Reason required' },
+        { error: validationResult.error.issues[0].message },
         { status: 400 }
       )
     }
 
-    // Validate reason
-    const validReasons = ['spam', 'offensive', 'fake', 'irrelevant', 'other']
-    if (!validReasons.includes(reason)) {
-      return NextResponse.json(
-        { error: 'Invalid reason' },
-        { status: 400 }
-      )
-    }
+    const { reason, description } = validationResult.data
 
     // Get review and verify user owns the business
-    const { data: review } = await supabase
+    const { data: review, error: reviewError } = await supabase
       .from('business_reviews')
-      .select('id, business_id, businesses(owner_id)')
+      .select('id, business_id, businesses!inner(owner_id)')
       .eq('id', reviewId)
       .single()
 
-    if (!review) {
+    if (reviewError || !review) {
       return NextResponse.json(
-        { error: 'Review not found' },
+        { error: 'La reseña no existe.' },
         { status: 404 }
       )
     }
 
-    const business = review.businesses as unknown as { owner_id: string }
-    if (business.owner_id !== user.id) {
+    // Verify user owns the business
+    const businessOwnerId = (review as ReviewWithBusiness).businesses.owner_id
+    if (businessOwnerId !== user.id) {
       return NextResponse.json(
-        { error: 'Forbidden - You can only flag reviews on your own business' },
+        { error: 'Solo puedes reportar reseñas de tu propio negocio.' },
         { status: 403 }
       )
     }
@@ -72,7 +114,7 @@ export async function POST(
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Ya reportaste esta reseña' },
+        { error: 'Ya reportaste esta reseña.' },
         { status: 400 }
       )
     }
@@ -93,16 +135,16 @@ export async function POST(
     if (insertError) {
       console.error('Error creating flag:', insertError)
       return NextResponse.json(
-        { error: 'Failed to flag review' },
+        { error: 'Error al reportar reseña.' },
         { status: 500 }
       )
     }
 
     return NextResponse.json({ flag }, { status: 201 })
   } catch (error) {
-    console.error('Flag review error:', error)
+    console.error('Error in POST /api/reviews/[reviewId]/flag:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Error al reportar reseña.' },
       { status: 500 }
     )
   }
