@@ -20,6 +20,10 @@ import {
   Globe,
   Settings,
   ShoppingBag,
+  Crown,
+  Image as ImageIcon,
+  DollarSign,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -34,7 +38,11 @@ const navItems = [
   { href: '/admin/reports', label: 'Reportes', icon: Flag },
   { href: '/admin/services', label: 'Servicios', icon: Briefcase },
   { href: '/admin/marketplace', label: 'Marketplace', icon: ShoppingBag },
-  { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3 },
+  { href: '/admin/subscriptions', label: 'Suscripciones', icon: Crown, divider: true, section: 'monetization' },
+  { href: '/admin/banners', label: 'Banners', icon: ImageIcon, section: 'monetization' },
+  { href: '/admin/payments', label: 'Pagos', icon: DollarSign, section: 'monetization' },
+  { href: '/admin/review-flags', label: 'Reseñas Reportadas', icon: AlertCircle, section: 'monetization' },
+  { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3, divider: true },
   { href: '/admin/engagement', label: 'Engagement', icon: Activity },
   { href: '/admin/communities', label: 'Comunidades', icon: Globe, roles: ['super_admin'], divider: true },
   { href: '/admin/logs', label: 'Logs', icon: FileText },
@@ -107,14 +115,23 @@ export function CollapsibleSidebar() {
 
         {/* Navigation items */}
         <nav className="space-y-2">
-          {visibleNavItems.map((item) => {
+          {visibleNavItems.map((item, index) => {
             const Icon = item.icon
             const isActive = pathname === item.href
+            const prevItem = index > 0 ? visibleNavItems[index - 1] : null
+            const showSectionLabel = item.section && (!prevItem || prevItem.section !== item.section)
 
             return (
               <div key={item.href}>
                 {item.divider && (
-                  <div className="border-t-2 border-black my-2" />
+                  <div className="border-t-2 border-black my-4" />
+                )}
+                {showSectionLabel && !isCollapsed && (
+                  <div className="px-3 py-2">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">
+                      Monetización
+                    </h3>
+                  </div>
                 )}
                 <Link href={item.href}>
                   <Button
