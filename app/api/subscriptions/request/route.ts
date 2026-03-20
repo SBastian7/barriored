@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Check for existing active subscription
     const { data: activeSubscription, error: activeError } = await supabase
-      .from('subscriptions')
+      .from('business_subscriptions')
       .select('id, status')
       .eq('business_id', businessId)
       .eq('status', 'active')
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Check for existing pending request
     const { data: pendingRequest, error: pendingError } = await supabase
-      .from('subscriptions')
+      .from('business_subscriptions')
       .select('id, status')
       .eq('business_id', businessId)
       .eq('status', 'requested')
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     // Create new subscription request
     const { data: subscription, error: createError } = await supabase
-      .from('subscriptions')
+      .from('business_subscriptions')
       .insert({
         business_id: businessId,
         status: 'requested',
