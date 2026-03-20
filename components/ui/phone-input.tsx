@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Phone } from 'lucide-react'
 
@@ -43,6 +43,13 @@ export function PhoneInput({ value, onChange, placeholder = '300 123 4567', erro
   const [prefix, setPrefix] = useState(parsed.prefix)
   const [localNumber, setLocalNumber] = useState(parsed.local)
   const [showDropdown, setShowDropdown] = useState(false)
+
+  // Sync state when value prop changes (e.g., form restoration from sessionStorage)
+  useEffect(() => {
+    const newParsed = parseValue(value)
+    setPrefix(newParsed.prefix)
+    setLocalNumber(newParsed.local)
+  }, [value, parseValue])
 
   const selectedCountry = COUNTRY_PREFIXES.find(p => p.code === prefix) ?? COUNTRY_PREFIXES[0]
 
