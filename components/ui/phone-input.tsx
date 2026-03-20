@@ -49,13 +49,15 @@ export function PhoneInput({ value, onChange, placeholder = '300 123 4567', erro
   function handleLocalChange(raw: string) {
     const digits = raw.replace(/\D/g, '')
     setLocalNumber(digits)
-    onChange(prefix + digits)
+    // Remove + sign for validation compatibility (57XXXXXXXXXX format)
+    onChange(prefix.replace('+', '') + digits)
   }
 
   function handlePrefixChange(newPrefix: string) {
     setPrefix(newPrefix)
     setShowDropdown(false)
-    onChange(newPrefix + localNumber)
+    // Remove + sign for validation compatibility (57XXXXXXXXXX format)
+    onChange(newPrefix.replace('+', '') + localNumber)
   }
 
   // Format display: 300 123 4567
