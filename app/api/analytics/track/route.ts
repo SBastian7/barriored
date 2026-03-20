@@ -3,9 +3,50 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// CRITICAL FIX #1: Simple in-memory rate limiter to prevent abuse
+// Tracks: IP + Business ID -> [timestamps]
+// Limit: 10 requests per business per IP per hour
+const rateLimitMap = new Map<string, number[]>()
+const RATE_LIMIT = 10 // max requests
+const RATE_WINDOW = 60 * 60 * 1000 // 1 hour in milliseconds
+
+// Clean up expired entries every 10 minutes
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, timestamps] of rateLimitMap.entries()) {
+    const validTimestamps = timestamps.filter(t => now - t < RATE_WINDOW)
+    if (validTimestamps.length === 0) {
+      rateLimitMap.delete(key)
+    } else {
+      rateLimitMap.set(key, validTimestamps)
+    }
+  }
+}, 10 * 60 * 1000)
+
+function checkRateLimit(ip: string, businessId: string): boolean {
+  const key = `${ip}:${businessId}`
+  const now = Date.now()
+
+  // Get existing timestamps for this IP+business combination
+  const timestamps = rateLimitMap.get(key) || []
+
+  // Filter out expired timestamps (older than 1 hour)
+  const validTimestamps = timestamps.filter(t => now - t < RATE_WINDOW)
+
+  // Check if limit exceeded
+  if (validTimestamps.length >= RATE_LIMIT) {
+    return false // Rate limit exceeded
+  }
+
+  // Add current timestamp
+  validTimestamps.push(now)
+  rateLimitMap.set(key, validTimestamps)
+
+  return true // Request allowed
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
     const body = await request.json()
 
     const { businessId, eventType } = body as {
@@ -28,14 +69,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify business exists and get current analytics
-    const columnName = eventType === 'profile_view'
-      ? 'total_profile_views'
-      : 'total_whatsapp_clicks'
+    // CRITICAL FIX #1: Rate limiting based on IP + business ID
+    const ip = request.headers.get('x-forwarded-for') ||
+               request.headers.get('x-real-ip') ||
+               'unknown'
 
+    if (!checkRateLimit(ip, businessId)) {
+      console.warn(`Rate limit exceeded for IP ${ip} on business ${businessId}`)
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Maximum 10 requests per business per hour.' },
+        { status: 429 }
+      )
+    }
+
+    // Verify business exists
+    const supabase = await createClient()
     const { data: business, error: businessError } = await supabase
       .from('businesses')
-      .select(`id, ${columnName}`)
+      .select('id')
       .eq('id', businessId)
       .single()
 
@@ -46,28 +97,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-
-    // Increment rolling counter on businesses table using admin client to bypass RLS
     const adminClient = createAdminClient()
-    const currentValue = business[columnName as keyof typeof business] as number || 0
-    const { error: updateError } = await adminClient
-      .from('businesses')
-      .update({
-        [columnName]: currentValue + 1,
-        last_analytics_update: new Date().toISOString()
-      })
-      .eq('id', businessId)
 
-    if (updateError) {
-      console.error('Error updating business analytics:', updateError)
+    // CRITICAL FIX #2: Use atomic increment function to prevent race conditions
+    const { error: incrementError } = await adminClient.rpc(
+      'increment_business_analytics',
+      {
+        p_business_id: businessId,
+        p_event_type: eventType
+      }
+    )
+
+    if (incrementError) {
+      console.error('Error incrementing business analytics:', incrementError)
       return NextResponse.json(
         { error: 'Failed to update analytics' },
         { status: 500 }
       )
     }
 
-    // Upsert daily snapshot using admin client
+    // CRITICAL FIX #3: Fail loudly if daily analytics fails
+    // Track daily snapshot
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
     const dailyColumn = eventType === 'profile_view'
       ? 'profile_views'
       : 'whatsapp_clicks'
@@ -90,7 +141,12 @@ export async function POST(request: NextRequest) {
         .eq('id', existing.id)
 
       if (dailyError) {
-        console.error('Error updating daily analytics:', dailyError)
+        console.error('CRITICAL: Error updating daily analytics:', dailyError)
+        // FAIL LOUDLY - don't silently succeed if daily tracking fails
+        return NextResponse.json(
+          { error: 'Failed to update daily analytics' },
+          { status: 500 }
+        )
       }
     } else {
       // Insert new record
@@ -103,7 +159,12 @@ export async function POST(request: NextRequest) {
         })
 
       if (dailyError) {
-        console.error('Error inserting daily analytics:', dailyError)
+        console.error('CRITICAL: Error inserting daily analytics:', dailyError)
+        // FAIL LOUDLY - don't silently succeed if daily tracking fails
+        return NextResponse.json(
+          { error: 'Failed to insert daily analytics' },
+          { status: 500 }
+        )
       }
     }
 
