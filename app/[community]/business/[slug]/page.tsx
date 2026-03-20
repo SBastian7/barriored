@@ -13,6 +13,7 @@ import { Calendar, Briefcase } from 'lucide-react'
 import { BusinessRating } from '@/components/reviews/business-rating'
 import { ReviewList } from '@/components/reviews/review-list'
 import { WriteReviewButton } from '@/components/reviews/write-review-button'
+import { AnalyticsTracker } from '@/components/analytics/analytics-tracker'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; slug: string }> }) {
   const { community: commSlug, slug } = await params
@@ -94,6 +95,9 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
+      {/* Analytics Tracker */}
+      <AnalyticsTracker businessId={business.id} />
+
       <Breadcrumbs
         items={[
           { label: community.name, href: `/${commSlug}` },
@@ -208,7 +212,11 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
       )}
 
       {business.whatsapp && (
-        <WhatsAppButton number={business.whatsapp} message={`Hola, te encontre en BarrioRed`} />
+        <WhatsAppButton
+          number={business.whatsapp}
+          message={`Hola, te encontre en BarrioRed`}
+          businessId={business.id}
+        />
       )}
     </div>
   )
