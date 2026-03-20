@@ -3,6 +3,7 @@ import { HeroBanner } from '@/components/home/hero-banner'
 import { QuickNav } from '@/components/home/quick-nav'
 import { BusinessSection } from '@/components/home/featured-businesses'
 import { RegisterCTA } from '@/components/home/register-cta'
+import { BannerRotator } from '@/components/banners/banner-rotator'
 
 export default async function CommunityHomePage({ params }: { params: Promise<{ community: string }> }) {
   const { community: slug } = await params
@@ -54,6 +55,9 @@ export default async function CommunityHomePage({ params }: { params: Promise<{ 
   return (
     <>
       <HeroBanner community={community} businessCount={businessCountRes.count ?? 0} />
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <BannerRotator placement="homepage" communityId={community.id} />
+      </div>
       <QuickNav communitySlug={slug} />
 
       {/* Featured businesses section */}
