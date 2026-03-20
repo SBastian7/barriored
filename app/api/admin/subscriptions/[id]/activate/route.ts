@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/lib/types/database'
+import { isValidUUID, isValidISODate } from '@/lib/validations/common'
 
 type SubscriptionUpdate = Database['public']['Tables']['business_subscriptions']['Update']
 type PaymentInsert = Database['public']['Tables']['subscription_payments']['Insert']
@@ -13,18 +14,6 @@ interface ActivateSubscriptionRequest {
   paymentMethod: string
   paymentProofUrl?: string
   notes?: string
-}
-
-// Helper to validate UUID format
-function isValidUUID(uuid: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(uuid)
-}
-
-// Helper to validate ISO date string
-function isValidISODate(dateString: string): boolean {
-  const date = new Date(dateString)
-  return !isNaN(date.getTime()) && dateString === date.toISOString()
 }
 
 // Type guard for subscription with business community_id
@@ -78,6 +67,8 @@ export async function POST(
     }
 
     // Verify user is admin
+    // Note: Using manual check instead of checkAdminAccess() from lib/supabase/admin.ts
+    // because we need community_id and is_super_admin for community-level access control
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, is_super_admin, community_id')
@@ -196,6 +187,9 @@ export async function POST(
       )
     }
 
+    // Track non-critical failures to report to admin
+    const warnings: string[] = []
+
     // Extract date parts for period fields (YYYY-MM-DD)
     const periodStart = new Date(activatedAt).toISOString().split('T')[0]
     const periodEnd = new Date(expiresAt).toISOString().split('T')[0]
@@ -218,6 +212,7 @@ export async function POST(
 
     if (paymentError) {
       console.error('Error creating payment record (non-blocking):', paymentError)
+      warnings.push('No se pudo crear el registro de pago')
     }
 
     // Set business as featured (failure should not block activation)
@@ -228,6 +223,7 @@ export async function POST(
 
     if (businessError) {
       console.error('Error setting business as featured (non-blocking):', businessError)
+      warnings.push('No se pudo marcar el negocio como destacado')
     }
 
     // Log to audit trail (failure should not block activation)
@@ -254,7 +250,10 @@ export async function POST(
       .eq('id', subscriptionId)
       .single()
 
-    return NextResponse.json({ subscription: updated })
+    return NextResponse.json({
+      subscription: updated,
+      ...(warnings.length > 0 && { warnings })
+    })
   } catch (error) {
     console.error('Activate subscription error:', error)
     return NextResponse.json(
