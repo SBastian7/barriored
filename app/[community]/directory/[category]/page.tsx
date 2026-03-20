@@ -28,6 +28,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
     .eq('community_id', communityRes.data.id)
     .eq('category_id', categoryRes.data.id)
     .eq('status', 'approved')
+    .order('is_featured', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(50)
 

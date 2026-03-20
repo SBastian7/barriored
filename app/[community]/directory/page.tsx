@@ -48,6 +48,7 @@ export default async function DirectoryPage({
       .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
       .eq('community_id', community.id)
       .eq('status', 'approved')
+      .order('is_featured', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(50)
     businesses = data ?? []
