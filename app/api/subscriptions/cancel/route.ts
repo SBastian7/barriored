@@ -18,17 +18,45 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'No autorizado' },
         { status: 401 }
       )
     }
 
-    const body = await request.json()
-    const { subscriptionId, reason } = body as CancelSubscriptionRequest
+    // Runtime input validation
+    let subscriptionId: string
+    let reason: string | undefined
 
-    if (!subscriptionId) {
+    try {
+      const body = await request.json()
+      subscriptionId = body.subscriptionId
+      reason = body.reason
+
+      if (typeof subscriptionId !== 'string' || !subscriptionId) {
+        return NextResponse.json(
+          { error: 'ID de suscripción requerido' },
+          { status: 400 }
+        )
+      }
+
+      if (reason !== undefined && typeof reason !== 'string') {
+        return NextResponse.json(
+          { error: 'Razón debe ser texto' },
+          { status: 400 }
+        )
+      }
+    } catch (e) {
       return NextResponse.json(
-        { error: 'Subscription ID required' },
+        { error: 'Cuerpo de solicitud inválido' },
+        { status: 400 }
+      )
+    }
+
+    // UUID validation
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!UUID_REGEX.test(subscriptionId)) {
+      return NextResponse.json(
+        { error: 'ID de suscripción inválido' },
         { status: 400 }
       )
     }
@@ -36,28 +64,40 @@ export async function POST(request: NextRequest) {
     // Get subscription and verify ownership
     const { data: subscription, error: fetchError } = await supabase
       .from('business_subscriptions')
-      .select('id, business_id, status, businesses(owner_id)')
+      .select(`
+        id,
+        business_id,
+        status,
+        businesses!inner(owner_id)
+      `)
       .eq('id', subscriptionId)
       .single()
 
     if (fetchError || !subscription) {
       return NextResponse.json(
-        { error: 'Subscription not found' },
+        { error: 'Suscripción no encontrada' },
         { status: 404 }
       )
     }
 
-    const business = subscription.businesses as unknown as BusinessOwner
-    if (business.owner_id !== user.id) {
+    // Type guard for business relation
+    if (!subscription.businesses || Array.isArray(subscription.businesses)) {
       return NextResponse.json(
-        { error: 'Forbidden' },
+        { error: 'Negocio no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    if (subscription.businesses.owner_id !== user.id) {
+      return NextResponse.json(
+        { error: 'No tienes permiso para gestionar esta suscripción' },
         { status: 403 }
       )
     }
 
     if (subscription.status !== 'active') {
       return NextResponse.json(
-        { error: 'Only active subscriptions can be cancelled' },
+        { error: 'Solo se pueden cancelar suscripciones activas' },
         { status: 400 }
       )
     }
@@ -76,7 +116,7 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('Error cancelling subscription:', updateError)
       return NextResponse.json(
-        { error: 'Failed to cancel subscription' },
+        { error: 'Error al cancelar la suscripción' },
         { status: 500 }
       )
     }
@@ -96,7 +136,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Cancel subscription error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }
