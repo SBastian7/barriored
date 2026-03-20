@@ -1,5 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import type { Subscription } from '@/lib/types/database';
+
+interface SubscriptionRequestBody {
+  businessId: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const body = await request.json();
+    const body: SubscriptionRequestBody = await request.json();
     const { businessId } = body;
 
     if (!businessId) {
@@ -102,7 +107,7 @@ export async function POST(request: NextRequest) {
         requested_at: new Date().toISOString(),
       })
       .select()
-      .single();
+      .single<Subscription>();
 
     if (createError) {
       console.error('Error creating subscription request:', createError);
