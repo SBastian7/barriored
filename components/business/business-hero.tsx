@@ -5,15 +5,17 @@ import { Badge } from '@/components/ui/badge'
 import { CheckCircle, Expand } from 'lucide-react'
 import { ImageLoader } from '@/components/ui/image-loader'
 import { PhotoGallery, Lightbox } from './photo-gallery'
+import { PremiumBadge } from './premium-badge'
 
 type Props = {
   name: string
   categoryName: string
   photos: string[]
   isVerified: boolean
+  isFeatured?: boolean
 }
 
-export function BusinessHero({ name, categoryName, photos, isVerified }: Props) {
+export function BusinessHero({ name, categoryName, photos, isVerified, isFeatured }: Props) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
 
@@ -65,11 +67,16 @@ export function BusinessHero({ name, categoryName, photos, isVerified }: Props) 
               <h1 className="text-4xl md:text-5xl font-heading font-black uppercase tracking-tighter italic leading-none mb-4">
                 {name}
               </h1>
-              {isVerified && (
-                <div className="inline-flex items-center gap-1.5 bg-black text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest italic shadow-[2px_2px_0px_0px_rgba(225,29,72,1)]">
-                  <CheckCircle className="h-3 w-3 text-primary" /> Verificado
-                </div>
-              )}
+              <div className="flex flex-wrap items-center gap-3">
+                {isFeatured && (
+                  <PremiumBadge />
+                )}
+                {isVerified && (
+                  <div className="inline-flex items-center gap-1.5 bg-black text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest italic shadow-[2px_2px_0px_0px_rgba(225,29,72,1)]">
+                    <CheckCircle className="h-3 w-3 text-primary" /> Verificado
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -111,6 +111,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
         categoryName={business.categories?.name ?? ''}
         photos={business.photos ?? []}
         isVerified={!!business.is_verified}
+        isFeatured={!!business.is_featured}
       />
 
       {/* Action buttons row */}
