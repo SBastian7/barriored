@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { z } from 'zod'
+
+const ResolveFlagSchema = z.object({
+  status: z.enum(['reviewed', 'dismissed']),
+  resolutionNotes: z.string().optional(),
+  deleteReview: z.boolean().optional()
+})
 
 export async function POST(
   request: NextRequest,
@@ -33,23 +40,30 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { status, resolutionNotes, deleteReview } = body as {
-      status: 'reviewed' | 'dismissed'
-      resolutionNotes?: string
-      deleteReview?: boolean
-    }
 
-    if (!status || !['reviewed', 'dismissed'].includes(status)) {
+    // Validate request body with Zod
+    const validation = ResolveFlagSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid status' },
+        { error: 'Invalid request body', details: validation.error.errors },
         { status: 400 }
       )
     }
 
-    // Get flag
+    const { status, resolutionNotes, deleteReview } = validation.data
+
+    // Get flag with business community info for isolation check
     const { data: flag } = await supabase
       .from('review_flags')
-      .select('id, review_id')
+      .select(`
+        id,
+        review_id,
+        business_reviews (
+          businesses (
+            community_id
+          )
+        )
+      `)
       .eq('id', flagId)
       .single()
 
@@ -60,8 +74,21 @@ export async function POST(
       )
     }
 
-    // Update flag
-    const { error: updateError } = await supabase
+    // CRITICAL: Community isolation check (unless super admin)
+    if (!profile.is_super_admin) {
+      const review = flag.business_reviews as any
+      const business = review?.businesses
+
+      if (business?.community_id !== profile.community_id) {
+        return NextResponse.json(
+          { error: 'Forbidden - Cannot resolve flags outside your community' },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Update flag with optimized single query
+    const { data: updated, error: updateError } = await supabase
       .from('review_flags')
       .update({
         status,
@@ -70,6 +97,8 @@ export async function POST(
         resolution_notes: resolutionNotes
       })
       .eq('id', flagId)
+      .select()
+      .single()
 
     if (updateError) {
       console.error('Error resolving flag:', updateError)
@@ -94,13 +123,6 @@ export async function POST(
         )
       }
     }
-
-    // Get updated flag
-    const { data: updated } = await supabase
-      .from('review_flags')
-      .select('*')
-      .eq('id', flagId)
-      .single()
 
     return NextResponse.json({ flag: updated })
   } catch (error) {
