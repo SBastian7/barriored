@@ -116,56 +116,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // CRITICAL FIX #3: Fail loudly if daily analytics fails
-    // Track daily snapshot
+    // CRITICAL FIX #3: Use atomic upsert for daily analytics (race-condition free)
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-    const dailyColumn = eventType === 'profile_view'
-      ? 'profile_views'
-      : 'whatsapp_clicks'
 
-    // Check if record exists for today
-    const { data: existing } = await adminClient
-      .from('business_analytics_daily')
-      .select('id, profile_views, whatsapp_clicks')
-      .eq('business_id', businessId)
-      .eq('date', today)
-      .single()
-
-    if (existing) {
-      // Update existing record
-      const { error: dailyError } = await adminClient
-        .from('business_analytics_daily')
-        .update({
-          [dailyColumn]: existing[dailyColumn] + 1
-        })
-        .eq('id', existing.id)
-
-      if (dailyError) {
-        console.error('CRITICAL: Error updating daily analytics:', dailyError)
-        // FAIL LOUDLY - don't silently succeed if daily tracking fails
-        return NextResponse.json(
-          { error: 'Failed to update daily analytics' },
-          { status: 500 }
-        )
+    const { error: dailyError } = await adminClient.rpc(
+      'increment_daily_analytics',
+      {
+        p_business_id: businessId,
+        p_date: today,
+        p_event_type: eventType
       }
-    } else {
-      // Insert new record
-      const { error: dailyError } = await adminClient
-        .from('business_analytics_daily')
-        .insert({
-          business_id: businessId,
-          date: today,
-          [dailyColumn]: 1
-        })
+    )
 
-      if (dailyError) {
-        console.error('CRITICAL: Error inserting daily analytics:', dailyError)
-        // FAIL LOUDLY - don't silently succeed if daily tracking fails
-        return NextResponse.json(
-          { error: 'Failed to insert daily analytics' },
-          { status: 500 }
-        )
-      }
+    if (dailyError) {
+      console.error('CRITICAL: Error updating daily analytics:', dailyError)
+      return NextResponse.json(
+        { error: 'Failed to update daily analytics' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ success: true })
