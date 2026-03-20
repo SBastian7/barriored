@@ -23,6 +23,9 @@ import {
   Briefcase,
   Shield as ShieldIcon,
   Flag,
+  DollarSign,
+  Crown,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -56,6 +59,14 @@ type Stats = {
     totalReports: number
     pendingReports: number
     resolvedReports: number
+  }
+  revenue: {
+    totalRevenue: number
+    monthlyRevenue: number
+    activeSubscriptions: number
+    activeBanners: number
+    subscriptionRevenue: number
+    bannerRevenue: number
   }
 }
 
@@ -197,6 +208,37 @@ export default function AdminStatisticsPage() {
         supabase.from('content_reports').select('*', { count: 'exact' }).eq('status', 'resolved'),
       ])
 
+      // Fetch revenue stats
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+      const [activeSubscriptions, activeBanners, subPayments, bannerPayments] = await Promise.all([
+        supabase.from('business_subscriptions').select('*', { count: 'exact' }).eq('status', 'active'),
+        supabase.from('banner_ads').select('*', { count: 'exact' }).eq('status', 'approved'),
+        supabase.from('subscription_payments').select('amount'),
+        supabase.from('banner_ads').select('amount_paid').eq('status', 'approved').not('amount_paid', 'is', null),
+      ])
+
+      const totalSubRevenue = (subPayments.data || []).reduce((sum, p) => sum + (p.amount || 0), 0)
+      const totalBannerRevenue = (bannerPayments.data || []).reduce((sum, b) => sum + (b.amount_paid || 0), 0)
+      const totalRevenue = totalSubRevenue + totalBannerRevenue
+
+      // Monthly revenue (this month only)
+      const monthlySubPayments = await supabase
+        .from('subscription_payments')
+        .select('amount')
+        .gte('payment_date', firstDayOfMonth.toISOString())
+
+      const monthlyBanners = await supabase
+        .from('banner_ads')
+        .select('amount_paid')
+        .eq('status', 'approved')
+        .not('amount_paid', 'is', null)
+        .gte('approved_at', firstDayOfMonth.toISOString())
+
+      const monthlySubRevenue = (monthlySubPayments.data || []).reduce((sum, p) => sum + (p.amount || 0), 0)
+      const monthlyBanRevenue = (monthlyBanners.data || []).reduce((sum, b) => sum + (b.amount_paid || 0), 0)
+      const monthlyRevenue = monthlySubRevenue + monthlyBanRevenue
+
       setStats({
         businesses: {
           total: allBusinesses.count || 0,
@@ -227,6 +269,14 @@ export default function AdminStatisticsPage() {
           totalReports: allReports.count || 0,
           pendingReports: pendingReports.count || 0,
           resolvedReports: resolvedReports.count || 0,
+        },
+        revenue: {
+          totalRevenue,
+          monthlyRevenue,
+          activeSubscriptions: activeSubscriptions.count || 0,
+          activeBanners: activeBanners.count || 0,
+          subscriptionRevenue: totalSubRevenue,
+          bannerRevenue: totalBannerRevenue,
         },
       })
     } catch (error) {
@@ -512,6 +562,67 @@ export default function AdminStatisticsPage() {
             label="Resueltos"
             value={stats.moderation.resolvedReports}
             bg="bg-green-50"
+            iconBg="bg-green-600"
+            iconColor="text-white"
+          />
+        </div>
+      </div>
+
+      {/* Revenue Stats */}
+      <div>
+        <h2 className="text-2xl font-black uppercase italic mb-4 flex items-center gap-2">
+          <DollarSign className="h-6 w-6" /> Monetización
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <StatCard
+            icon={DollarSign}
+            label="Ingresos Totales"
+            value={`$${stats.revenue.totalRevenue.toLocaleString()} COP`}
+            bg="bg-primary/10"
+            iconBg="bg-primary"
+            iconColor="text-white"
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Ingresos Este Mes"
+            value={`$${stats.revenue.monthlyRevenue.toLocaleString()} COP`}
+            bg="bg-secondary/20"
+            iconBg="bg-secondary"
+            iconColor="text-black"
+          />
+          <StatCard
+            icon={Crown}
+            label="Suscripciones Activas"
+            value={stats.revenue.activeSubscriptions}
+            bg="bg-accent/10"
+            iconBg="bg-accent"
+            iconColor="text-white"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          <StatCard
+            icon={ImageIcon}
+            label="Banners Activos"
+            value={stats.revenue.activeBanners}
+            bg="bg-green-50"
+            iconBg="bg-green-600"
+            iconColor="text-white"
+          />
+          <StatCard
+            icon={Crown}
+            label="Ingresos Suscripciones"
+            value={`$${stats.revenue.subscriptionRevenue.toLocaleString()} COP`}
+            bg="bg-white"
+            iconBg="bg-accent"
+            iconColor="text-white"
+          />
+          <StatCard
+            icon={ImageIcon}
+            label="Ingresos Banners"
+            value={`$${stats.revenue.bannerRevenue.toLocaleString()} COP`}
+            bg="bg-white"
             iconBg="bg-green-600"
             iconColor="text-white"
           />
