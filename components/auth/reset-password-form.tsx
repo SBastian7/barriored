@@ -15,6 +15,7 @@ export function ResetPasswordForm() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -22,7 +23,11 @@ export function ResetPasswordForm() {
         setReady(true)
       }
     })
-    return () => subscription.unsubscribe()
+    const timeout = setTimeout(() => setTimedOut(true), 5000)
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [supabase])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -49,9 +54,18 @@ export function ResetPasswordForm() {
   return (
     <>
       {!ready ? (
-        <p className="text-center text-sm text-black/60 py-4">
-          Verificando enlace...
-        </p>
+        timedOut ? (
+          <div className="text-center space-y-3 py-4">
+            <p className="text-sm text-black/70">El enlace no es válido o ya expiró.</p>
+            <a href="/auth/forgot-password" className="text-sm font-bold text-primary hover:underline italic uppercase tracking-tight">
+              Solicitar nuevo enlace
+            </a>
+          </div>
+        ) : (
+          <p className="text-center text-sm text-black/60 py-4">
+            Verificando enlace...
+          </p>
+        )
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
