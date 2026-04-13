@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { processImage } from '@/lib/image/process'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -33,25 +34,14 @@ export async function POST(request: Request) {
     )
   }
 
-  // Delete old avatar if exists
-  const { data: existingFiles } = await supabase.storage
-    .from('profile-images')
-    .list(user.id)
+  const rawBuffer = Buffer.from(await file.arrayBuffer())
+  const avatarBuffer = await processImage(rawBuffer, 200, 80)
 
-  if (existingFiles && existingFiles.length > 0) {
-    const filesToDelete = existingFiles.map(f => `${user.id}/${f.name}`)
-    await supabase.storage
-      .from('profile-images')
-      .remove(filesToDelete)
-  }
-
-  // Upload new avatar (always named avatar.{ext})
-  const ext = file.name.split('.').pop()
-  const path = `${user.id}/avatar.${ext}`
+  const path = `${user.id}/avatar.webp`
 
   const { data, error } = await supabase.storage
     .from('profile-images')
-    .upload(path, file, { upsert: true })
+    .upload(path, avatarBuffer, { contentType: 'image/webp', upsert: true })
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
