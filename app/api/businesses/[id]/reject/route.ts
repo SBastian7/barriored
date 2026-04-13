@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePermission } from '@/lib/auth/api-protection'
 import { logAuditAction } from '@/lib/utils/audit-logger'
+import { sendBusinessRejectedEmail } from '@/lib/email/resend'
 
 export async function POST(
   request: Request,
@@ -57,7 +59,25 @@ export async function POST(
     communityId: data.community_id,
   })
 
-  // TODO: Send notification to business owner about rejection
+  // Send rejection email fire-and-forget
+  try {
+    const { data: biz } = await (supabase as any)
+      .from('businesses')
+      .select('name, owner_id, rejection_reason')
+      .eq('id', id)
+      .single()
+
+    if (biz?.owner_id) {
+      const adminClient = createAdminClient()
+      const { data: ownerData } = await adminClient.auth.admin.getUserById(biz.owner_id)
+      const ownerEmail = ownerData?.user?.email
+      if (ownerEmail) {
+        sendBusinessRejectedEmail(ownerEmail, biz.name, biz.rejection_reason ?? undefined).catch(console.error)
+      }
+    }
+  } catch (e) {
+    console.error('Failed to send rejection email:', e)
+  }
 
   return NextResponse.json({ success: true, data })
 }
