@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner'
 
 export function SignupForm() {
-  const router = useRouter()
   const supabase = createClient()
 
   const [communities, setCommunities] = useState<{ id: string; name: string }[]>([])
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', community_id: '' })
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   useEffect(() => {
     supabase.from('communities').select('id, name').eq('is_active', true).then(({ data }) => {
@@ -39,18 +38,34 @@ export function SignupForm() {
       toast.error(error.message)
     } else {
       // Update profile with community_id (trigger only sets full_name)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
+      const { data: { user: newUser } } = await supabase.auth.getUser()
+      if (newUser) {
         await (supabase as any).from('profiles').update({
           community_id: form.community_id,
           phone: form.phone,
           role: 'user',
-        }).eq('id', user.id)
+        }).eq('id', newUser.id)
       }
-      toast.success('Cuenta creada exitosamente')
-      router.push('/')
-      router.refresh()
+      setEmailSent(true)
     }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="text-center space-y-4 py-4">
+        <div className="text-5xl">📬</div>
+        <h2 className="font-heading font-black text-2xl uppercase tracking-tighter italic">
+          Revisa tu correo
+        </h2>
+        <p className="text-sm text-black/70">
+          Te enviamos un enlace de verificación a <strong>{form.email}</strong>.
+          Haz clic en el enlace para activar tu cuenta.
+        </p>
+        <p className="text-xs text-black/50 italic">
+          ¿No lo ves? Revisa tu carpeta de spam.
+        </p>
+      </div>
+    )
   }
 
   return (
