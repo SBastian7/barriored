@@ -71,12 +71,12 @@ export async function POST(
       const adminClient = createAdminClient()
       const { data: ownerData } = await adminClient.auth.admin.getUserById(biz.owner_id)
       const ownerEmail = ownerData?.user?.email
-      if (ownerEmail) {
+      if (ownerEmail && biz.name) {
         sendBusinessRejectedEmail(ownerEmail, biz.name, biz.rejection_reason ?? undefined).catch(console.error)
       }
     }
   } catch (e) {
-    console.error('Failed to send rejection email:', e)
+    console.error(`Failed to send rejection email for business ${id}:`, e)
   }
 
   return NextResponse.json({ success: true, data })

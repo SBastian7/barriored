@@ -48,12 +48,12 @@ export async function POST(
       const { data: ownerData } = await adminClient.auth.admin.getUserById(biz.owner_id)
       const ownerEmail = ownerData?.user?.email
       const communitySlug = (biz.communities as any)?.slug ?? ''
-      if (ownerEmail) {
+      if (ownerEmail && biz.name) {
         sendBusinessApprovedEmail(ownerEmail, biz.name, communitySlug).catch(console.error)
       }
     }
   } catch (e) {
-    console.error('Failed to send approval email:', e)
+    console.error(`Failed to send approval email for business ${id}:`, e)
   }
 
   return NextResponse.json(data)
