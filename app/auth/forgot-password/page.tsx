@@ -1,36 +1,13 @@
-'use client'
-
-import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { ForgotPasswordForm } from '@/components/auth/forgot-password-form'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { toast } from 'sonner'
+
+export const metadata = { title: 'Recuperar Contraseña | BarrioRed' }
 
 export default function ForgotPasswordPage() {
-  const supabase = createClient()
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    })
-    setLoading(false)
-    if (error) {
-      toast.error(error.message)
-    } else {
-      setSent(true)
-    }
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background relative overflow-hidden">
+      {/* Decorative patterns */}
       <div className="absolute top-[10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rotate-12 border-4 border-black -z-10" />
       <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-secondary/10 -rotate-12 border-4 border-black -z-10" />
 
@@ -44,40 +21,7 @@ export default function ForgotPasswordPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          {sent ? (
-            <div className="text-center space-y-4 py-4">
-              <div className="text-5xl">📬</div>
-              <h2 className="font-heading font-black text-2xl uppercase tracking-tighter italic">
-                Revisa tu correo
-              </h2>
-              <p className="text-sm text-black/70">
-                Te enviamos un enlace para restablecer tu contraseña a <strong>{email}</strong>.
-              </p>
-              <p className="text-xs text-black/50 italic">¿No lo ves? Revisa tu carpeta de spam.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="forgot_email">Email</Label>
-                <Input
-                  id="forgot_email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="tu@correo.com"
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar enlace'}
-              </Button>
-              <div className="mt-4 pt-4 border-t-2 border-dashed border-black text-center">
-                <Link href="/auth/login" className="text-sm font-bold text-primary hover:underline italic uppercase tracking-tight">
-                  Volver al login
-                </Link>
-              </div>
-            </form>
-          )}
+          <ForgotPasswordForm />
         </CardContent>
       </Card>
     </div>
