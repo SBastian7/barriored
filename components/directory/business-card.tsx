@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
 import { whatsappUrl } from '@/lib/utils'
+import { getThumbUrl } from '@/lib/image/thumbnail'
 import { BusinessRating } from '@/components/reviews/business-rating'
 import { PremiumBadge } from '@/components/business/premium-badge'
 
@@ -29,7 +30,7 @@ export function BusinessCard({ business, communitySlug }: BusinessCardProps) {
         <div className="aspect-video bg-muted relative border-b-2 border-black overflow-hidden">
           {photo ? (
             <Image
-              src={photo}
+              src={getThumbUrl(photo)}
               alt={business.name}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -40,11 +41,11 @@ export function BusinessCard({ business, communitySlug }: BusinessCardProps) {
           )}
 
           {/* Premium Badge */}
-          {business.is_featured && (
+          {/* {business.is_featured && (
             <div className="absolute top-2 left-2 z-10">
               <PremiumBadge />
             </div>
-          )}
+          )} */}
 
           <div className="absolute top-2 right-2 bg-black text-white p-1 border border-white opacity-0 group-hover:opacity-100 transition-opacity">
             <ArrowUpRight className="h-4 w-4" />
