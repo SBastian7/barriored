@@ -33,9 +33,9 @@ export function SignupForm() {
         data: { full_name: form.full_name, phone: form.phone, community_id: form.community_id },
       },
     })
-    setLoading(false)
     if (error) {
       toast.error(error.message)
+      setLoading(false)
     } else {
       // Update profile with community_id (trigger only sets full_name)
       const { data: { user: newUser } } = await supabase.auth.getUser()
@@ -46,6 +46,7 @@ export function SignupForm() {
           role: 'user',
         }).eq('id', newUser.id)
       }
+      setLoading(false)
       setEmailSent(true)
     }
   }
