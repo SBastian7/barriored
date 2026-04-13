@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,6 +49,11 @@ export function LoginForm() {
           <div>
             <Label htmlFor="password">Contrasena</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          <div className="text-right -mt-2">
+            <Link href="/auth/forgot-password" className="text-xs text-black/60 hover:text-primary italic underline">
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Ingresando...' : 'Ingresar'}
