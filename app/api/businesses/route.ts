@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createBusinessSchema } from '@/lib/validations/business'
 import { slugify } from '@/lib/utils'
+import { sendBusinessSubmittedEmail } from '@/lib/email/resend'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -75,6 +76,12 @@ export async function POST(request: Request) {
 
   // Note: Users maintain 'user' role regardless of business ownership
   // Role changes are only for admin/moderator assignments
+
+  // Fire-and-forget confirmation email
+  const ownerEmail = user.email
+  if (ownerEmail) {
+    sendBusinessSubmittedEmail(ownerEmail, rest.name).catch(console.error)
+  }
 
   return NextResponse.json(data, { status: 201 })
 }
