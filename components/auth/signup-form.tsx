@@ -26,7 +26,7 @@ export function SignupForm() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
+    const { data: { user: newUser }, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -37,13 +37,12 @@ export function SignupForm() {
       toast.error(error.message)
       setLoading(false)
     } else {
-      // Update profile with community_id (trigger only sets full_name)
-      const { data: { user: newUser } } = await supabase.auth.getUser()
+      // Trigger saves full_name, phone, community_id from metadata.
+      // Also update here in case trigger ran before metadata was fully propagated.
       if (newUser) {
         await (supabase as any).from('profiles').update({
           community_id: form.community_id,
           phone: form.phone,
-          role: 'user',
         }).eq('id', newUser.id)
       }
       setLoading(false)

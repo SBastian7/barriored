@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -18,12 +19,17 @@ export function ResetPasswordForm() {
   const [timedOut, setTimedOut] = useState(false)
 
   useEffect(() => {
+    // Check for existing recovery session set by /auth/callback
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true)
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setReady(true)
       }
     })
-    const timeout = setTimeout(() => setTimedOut(true), 5000)
+    const timeout = setTimeout(() => setTimedOut(true), 8000)
     return () => {
       subscription.unsubscribe()
       clearTimeout(timeout)
@@ -57,9 +63,9 @@ export function ResetPasswordForm() {
         timedOut ? (
           <div className="text-center space-y-3 py-4">
             <p className="text-sm text-black/70">El enlace no es válido o ya expiró.</p>
-            <a href="/auth/forgot-password" className="text-sm font-bold text-primary hover:underline italic uppercase tracking-tight">
+            <Link href="/auth/forgot-password" className="text-sm font-bold text-primary hover:underline italic uppercase tracking-tight">
               Solicitar nuevo enlace
-            </a>
+            </Link>
           </div>
         ) : (
           <p className="text-center text-sm text-black/60 py-4">

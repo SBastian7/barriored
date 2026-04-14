@@ -35,7 +35,7 @@ export async function POST(
     communityId: data.community_id,
   })
 
-  // Send approval email fire-and-forget
+  // Send approval email
   try {
     const { data: biz } = await (supabase as any)
       .from('businesses')
@@ -43,17 +43,25 @@ export async function POST(
       .eq('id', id)
       .single()
 
-    if (biz?.owner_id) {
+    if (!biz?.owner_id) {
+      console.error(`Approval email: business ${id} not found or missing owner_id`)
+    } else {
       const adminClient = createAdminClient()
-      const { data: ownerData } = await adminClient.auth.admin.getUserById(biz.owner_id)
-      const ownerEmail = ownerData?.user?.email
-      const communitySlug = (biz.communities as any)?.slug ?? ''
-      if (ownerEmail && biz.name) {
-        sendBusinessApprovedEmail(ownerEmail, biz.name, communitySlug).catch(console.error)
+      const { data: ownerData, error: userError } = await adminClient.auth.admin.getUserById(biz.owner_id)
+      if (userError) {
+        console.error(`Approval email: getUserById failed for business ${id}:`, userError.message)
+      } else {
+        const ownerEmail = ownerData?.user?.email
+        const communitySlug = (biz.communities as any)?.slug ?? ''
+        if (ownerEmail && biz.name) {
+          await sendBusinessApprovedEmail(ownerEmail, biz.name, communitySlug)
+        } else {
+          console.error(`Approval email: missing data for business ${id} — email: ${ownerEmail}, name: ${biz.name}`)
+        }
       }
     }
-  } catch (e) {
-    console.error(`Failed to send approval email for business ${id}:`, e)
+  } catch (e: any) {
+    console.error(`Approval email failed for business ${id}:`, e?.message ?? e)
   }
 
   return NextResponse.json(data)
