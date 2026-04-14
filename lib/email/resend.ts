@@ -72,3 +72,73 @@ export async function sendBusinessRejectedEmail(
     `,
   })
 }
+
+export async function sendSubscriptionRenewalReminderEmail(
+  ownerEmail: string,
+  businessName: string,
+  expiresAt: string,
+  daysLeft: number
+) {
+  const expiryDate = new Date(expiresAt).toLocaleDateString('es-CO', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `Tu suscripción Premium de "${businessName}" vence en ${daysLeft} días — BarrioRed`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+          Barrio<span style="color: #c0392b;">Red</span>
+        </h1>
+        <p>Hola,</p>
+        <p>Tu suscripción Premium para <strong>${businessName}</strong> vence el <strong>${expiryDate}</strong> (en ${daysLeft} días).</p>
+        <p>Para continuar apareciendo como negocio destacado, contacta a tu administrador de comunidad para renovar tu suscripción.</p>
+        <p>
+          <a href="https://barriored.co/dashboard" style="background: #c0392b; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; display: inline-block;">
+            Ver mi Panel
+          </a>
+        </p>
+        <p style="color: #666; font-size: 12px; margin-top: 32px;">BarrioRed — Comunidad Parque Industrial, Pereira</p>
+      </div>
+    `,
+  })
+}
+
+export async function sendSubscriptionExpirationWarningEmail(
+  ownerEmail: string,
+  businessName: string,
+  expiresAt: string
+) {
+  const expiryDate = new Date(expiresAt).toLocaleDateString('es-CO', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `⚠️ Tu suscripción Premium de "${businessName}" vence mañana — BarrioRed`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+          Barrio<span style="color: #c0392b;">Red</span>
+        </h1>
+        <p>Hola,</p>
+        <p>⚠️ Tu suscripción Premium para <strong>${businessName}</strong> vence el <strong>${expiryDate}</strong>.</p>
+        <p>Si no se renueva antes de esa fecha, tu negocio dejará de aparecer como destacado en el directorio.</p>
+        <p>Contacta a tu administrador de comunidad para renovar tu suscripción a la brevedad.</p>
+        <p>
+          <a href="https://barriored.co/dashboard" style="background: #c0392b; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; display: inline-block;">
+            Ver mi Panel
+          </a>
+        </p>
+        <p style="color: #666; font-size: 12px; margin-top: 32px;">BarrioRed — Comunidad Parque Industrial, Pereira</p>
+      </div>
+    `,
+  })
+}
