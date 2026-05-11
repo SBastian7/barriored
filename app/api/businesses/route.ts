@@ -4,6 +4,37 @@ import { createBusinessSchema } from '@/lib/validations/business'
 import { slugify } from '@/lib/utils'
 import { sendBusinessSubmittedEmail } from '@/lib/email/resend'
 
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const communityId = searchParams.get('community_id')
+
+  const supabase = await createClient()
+
+  let query = (supabase as any)
+    .from('businesses')
+    .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
+    .eq('status', 'approved')
+    .order('is_featured', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  if (communityId) {
+    query = query.eq('community_id', communityId)
+  }
+
+  const { data: businesses, error } = await query
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json(businesses, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+    },
+  })
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

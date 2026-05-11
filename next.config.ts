@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 
+// Note: PWA service worker (app/sw.ts) is compiled separately via build:sw script
 const nextConfig: NextConfig = {
   compress: true,
   env: {
@@ -19,18 +20,6 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'Service-Worker-Allowed', value: '/' },
           { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
-        ],
-      },
-      {
-        source: '/api/businesses',
-        headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
-        ],
-      },
-      {
-        source: '/api/communities',
-        headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=600' },
         ],
       },
     ]
