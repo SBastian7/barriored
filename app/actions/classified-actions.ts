@@ -223,7 +223,9 @@ export async function updateClassifiedAction(
       whatsapp,
       category_id,
       images,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      last_activity_at: new Date().toISOString(),
+      renewal_reminder_sent_at: null
     })
     .eq('id', id)
 

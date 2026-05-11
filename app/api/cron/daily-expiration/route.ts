@@ -142,9 +142,9 @@ export async function GET(request: Request) {
       .select('id')
 
     // ── Step 6: 3-day expiry reminder ────────────────────────────────────────────
-    // Window: last_activity_at is between 27 and 28 days ago (fires once per day)
-    const reminderWindowOlder = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
-    const reminderWindowNewer = new Date(now.getTime() - 27 * 24 * 60 * 60 * 1000)
+    // Window: last_activity_at is between 26 and 27 days ago (fires once per day, 3–4 days before expiry)
+    const reminderWindowOlder = new Date(now.getTime() - 27 * 24 * 60 * 60 * 1000)
+    const reminderWindowNewer = new Date(now.getTime() - 26 * 24 * 60 * 60 * 1000)
 
     const { data: reminderCandidates } = await (adminClient as any)
       .from('classifieds')
