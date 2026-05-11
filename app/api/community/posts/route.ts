@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createPostSchema } from '@/lib/validations/community'
+import { checkContent } from '@/lib/moderation/keywords'
 
 export async function GET(request: NextRequest) {
     const supabase = await createClient()
@@ -55,6 +56,16 @@ export async function POST(request: Request) {
     const { type, title, content, image_url, community_id, ...rest } = parsed.data
     const metadata = 'metadata' in rest ? rest.metadata : {}
 
+    // Spam/profanity moderation
+    const moderation = checkContent(title, content)
+    if (moderation.matches.length >= 2) {
+        return NextResponse.json(
+            { error: 'Tu publicación contiene contenido no permitido. Por favor revisa el texto.' },
+            { status: 400 }
+        )
+    }
+    const moderationFlag = moderation.matches.length === 1
+
     const { data, error } = await (supabase as any)
         .from('community_posts')
         .insert({
@@ -66,6 +77,7 @@ export async function POST(request: Request) {
             image_url: image_url || null,
             metadata,
             status: 'pending',
+            moderation_flag: moderationFlag,
         })
         .select()
         .single()
