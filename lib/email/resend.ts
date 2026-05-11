@@ -277,3 +277,101 @@ export async function sendClassifiedExpiryReminderEmail(
     `,
   })
 }
+
+export type WeeklyDigestData = {
+  communityName: string
+  newBusinesses: number
+  newPosts: number
+  newUsers: number
+  activeClassifieds: number
+  errorCount: number
+  weekStart: string
+}
+
+export async function sendWeeklyDigestEmail(
+  adminEmail: string,
+  data: WeeklyDigestData
+) {
+  const errorBadge = data.errorCount > 20
+    ? `<span style="background:#c0392b;color:white;padding:2px 8px;font-size:11px;font-weight:bold;">⚠️ ${data.errorCount} errores</span>`
+    : `<span style="color:#666;font-size:12px;">${data.errorCount} errores</span>`
+
+  await resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: `📊 Resumen semanal — ${data.communityName} — BarrioRed`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+          Barrio<span style="color: #c0392b;">Red</span>
+        </h1>
+        <p style="color:#666;font-size:13px;">Semana del ${data.weekStart}</p>
+        <h2 style="font-size:18px;margin:24px 0 12px;">${data.communityName}</h2>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:12px;border:2px solid black;font-weight:bold;">Negocios nuevos</td>
+            <td style="padding:12px;border:2px solid black;font-size:20px;font-weight:900;">${data.newBusinesses}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px;border:2px solid black;font-weight:bold;">Publicaciones nuevas</td>
+            <td style="padding:12px;border:2px solid black;font-size:20px;font-weight:900;">${data.newPosts}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px;border:2px solid black;font-weight:bold;">Nuevos vecinos</td>
+            <td style="padding:12px;border:2px solid black;font-size:20px;font-weight:900;">${data.newUsers}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px;border:2px solid black;font-weight:bold;">Clasificados activos</td>
+            <td style="padding:12px;border:2px solid black;font-size:20px;font-weight:900;">${data.activeClassifieds}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px;border:2px solid black;font-weight:bold;">Errores (7 días)</td>
+            <td style="padding:12px;border:2px solid black;">${errorBadge}</td>
+          </tr>
+        </table>
+        <p>
+          <a href="https://barriored.co/admin"
+             style="background:#c0392b;color:white;padding:10px 20px;text-decoration:none;font-weight:bold;text-transform:uppercase;display:inline-block;margin-top:20px;">
+            Ver Panel Admin
+          </a>
+        </p>
+        <p style="color:#666;font-size:12px;margin-top:32px;">BarrioRed — Resumen automático semanal</p>
+      </div>
+    `,
+  })
+}
+
+export async function sendErrorAlertEmail(
+  adminEmail: string,
+  count: number,
+  topErrors: string[]
+) {
+  const errorList = topErrors
+    .map(e => `<li style="margin-bottom:4px;font-size:13px;">${e}</li>`)
+    .join('')
+
+  await resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: `🚨 ${count} errores en las últimas 24h — BarrioRed`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+          Barrio<span style="color: #c0392b;">Red</span>
+        </h1>
+        <div style="background:#c0392b;color:white;padding:12px 16px;margin:16px 0;">
+          <strong style="font-size:18px;">⚠️ ${count} errores registrados en las últimas 24 horas</strong>
+        </div>
+        <p><strong>Errores más frecuentes:</strong></p>
+        <ul>${errorList}</ul>
+        <p>
+          <a href="https://barriored.co/admin"
+             style="background:#c0392b;color:white;padding:10px 20px;text-decoration:none;font-weight:bold;text-transform:uppercase;display:inline-block;">
+            Ver Logs de Errores
+          </a>
+        </p>
+        <p style="color:#666;font-size:12px;margin-top:32px;">BarrioRed — Alertas automáticas</p>
+      </div>
+    `,
+  })
+}
