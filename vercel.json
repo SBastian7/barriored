@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/daily-expiration",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/community",
+      "schedule": "0 * * * *"
     }
   ]
 }
