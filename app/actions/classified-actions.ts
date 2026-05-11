@@ -321,7 +321,8 @@ export async function reactivateClassifiedAction(id: string): Promise<ActionResu
       status: 'active',
       last_activity_at: new Date().toISOString(),
       sold_at: null,
-      archived_at: null
+      archived_at: null,
+      renewal_reminder_sent_at: null
     })
     .eq('id', id)
     .eq('user_id', user.id)
