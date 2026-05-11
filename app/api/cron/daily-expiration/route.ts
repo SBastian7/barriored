@@ -3,7 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import {
   sendSubscriptionRenewalReminderEmail,
-  sendSubscriptionExpirationWarningEmail
+  sendSubscriptionExpirationWarningEmail,
+  sendClassifiedExpiryReminderEmail,
 } from '@/lib/email/resend'
 
 export async function GET(request: Request) {
@@ -125,12 +126,65 @@ export async function GET(request: Request) {
         .eq('id', banner.id)
     }
 
+    // ── Step 5: Auto-expire classifieds (30 days from last_activity_at) ──────────
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+    const { data: expiredClassifieds } = await (adminClient as any)
+      .from('classifieds')
+      .update({
+        status: 'archived',
+        archived_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      })
+      .eq('status', 'active')
+      .lt('last_activity_at', thirtyDaysAgo.toISOString())
+      .select('id')
+
+    // ── Step 6: 3-day expiry reminder ────────────────────────────────────────────
+    // Window: last_activity_at is between 27 and 28 days ago (fires once per day)
+    const reminderWindowOlder = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
+    const reminderWindowNewer = new Date(now.getTime() - 27 * 24 * 60 * 60 * 1000)
+
+    const { data: reminderCandidates } = await (adminClient as any)
+      .from('classifieds')
+      .select('id, title, user_id, communities!inner(slug)')
+      .eq('status', 'active')
+      .is('renewal_reminder_sent_at', null)
+      .gte('last_activity_at', reminderWindowOlder.toISOString())
+      .lte('last_activity_at', reminderWindowNewer.toISOString())
+
+    let classifiedRemindersSent = 0
+
+    for (const classified of reminderCandidates ?? []) {
+      try {
+        const slug = (classified.communities as any).slug as string
+        const { data: userData } = await adminClient.auth.admin.getUserById(classified.user_id)
+        const email = userData?.user?.email
+
+        if (email) {
+          await sendClassifiedExpiryReminderEmail(email, classified.title, slug)
+        }
+
+        await (adminClient as any)
+          .from('classifieds')
+          .update({ renewal_reminder_sent_at: now.toISOString() })
+          .eq('id', classified.id)
+
+        classifiedRemindersSent++
+      } catch (err) {
+        console.error(`[cron] classified reminder failed for ${classified.id}:`, err)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       renewalRemindersSent,
       expirationWarningsSent,
       expiredSubscriptions: expiredSubs?.length || 0,
       expiredBanners: expiredBanners?.length || 0,
+      classifiedsExpired: expiredClassifieds?.length ?? 0,
+      classifiedRemindersSent,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
