@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { sendAdminFlaggedContentNotification } from '@/lib/notifications/community'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -9,15 +10,17 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 type ReviewWithBusiness = {
   id: string
   business_id: string
+  review_text: string | null
   businesses: {
     owner_id: string
+    community_id: string
   }
 }
 
 // Zod schema for request body validation
 const FlagReviewSchema = z.object({
   reason: z.enum(['spam', 'offensive', 'fake', 'irrelevant', 'other'], {
-    errorMap: () => ({ message: 'Motivo inválido.' })
+    error: 'Motivo inválido.'
   }),
   description: z.string().optional()
 })
@@ -84,7 +87,7 @@ export async function POST(
     // Get review and verify user owns the business
     const { data: review, error: reviewError } = await supabase
       .from('business_reviews')
-      .select('id, business_id, businesses!inner(owner_id)')
+      .select('id, business_id, review_text, businesses!inner(owner_id, community_id)')
       .eq('id', reviewId)
       .single()
 
@@ -138,6 +141,24 @@ export async function POST(
         { error: 'Error al reportar reseña.' },
         { status: 500 }
       )
+    }
+
+    // Notify admins on first flag only
+    const { count: existingFlagCount } = await supabase
+      .from('review_flags')
+      .select('*', { count: 'exact', head: true })
+      .eq('review_id', reviewId)
+
+    if ((existingFlagCount ?? 0) <= 1) {
+      const reviewWithBusiness = review as ReviewWithBusiness
+      const communityId = reviewWithBusiness.businesses.community_id
+      const excerpt = (reviewWithBusiness.review_text ?? '').slice(0, 80)
+      sendAdminFlaggedContentNotification(communityId, {
+        type: 'review',
+        title: excerpt || 'Reseña reportada',
+        reason,
+        adminPanelUrl: `https://barriored.co/admin/review-flags`,
+      })
     }
 
     return NextResponse.json({ flag }, { status: 201 })
