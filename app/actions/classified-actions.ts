@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import type { Database } from '@/lib/types/database'
 import { checkProhibitedKeywords } from '@/lib/moderation/marketplace-keywords'
+import { notifyClassifiedSold } from '@/lib/notifications/marketplace'
 
 type ClassifiedInsert = Database['public']['Tables']['classifieds']['Insert']
 type ClassifiedUpdate = Database['public']['Tables']['classifieds']['Update']
@@ -294,6 +295,11 @@ export async function markAsSoldAction(id: string): Promise<ActionResult> {
     console.error('Mark sold error:', error)
     return { success: false, error: 'Error al marcar como vendido' }
   }
+
+  // Fire-and-forget: notify seller
+  notifyClassifiedSold(id, user.id).catch(err =>
+    console.error('[markAsSoldAction] notification failed:', err)
+  )
 
   revalidatePath('/dashboard')
   revalidatePath('/[community]/marketplace', 'page')

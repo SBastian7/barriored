@@ -1,6 +1,7 @@
 // @ts-nocheck - Pre-existing admin file with Supabase type inference issues
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { notifyClassifiedSold } from '@/lib/notifications/marketplace'
 
 export async function GET(
   request: NextRequest,
@@ -149,6 +150,13 @@ export async function PATCH(
     return NextResponse.json(
       { error: 'Error al actualizar clasificado' },
       { status: 500 }
+    )
+  }
+
+  // Notify seller when admin marks as sold
+  if (status === 'sold' && updated) {
+    notifyClassifiedSold(id, updated.user_id).catch(err =>
+      console.error('[admin PATCH] sold notification failed:', err)
     )
   }
 
