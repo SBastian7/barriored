@@ -5,6 +5,7 @@ import {
   sendSubscriptionRenewalReminderEmail,
   sendSubscriptionExpirationWarningEmail,
   sendClassifiedExpiryReminderEmail,
+  sendErrorAlertEmail,
 } from '@/lib/email/resend'
 
 export async function GET(request: Request) {
@@ -178,6 +179,85 @@ export async function GET(request: Request) {
       }
     }
 
+    // ── Step 7: Error spike alert ─────────────────────────────────────────────
+    let errorAlertSent = false
+    try {
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+      const { count: errorCount } = await (adminClient as any)
+        .from('error_logs')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', since24h)
+
+      if ((errorCount ?? 0) > 20) {
+        const { data: topErrorRows } = await (adminClient as any)
+          .from('error_logs')
+          .select('error_message')
+          .gte('created_at', since24h)
+          .order('created_at', { ascending: false })
+          .limit(20)
+
+        // Count by message and take top 5
+        const freq: Record<string, number> = {}
+        for (const row of topErrorRows ?? []) {
+          const msg = row.error_message ?? 'Unknown'
+          freq[msg] = (freq[msg] ?? 0) + 1
+        }
+        const topErrors = Object.entries(freq)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([msg, cnt]) => `${msg} (×${cnt})`)
+
+        const { data: superAdmins } = await (adminClient as any)
+          .from('profiles')
+          .select('id')
+          .eq('is_super_admin', true)
+
+        for (const admin of superAdmins ?? []) {
+          try {
+            const { data: userData } = await adminClient.auth.admin.getUserById(admin.id)
+            const email = userData?.user?.email
+            if (email) {
+              await sendErrorAlertEmail(email, errorCount!, topErrors)
+                .catch(err => console.error('[cron] error alert email failed:', err))
+              errorAlertSent = true
+            }
+          } catch (err) {
+            console.error('[cron] failed to send error alert to admin:', err)
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[cron] error spike check failed:', err)
+    }
+
+    // ── Step 8: Data cleanup ──────────────────────────────────────────────────
+    let errorLogsDeleted = 0
+    let reminderLogsDeleted = 0
+    try {
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+      const { data: deletedErrors } = await (adminClient as any)
+        .from('error_logs')
+        .delete()
+        .lt('created_at', ninetyDaysAgo)
+        .select('id')
+      errorLogsDeleted = deletedErrors?.length ?? 0
+    } catch (err) {
+      console.error('[cron] error_logs cleanup failed:', err)
+    }
+
+    try {
+      const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
+      const { data: deletedReminders } = await (adminClient as any)
+        .from('cron_reminder_logs')
+        .delete()
+        .lt('created_at', sixtyDaysAgo)
+        .select('id')
+      reminderLogsDeleted = deletedReminders?.length ?? 0
+    } catch (err) {
+      console.error('[cron] cron_reminder_logs cleanup failed:', err)
+    }
+
     return NextResponse.json({
       success: true,
       renewalRemindersSent,
@@ -186,6 +266,9 @@ export async function GET(request: Request) {
       expiredBanners: expiredBanners?.length || 0,
       classifiedsExpired: expiredClassifieds?.length ?? 0,
       classifiedRemindersSent,
+      errorAlertSent,
+      errorLogsDeleted,
+      reminderLogsDeleted,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
