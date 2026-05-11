@@ -33,6 +33,7 @@ export function InstallPrompt() {
     await deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === 'accepted') {
+      localStorage.setItem(DISMISSED_KEY, '1')
       setVisible(false)
     }
   }
