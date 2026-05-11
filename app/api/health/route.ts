@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET() {
   const start = Date.now()
   let dbOk = false
 
   try {
-    const admin = createAdminClient()
-    const { error } = await (admin as any).from('communities').select('id').limit(1)
+    const supabase = await createClient()
+    const { error } = await supabase.from('communities').select('id').limit(1)
     dbOk = !error
   } catch {
     dbOk = false
