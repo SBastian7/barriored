@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAlertSchema } from '@/lib/validations/community'
+import { sendCommunityAlertNotifications } from '@/lib/notifications/community'
 
 export async function GET(request: NextRequest) {
     const supabase = await createClient()
@@ -43,5 +44,23 @@ export async function POST(request: Request) {
         .single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // Fire-and-forget: fetch community slug then send notifications
+    const { data: community } = await supabase
+        .from('communities')
+        .select('slug')
+        .eq('id', parsed.data.community_id)
+        .single() as { data: { slug: string } | null }
+
+    if (community?.slug) {
+        sendCommunityAlertNotifications(parsed.data.community_id, {
+            title: parsed.data.title,
+            description: parsed.data.description ?? null,
+            type: parsed.data.type,
+            severity: parsed.data.severity,
+            communitySlug: community.slug,
+        })
+    }
+
     return NextResponse.json(data, { status: 201 })
 }
