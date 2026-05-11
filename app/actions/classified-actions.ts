@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import type { Database } from '@/lib/types/database'
+import { checkProhibitedKeywords } from '@/lib/moderation/marketplace-keywords'
 
 type ClassifiedInsert = Database['public']['Tables']['classifieds']['Insert']
 type ClassifiedUpdate = Database['public']['Tables']['classifieds']['Update']
@@ -97,6 +98,31 @@ export async function createClassifiedAction(formData: FormData) {
     }
   }
 
+  // Prohibited keyword check
+  const prohibitedMatch = checkProhibitedKeywords(`${title} ${description}`)
+  if (prohibitedMatch) {
+    return {
+      success: false,
+      error: `Contenido no permitido: "${prohibitedMatch}". Este tipo de artículo no puede publicarse en el marketplace.`
+    }
+  }
+
+  // Duplicate detection
+  const { data: duplicate } = await supabase
+    .from('classifieds')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .ilike('title', title)
+    .maybeSingle()
+
+  if (duplicate) {
+    return {
+      success: false,
+      error: 'Ya tienes un clasificado activo con ese título. Edita el existente o elige un título diferente.'
+    }
+  }
+
   // Insert classified
   const { data: classified, error } = await supabase
     .from('classifieds')
@@ -175,6 +201,15 @@ export async function updateClassifiedAction(
 
   if (images.length > 5) {
     return { success: false, error: 'Máximo 5 imágenes permitidas' }
+  }
+
+  // Prohibited keyword check
+  const prohibitedMatch = checkProhibitedKeywords(`${title} ${description}`)
+  if (prohibitedMatch) {
+    return {
+      success: false,
+      error: `Contenido no permitido: "${prohibitedMatch}". Actualiza el texto y vuelve a intentarlo.`
+    }
   }
 
   // Update classified
