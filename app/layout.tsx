@@ -3,6 +3,7 @@ import { Inter, Outfit } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { ServiceWorkerRegister } from '@/components/service-worker-register'
 import { ErrorBoundary } from '@/components/shared/error-boundary'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const inter = Inter({
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ErrorBoundary>
         <Toaster />
         <ServiceWorkerRegister />
+        <Analytics />
       </body>
     </html>
   )
