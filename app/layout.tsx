@@ -3,6 +3,7 @@ import { Inter, Outfit } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { ServiceWorkerRegister } from '@/components/service-worker-register'
 import { ErrorBoundary } from '@/components/shared/error-boundary'
+import { OfflineBanner } from '@/components/shared/offline-banner'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${inter.variable} ${outfit.variable}`}>
       <body className="font-sans antialiased">
+        <OfflineBanner />
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
