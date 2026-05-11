@@ -80,6 +80,9 @@ export type Database = {
           image_url: string
           link_url: string | null
           placement: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           requested_at: string | null
           starts_at: string | null
           status: string
@@ -97,6 +100,9 @@ export type Database = {
           image_url: string
           link_url?: string | null
           placement: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           requested_at?: string | null
           starts_at?: string | null
           status: string
@@ -114,6 +120,9 @@ export type Database = {
           image_url?: string
           link_url?: string | null
           placement?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           requested_at?: string | null
           starts_at?: string | null
           status?: string
@@ -133,6 +142,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banner_ads_rejected_by_fkey"
+            columns: ["rejected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -594,6 +610,7 @@ export type Database = {
           is_featured: boolean | null
           last_activity_at: string | null
           price: string | null
+          renewal_reminder_sent_at: string | null
           sold_at: string | null
           status: string
           title: string
@@ -616,6 +633,7 @@ export type Database = {
           is_featured?: boolean | null
           last_activity_at?: string | null
           price?: string | null
+          renewal_reminder_sent_at?: string | null
           sold_at?: string | null
           status?: string
           title: string
@@ -638,6 +656,7 @@ export type Database = {
           is_featured?: boolean | null
           last_activity_at?: string | null
           price?: string | null
+          renewal_reminder_sent_at?: string | null
           sold_at?: string | null
           status?: string
           title?: string
