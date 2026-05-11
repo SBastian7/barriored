@@ -220,3 +220,60 @@ export async function sendAdminFlaggedContentEmail(
     `,
   })
 }
+
+export async function sendClassifiedSoldEmail(
+  ownerEmail: string,
+  classifiedTitle: string,
+  communitySlug: string
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `¡Vendido! "${classifiedTitle}" — BarrioRed`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+          Barrio<span style="color: #c0392b;">Red</span>
+        </h1>
+        <p>¡Felicitaciones!</p>
+        <p>Tu clasificado <strong>"${classifiedTitle}"</strong> fue marcado como vendido.</p>
+        <p>Si tienes más artículos, publica otro clasificado en el marketplace.</p>
+        <p>
+          <a href="https://barriored.co/${communitySlug}/marketplace"
+             style="background: #c0392b; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; display: inline-block;">
+            Ver Marketplace
+          </a>
+        </p>
+        <p style="color: #666; font-size: 12px; margin-top: 32px;">BarrioRed — Tu comunidad digital</p>
+      </div>
+    `,
+  })
+}
+
+export async function sendClassifiedExpiryReminderEmail(
+  ownerEmail: string,
+  classifiedTitle: string,
+  communitySlug: string
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `Tu clasificado "${classifiedTitle}" vence en 3 días — BarrioRed`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+          Barrio<span style="color: #c0392b;">Red</span>
+        </h1>
+        <p>Tu clasificado <strong>"${classifiedTitle}"</strong> vence en <strong>3 días</strong>.</p>
+        <p>Si aún no lo has vendido, actualiza tu publicación para renovar los 30 días automáticamente.</p>
+        <p>
+          <a href="https://barriored.co/dashboard?tab=marketplace"
+             style="background: #c0392b; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; display: inline-block;">
+            Actualizar Clasificado
+          </a>
+        </p>
+        <p style="color: #666; font-size: 12px; margin-top: 32px;">BarrioRed — Tu comunidad digital</p>
+      </div>
+    `,
+  })
+}
