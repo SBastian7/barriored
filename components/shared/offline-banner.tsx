@@ -21,7 +21,7 @@ export function OfflineBanner() {
   if (isOnline) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-foreground text-white px-4 py-2 text-sm font-bold uppercase tracking-widest">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-primary text-background px-4 py-2 text-sm font-bold uppercase tracking-widest">
       <WifiOff className="h-4 w-4 shrink-0" />
       <span>Sin conexión — algunas funciones no estarán disponibles</span>
     </div>
