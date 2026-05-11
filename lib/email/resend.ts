@@ -3,6 +3,15 @@ import { Resend } from 'resend'
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'noreply@barriored.co'
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export async function sendBusinessSubmittedEmail(ownerEmail: string, businessName: string) {
   await resend.emails.send({
     from: FROM,
@@ -305,8 +314,8 @@ export async function sendWeeklyDigestEmail(
         <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
           Barrio<span style="color: #c0392b;">Red</span>
         </h1>
-        <p style="color:#666;font-size:13px;">Semana del ${data.weekStart}</p>
-        <h2 style="font-size:18px;margin:24px 0 12px;">${data.communityName}</h2>
+        <p style="color:#666;font-size:13px;">Semana del ${escapeHtml(data.weekStart)}</p>
+        <h2 style="font-size:18px;margin:24px 0 12px;">${escapeHtml(data.communityName)}</h2>
         <table style="width:100%;border-collapse:collapse;">
           <tr>
             <td style="padding:12px;border:2px solid black;font-weight:bold;">Negocios nuevos</td>
@@ -347,7 +356,7 @@ export async function sendErrorAlertEmail(
   topErrors: string[]
 ) {
   const errorList = topErrors
-    .map(e => `<li style="margin-bottom:4px;font-size:13px;">${e}</li>`)
+    .map(e => `<li style="margin-bottom:4px;font-size:13px;">${escapeHtml(e)}</li>`)
     .join('')
 
   await resend.emails.send({
