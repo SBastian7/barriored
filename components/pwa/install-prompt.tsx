@@ -17,23 +17,32 @@ export function InstallPrompt() {
   useEffect(() => {
     if (localStorage.getItem(DISMISSED_KEY)) return
 
+    let timerId: ReturnType<typeof setTimeout>
+
     const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
       // Show after 10 seconds
-      setTimeout(() => setVisible(true), 10_000)
+      timerId = setTimeout(() => setVisible(true), 10_000)
     }
 
     window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler)
+      clearTimeout(timerId)
+    }
   }, [])
 
   async function handleInstall() {
     if (!deferredPrompt) return
-    await deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    if (outcome === 'accepted') {
-      localStorage.setItem(DISMISSED_KEY, '1')
+    try {
+      await deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        localStorage.setItem(DISMISSED_KEY, '1')
+        setVisible(false)
+      }
+    } catch {
       setVisible(false)
     }
   }
