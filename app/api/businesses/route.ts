@@ -8,6 +8,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const communityId = searchParams.get('community_id')
 
+  if (!communityId) {
+    return NextResponse.json({ error: 'community_id is required' }, { status: 400 })
+  }
+
   const supabase = await createClient()
 
   let query = (supabase as any)
