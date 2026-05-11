@@ -164,6 +164,7 @@ export async function GET(request: Request) {
 
         if (email) {
           await sendClassifiedExpiryReminderEmail(email, classified.title, slug)
+            .catch(err => console.error(`[cron] reminder email failed for ${classified.id}:`, err))
         }
 
         await (adminClient as any)
