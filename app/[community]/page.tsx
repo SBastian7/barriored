@@ -1,69 +1,78 @@
-import { createClient } from '@/lib/supabase/server'
+import { unstable_cache } from 'next/cache'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { HeroBanner } from '@/components/home/hero-banner'
 import { QuickNav } from '@/components/home/quick-nav'
 import { BusinessSection } from '@/components/home/featured-businesses'
 import { RegisterCTA } from '@/components/home/register-cta'
 import { BannerRotator } from '@/components/banners/banner-rotator'
 
+const getCommunityHomepageData = unstable_cache(
+  async (slug: string) => {
+    const admin = createAdminClient()
+
+    const { data: community } = await (admin as any)
+      .from('communities')
+      .select('*')
+      .eq('slug', slug)
+      .single()
+
+    if (!community) return null
+
+    const [businessCountRes, featuredRes, recentRes] = await Promise.all([
+      (admin as any).from('businesses').select('id', { count: 'exact', head: true })
+        .eq('community_id', community.id).eq('status', 'approved'),
+
+      (admin as any).from('businesses')
+        .select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
+        .eq('community_id', community.id)
+        .eq('status', 'approved')
+        .eq('is_featured', true)
+        .order('featured_order', { ascending: true, nullsFirst: false })
+        .limit(3),
+
+      (admin as any).from('businesses')
+        .select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
+        .eq('community_id', community.id)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(10),
+    ])
+
+    const featuredIds = (featuredRes.data ?? []).map((b: any) => b.id)
+    const recentBusinesses = (recentRes.data ?? [])
+      .filter((b: any) => !featuredIds.includes(b.id))
+      .slice(0, 3)
+
+    return {
+      community,
+      businessCount: businessCountRes.count ?? 0,
+      featuredBusinesses: featuredRes.data ?? [],
+      recentBusinesses,
+    }
+  },
+  ['community-homepage'],
+  { revalidate: 3600 }
+)
+
 export default async function CommunityHomePage({ params }: { params: Promise<{ community: string }> }) {
   const { community: slug } = await params
-  const supabase = await createClient()
 
-  const { data: community } = await supabase
-    .from('communities')
-    .select('*')
-    .eq('slug', slug)
-    .single<{
-      id: string
-      name: string
-      slug: string
-      municipality: string
-      department: string
-      description: string | null
-      logo_url: string | null
-      primary_color: string | null
-      cover_image_url: string | null
-      [key: string]: any
-    }>()
-
-  if (!community) return null
-
-  const [businessCountRes, featuredRes, recentRes] = await Promise.all([
-    supabase.from('businesses').select('id', { count: 'exact', head: true })
-      .eq('community_id', community.id).eq('status', 'approved'),
-
-    // Featured businesses query
-    supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
-      .eq('community_id', community.id)
-      .eq('status', 'approved')
-      .eq('is_featured', true)
-      .order('featured_order', { ascending: true, nullsFirst: false })
-      .limit(3),
-
-    // Recent businesses query (will exclude featured in next step)
-    supabase.from('businesses').select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
-      .eq('community_id', community.id)
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
-      .limit(10) // Fetch extra to account for featured exclusions
-  ])
-
-  // Exclude featured businesses from recent list
-  const featuredIds = (featuredRes.data as any[] ?? []).map((b: any) => b.id)
-  const recentBusinesses = (recentRes.data as any[] ?? []).filter((b: any) => !featuredIds.includes(b.id)).slice(0, 3)
+  const data = await getCommunityHomepageData(slug)
+  if (!data) return null
+  const { community, businessCount, featuredBusinesses, recentBusinesses } = data
 
   return (
     <>
-      <HeroBanner community={community} businessCount={businessCountRes.count ?? 0} />
+      <HeroBanner community={community} businessCount={businessCount} />
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <BannerRotator placement="homepage" communityId={community.id} />
       </div>
       <QuickNav communitySlug={slug} />
 
       {/* Featured businesses section */}
-      {featuredRes.data && featuredRes.data.length > 0 && (
+      {featuredBusinesses.length > 0 && (
         <BusinessSection
-          businesses={featuredRes.data}
+          businesses={featuredBusinesses}
           communitySlug={slug}
           title="Destacados"
           showBadge={true}
