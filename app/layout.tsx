@@ -5,6 +5,7 @@ import { ServiceWorkerRegister } from '@/components/service-worker-register'
 import { ErrorBoundary } from '@/components/shared/error-boundary'
 import { OfflineBanner } from '@/components/shared/offline-banner'
 import { Analytics } from '@vercel/analytics/next'
+import { InstallPrompt } from '@/components/pwa/install-prompt'
 import './globals.css'
 
 const inter = Inter({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Toaster />
         <ServiceWorkerRegister />
         <Analytics />
+        <InstallPrompt />
       </body>
     </html>
   )
