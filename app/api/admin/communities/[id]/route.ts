@@ -191,45 +191,44 @@ export async function DELETE(
   const { id } = await params
   const supabase = await createClient()
 
-  // Check authentication
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  // Check super admin
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_super_admin')
-    .eq('id', user.id)
-    .single<{ is_super_admin: boolean }>()
+    .from('profiles').select('is_super_admin').eq('id', user.id).single<{ is_super_admin: boolean }>()
 
   if (!profile?.is_super_admin) {
-    return NextResponse.json(
-      { error: 'Forbidden - Super admin only' },
-      { status: 403 }
-    )
+    return NextResponse.json({ error: 'Forbidden - Super admin only' }, { status: 403 })
   }
 
-  // Soft delete (set is_active = false)
-  const { error } = await (supabase as any)
-    .from('communities')
-    .update({ is_active: false })
-    .eq('id', id)
+  const url = new URL(request.url)
+  const permanent = url.searchParams.get('permanent') === 'true'
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (permanent) {
+    // Safety check: block if community has associated data
+    const [{ count: bizCount }, { count: userCount }, { count: postCount }] = await Promise.all([
+      supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('community_id', id),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('community_id', id),
+      supabase.from('community_posts').select('id', { count: 'exact', head: true }).eq('community_id', id),
+    ])
+
+    if ((bizCount ?? 0) > 0 || (userCount ?? 0) > 0 || (postCount ?? 0) > 0) {
+      return NextResponse.json(
+        { error: `No se puede eliminar: ${bizCount} negocio(s), ${userCount} usuario(s), ${postCount} publicación(es)` },
+        { status: 409 }
+      )
+    }
+
+    const { error } = await supabase.from('communities').delete().eq('id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    await logAuditAction({ action: 'delete_community', entityType: 'community', entityId: id })
+    return NextResponse.json({ success: true })
   }
 
-  // Log audit action
-  await logAuditAction({
-    action: 'archive_community',
-    entityType: 'community',
-    entityId: id,
-  })
-
+  // Soft delete (existing behavior)
+  const { error } = await (supabase as any).from('communities').update({ is_active: false }).eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await logAuditAction({ action: 'archive_community', entityType: 'community', entityId: id })
   return NextResponse.json({ success: true })
 }

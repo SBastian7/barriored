@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CommunityStatsPanel } from '@/components/admin/community-stats-panel'
 import { CommunityStaffPanel } from '@/components/admin/community-staff-panel'
 import { CommunityOwnershipPanel } from '@/components/admin/community-ownership-panel'
+import { CommunityDangerZone } from '@/components/admin/community-danger-zone'
 import { Edit, ArrowLeft } from 'lucide-react'
 import type { Database } from '@/lib/types/database'
 
@@ -163,6 +164,12 @@ export default async function CommunityDetailPage({
           />
         </TabsContent>
       </Tabs>
+
+      <CommunityDangerZone
+        communityId={id}
+        communitySlug={community.slug}
+        isActive={community.is_active ?? false}
+      />
     </div>
   )
 }
