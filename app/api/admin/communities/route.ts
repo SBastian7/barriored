@@ -98,7 +98,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  const { name, slug, municipality, department, description, logo_url } = body
+  const { name, slug, municipality, department, description, logo_url, cover_image_url } = body
 
   // Validate required fields
   if (!name || !slug || !municipality || !department) {
@@ -132,6 +132,7 @@ export async function POST(request: Request) {
       department,
       description,
       logo_url,
+      cover_image_url: cover_image_url || null,
       is_active: true,
     })
     .select()
