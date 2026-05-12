@@ -116,35 +116,40 @@ export async function PATCH(
   if (logo_url !== undefined) updateData.logo_url = logo_url
   if (banner_url !== undefined) updateData.banner_url = banner_url
   if (is_active !== undefined) updateData.is_active = is_active
-  if (primary_admin_id !== undefined) updateData.primary_admin_id = primary_admin_id
-
-  // Validate primary_admin_id if provided
+  // Validate and set primary_admin_id if provided
   if (primary_admin_id !== undefined) {
-    const { data: targetProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, role, community_id')
-      .eq('id', primary_admin_id)
-      .single<{ id: string; role: string; community_id: string }>()
+    if (primary_admin_id === null) {
+      // Explicit clear is allowed
+      updateData.primary_admin_id = null
+    } else {
+      const { data: targetProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, role, community_id')
+        .eq('id', primary_admin_id)
+        .single<{ id: string; role: string; community_id: string }>()
 
-    if (profileError || !targetProfile) {
-      return NextResponse.json(
-        { error: 'Target profile not found' },
-        { status: 400 }
-      )
-    }
+      if (profileError || !targetProfile) {
+        return NextResponse.json(
+          { error: 'Target profile not found' },
+          { status: 400 }
+        )
+      }
 
-    if (targetProfile.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Target profile must have role = admin' },
-        { status: 400 }
-      )
-    }
+      if (targetProfile.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Target profile must have role = admin' },
+          { status: 400 }
+        )
+      }
 
-    if (targetProfile.community_id !== id) {
-      return NextResponse.json(
-        { error: 'Target profile does not belong to this community' },
-        { status: 400 }
-      )
+      if (targetProfile.community_id !== id) {
+        return NextResponse.json(
+          { error: 'Target profile does not belong to this community' },
+          { status: 400 }
+        )
+      }
+
+      updateData.primary_admin_id = primary_admin_id
     }
   }
 
