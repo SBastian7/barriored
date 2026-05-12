@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePermission } from '@/lib/auth/api-protection'
@@ -37,26 +38,25 @@ export async function POST(
 
   // Send approval email
   try {
-    const { data: biz } = await (supabase as any)
-      .from('businesses')
-      .select('name, owner_id, communities(slug)')
-      .eq('id', id)
-      .single()
-
-    if (!biz?.owner_id) {
-      console.error(`Approval email: business ${id} not found or missing owner_id`)
+    if (!data.owner_id) {
+      console.error(`Approval email: business ${id} missing owner_id`)
     } else {
       const adminClient = createAdminClient()
-      const { data: ownerData, error: userError } = await adminClient.auth.admin.getUserById(biz.owner_id)
-      if (userError) {
-        console.error(`Approval email: getUserById failed for business ${id}:`, userError.message)
+      const [ownerResult, communityResult] = await Promise.all([
+        adminClient.auth.admin.getUserById(data.owner_id),
+        adminClient.from('communities').select('slug').eq('id', data.community_id).single(),
+      ])
+
+      if (ownerResult.error) {
+        console.error(`Approval email: getUserById failed for business ${id}:`, ownerResult.error.message)
       } else {
-        const ownerEmail = ownerData?.user?.email
-        const communitySlug = (biz.communities as any)?.slug ?? ''
-        if (ownerEmail && biz.name) {
-          await sendBusinessApprovedEmail(ownerEmail, biz.name, communitySlug)
+        const ownerEmail = ownerResult.data?.user?.email
+        const communitySlug = (communityResult.data as any)?.slug ?? ''
+        if (communitySlug) revalidateTag(`businesses-${communitySlug}`, 'default')
+        if (ownerEmail && data.name) {
+          await sendBusinessApprovedEmail(ownerEmail, data.name, communitySlug)
         } else {
-          console.error(`Approval email: missing data for business ${id} — email: ${ownerEmail}, name: ${biz.name}`)
+          console.error(`Approval email: missing data for business ${id} — email: ${ownerEmail}, name: ${data.name}`)
         }
       }
     }

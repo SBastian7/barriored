@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createBusinessSchema } from '@/lib/validations/business'
 import { slugify } from '@/lib/utils'
@@ -111,6 +112,18 @@ export async function POST(request: Request) {
 
   // Note: Users maintain 'user' role regardless of business ownership
   // Role changes are only for admin/moderator assignments
+
+  // Bust cache so new pending business shows in admin (future-proof for status changes)
+  try {
+    const { data: comm } = await (supabase as any)
+      .from('communities')
+      .select('slug')
+      .eq('id', rest.community_id)
+      .single()
+    if (comm?.slug) revalidateTag(`businesses-${comm.slug}`, 'default')
+  } catch (e) {
+    console.error('[businesses POST] cache bust failed:', e)
+  }
 
   // Fire-and-forget confirmation email
   const ownerEmail = user.email

@@ -5,36 +5,38 @@ import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DirectoryView } from '@/components/directory/directory-view'
 import { BannerRotator } from '@/components/banners/banner-rotator'
 
-const getDirectoryData = unstable_cache(
-  async (slug: string) => {
-    const admin = createAdminClient()
+function getDirectoryData(slug: string) {
+  return unstable_cache(
+    async () => {
+      const admin = createAdminClient()
 
-    const { data: community } = await (admin as any)
-      .from('communities')
-      .select('id, name')
-      .eq('slug', slug)
-      .single()
+      const { data: community } = await (admin as any)
+        .from('communities')
+        .select('id, name')
+        .eq('slug', slug)
+        .single()
 
-    if (!community) return null
+      if (!community) return null
 
-    const { data: categories } = await (admin as any)
-      .from('categories')
-      .select('id, name, slug')
-      .order('sort_order')
+      const { data: categories } = await (admin as any)
+        .from('categories')
+        .select('id, name, slug')
+        .order('sort_order')
 
-    const { data: businesses } = await (admin as any)
-      .from('businesses')
-      .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
-      .eq('community_id', community.id)
-      .eq('status', 'approved')
-      .order('is_featured', { ascending: false })
-      .order('created_at', { ascending: false })
+      const { data: businesses } = await (admin as any)
+        .from('businesses')
+        .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
+        .eq('community_id', community.id)
+        .eq('status', 'approved')
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false })
 
-    return { community, categories: categories ?? [], businesses: businesses ?? [] }
-  },
-  ['directory-data'],
-  { revalidate: 3600 }
-)
+      return { community, categories: categories ?? [], businesses: businesses ?? [] }
+    },
+    [`directory-${slug}`],
+    { revalidate: 3600, tags: [`businesses-${slug}`] }
+  )()
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string }> }) {
   const { community: slug } = await params

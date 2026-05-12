@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePermission } from '@/lib/auth/api-protection'
@@ -58,6 +59,19 @@ export async function POST(
     newData: { status: 'rejected', reason: rejection_reason },
     communityId: data.community_id,
   })
+
+  // Bust cache for this community
+  try {
+    const adminClient = createAdminClient()
+    const { data: comm } = await (adminClient as any)
+      .from('communities')
+      .select('slug')
+      .eq('id', data.community_id)
+      .single()
+    if (comm?.slug) revalidateTag(`businesses-${comm.slug}`, 'default')
+  } catch (e) {
+    console.error('[reject] cache bust failed:', e)
+  }
 
   // Send rejection email fire-and-forget
   try {
