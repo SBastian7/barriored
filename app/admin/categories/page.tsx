@@ -143,7 +143,7 @@ export default function CategoriesPage() {
 
   // Preview lucide icon
   const PreviewIcon = formData.icon ? (LucideIcons as any)[
-    formData.icon.split('-').map((w: string) => w[0].toUpperCase() + w.slice(1)).join('')
+    formData.icon.split('-').filter(Boolean).map((w: string) => w[0].toUpperCase() + w.slice(1)).join('')
   ] : null
 
   if (loading) return <div className="p-8"><p>Cargando categorías...</p></div>

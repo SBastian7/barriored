@@ -13,6 +13,10 @@ export async function PATCH(
 
   const { name, slug, icon } = await request.json()
 
+  if (!name || !slug) {
+    return NextResponse.json({ error: 'name y slug son requeridos' }, { status: 400 })
+  }
+
   const { data, error } = await supabase
     .from('categories')
     .update({ name, slug, icon })
