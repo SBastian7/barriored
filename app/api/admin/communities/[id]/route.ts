@@ -96,6 +96,58 @@ export async function PATCH(
 
   const body = await request.json()
 
+  // Whitelist allowed fields
+  const {
+    name,
+    slug,
+    description,
+    location,
+    logo_url,
+    banner_url,
+    is_active,
+    primary_admin_id,
+  } = body
+
+  const updateData: Record<string, unknown> = {}
+  if (name !== undefined) updateData.name = name
+  if (slug !== undefined) updateData.slug = slug
+  if (description !== undefined) updateData.description = description
+  if (location !== undefined) updateData.location = location
+  if (logo_url !== undefined) updateData.logo_url = logo_url
+  if (banner_url !== undefined) updateData.banner_url = banner_url
+  if (is_active !== undefined) updateData.is_active = is_active
+  if (primary_admin_id !== undefined) updateData.primary_admin_id = primary_admin_id
+
+  // Validate primary_admin_id if provided
+  if (primary_admin_id !== undefined) {
+    const { data: targetProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, role, community_id')
+      .eq('id', primary_admin_id)
+      .single<{ id: string; role: string; community_id: string }>()
+
+    if (profileError || !targetProfile) {
+      return NextResponse.json(
+        { error: 'Target profile not found' },
+        { status: 400 }
+      )
+    }
+
+    if (targetProfile.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Target profile must have role = admin' },
+        { status: 400 }
+      )
+    }
+
+    if (targetProfile.community_id !== id) {
+      return NextResponse.json(
+        { error: 'Target profile does not belong to this community' },
+        { status: 400 }
+      )
+    }
+  }
+
   // Get old data for audit log
   const { data: oldCommunity } = await supabase
     .from('communities')
@@ -106,7 +158,7 @@ export async function PATCH(
   // Update community
   const { data: community, error } = await (supabase as any)
     .from('communities')
-    .update(body)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single()
