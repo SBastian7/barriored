@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CommunityStatsPanel } from '@/components/admin/community-stats-panel'
 import { CommunityStaffPanel } from '@/components/admin/community-staff-panel'
+import { CommunityOwnershipPanel } from '@/components/admin/community-ownership-panel'
 import { Edit, ArrowLeft } from 'lucide-react'
 import type { Database } from '@/lib/types/database'
 
@@ -77,6 +78,7 @@ export default async function CommunityDetailPage({
     cover_image_url: communityData.cover_image_url,
     is_active: communityData.is_active,
     created_at: communityData.created_at,
+    primary_admin_id: (communityData as any).primary_admin_id || null,
     staff: staff || [],
     stats: stats?.[0] || {
       businesses_count: 0,
@@ -134,6 +136,12 @@ export default async function CommunityDetailPage({
           >
             Staff
           </TabsTrigger>
+          <TabsTrigger
+            value="ownership"
+            className="uppercase tracking-widest font-bold text-xs"
+          >
+            Propietario
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="stats">
@@ -144,6 +152,14 @@ export default async function CommunityDetailPage({
           <CommunityStaffPanel
             communityId={id}
             staff={community.staff || []}
+          />
+        </TabsContent>
+
+        <TabsContent value="ownership">
+          <CommunityOwnershipPanel
+            communityId={id}
+            staff={community.staff || []}
+            primaryAdminId={community.primary_admin_id}
           />
         </TabsContent>
       </Tabs>
