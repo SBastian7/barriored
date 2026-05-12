@@ -8,6 +8,7 @@ ALTER TABLE communities
 -- 2. Platform config (singleton)
 CREATE TABLE IF NOT EXISTS platform_config (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  singleton BOOLEAN NOT NULL DEFAULT true UNIQUE,
   platform_name TEXT NOT NULL DEFAULT 'BarrioRed',
   support_email TEXT,
   support_phone TEXT,
@@ -20,17 +21,18 @@ CREATE TABLE IF NOT EXISTS platform_config (
 );
 
 -- Seed one row
-INSERT INTO platform_config (platform_name)
-  VALUES ('BarrioRed')
-  ON CONFLICT DO NOTHING;
+INSERT INTO platform_config (platform_name, singleton)
+  VALUES ('BarrioRed', true)
+  ON CONFLICT (singleton) DO NOTHING;
 
 -- RLS
 ALTER TABLE platform_config ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "platform_config_read" ON platform_config
   FOR SELECT TO authenticated USING (true);
 CREATE POLICY "platform_config_write" ON platform_config
-  FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true));
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true));
 
 -- 3. Platform policies
 CREATE TABLE IF NOT EXISTS platform_policies (
@@ -53,8 +55,9 @@ ALTER TABLE platform_policies ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "platform_policies_read" ON platform_policies
   FOR SELECT TO authenticated USING (true);
 CREATE POLICY "platform_policies_write" ON platform_policies
-  FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true));
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true));
 
 -- 4. Platform payment config
 CREATE TABLE IF NOT EXISTS platform_payment_config (
@@ -101,7 +104,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 ALTER TABLE service_categories ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "service_categories_read" ON service_categories
-  FOR SELECT TO authenticated USING (true);
+  FOR SELECT USING (true);
 CREATE POLICY "service_categories_write" ON service_categories
   FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true));
