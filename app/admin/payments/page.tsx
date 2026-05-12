@@ -27,6 +27,9 @@ interface Payment {
 
 export default function AdminPaymentsPage() {
   const [communityId, setCommunityId] = useState<string | null>(null)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [communities, setCommunities] = useState<{ id: string; name: string }[]>([])
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string | 'all'>('all')
   const [payments, setPayments] = useState<Payment[]>([])
   const [typeFilter, setTypeFilter] = useState('all')
   const [methodFilter, setMethodFilter] = useState('all')
@@ -75,18 +78,25 @@ export default function AdminPaymentsPage() {
         return
       }
 
-      setCommunityId(profile.community_id)
-      await fetchPayments(profile.community_id!)
+      if (profile.is_super_admin) {
+        setIsSuperAdmin(true)
+        const { data: comms } = await supabase.from('communities').select('id, name').eq('is_active', true).order('name')
+        setCommunities(comms || [])
+        await fetchPayments(null)
+      } else {
+        setCommunityId(profile.community_id)
+        await fetchPayments(profile.community_id)
+      }
       setLoading(false)
     }
 
     checkAccessAndFetch()
   }, [])
 
-  async function fetchPayments(commId: string) {
+  async function fetchPayments(commId: string | null) {
     try {
       // Fetch subscription payments
-      const { data: subPayments } = await supabase
+      let subQuery = supabase
         .from('subscription_payments')
         .select(`
           id,
@@ -105,11 +115,12 @@ export default function AdminPaymentsPage() {
             )
           )
         `)
-        .eq('business_subscriptions.businesses.community_id', commId)
         .order('payment_date', { ascending: false })
+      if (commId) subQuery = subQuery.eq('business_subscriptions.businesses.community_id', commId)
+      const { data: subPayments } = await subQuery
 
       // Fetch banner payments (from banner_ads approved records)
-      const { data: bannerPayments } = await supabase
+      let bannerQuery = supabase
         .from('banner_ads')
         .select(`
           id,
@@ -124,10 +135,11 @@ export default function AdminPaymentsPage() {
             profiles!businesses_owner_id_profiles_fkey(full_name)
           )
         `)
-        .eq('businesses.community_id', commId)
         .eq('status', 'approved')
         .not('amount_paid', 'is', null)
         .order('approved_at', { ascending: false })
+      if (commId) bannerQuery = bannerQuery.eq('businesses.community_id', commId)
+      const { data: bannerPayments } = await bannerQuery
 
       // Transform and combine payments
       const transformedSubPayments: Payment[] = (subPayments || []).map(p => ({
@@ -183,10 +195,11 @@ export default function AdminPaymentsPage() {
   }
 
   useEffect(() => {
-    if (communityId) {
-      fetchPayments(communityId)
+    const commId = isSuperAdmin ? (selectedCommunityId === 'all' ? null : selectedCommunityId) : communityId
+    if (commId !== undefined) {
+      fetchPayments(commId)
     }
-  }, [typeFilter, methodFilter, searchQuery, communityId])
+  }, [typeFilter, methodFilter, searchQuery, communityId, selectedCommunityId, isSuperAdmin])
 
   const exportToCSV = () => {
     const headers = ['Fecha', 'Tipo', 'Negocio', 'Propietario', 'Monto', 'Método', 'ID Transacción']
@@ -235,6 +248,22 @@ export default function AdminPaymentsPage() {
           Dashboard de <span className="text-primary">Pagos</span>
         </h1>
       </div>
+
+      {isSuperAdmin && (
+        <div className="mb-6">
+          <Select value={selectedCommunityId} onValueChange={(v) => setSelectedCommunityId(v)}>
+            <SelectTrigger className="brutalist-input w-70">
+              <SelectValue placeholder="Comunidad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las comunidades</SelectItem>
+              {communities.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
