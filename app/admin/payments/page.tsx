@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
@@ -35,6 +35,7 @@ export default function AdminPaymentsPage() {
   const [methodFilter, setMethodFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const hasLoaded = useRef(false)
   const supabase = createClient()
 
   // Stats
@@ -88,6 +89,7 @@ export default function AdminPaymentsPage() {
         await fetchPayments(profile.community_id)
       }
       setLoading(false)
+      hasLoaded.current = true
     }
 
     checkAccessAndFetch()
@@ -195,6 +197,7 @@ export default function AdminPaymentsPage() {
   }
 
   useEffect(() => {
+    if (!hasLoaded.current) return  // skip until initial load completes
     const commId = isSuperAdmin ? (selectedCommunityId === 'all' ? null : selectedCommunityId) : communityId
     if (commId !== undefined) {
       fetchPayments(commId)
@@ -252,7 +255,7 @@ export default function AdminPaymentsPage() {
       {isSuperAdmin && (
         <div className="mb-6">
           <Select value={selectedCommunityId} onValueChange={(v) => setSelectedCommunityId(v)}>
-            <SelectTrigger className="brutalist-input w-70">
+            <SelectTrigger className="brutalist-input w-[280px]">
               <SelectValue placeholder="Comunidad" />
             </SelectTrigger>
             <SelectContent>
