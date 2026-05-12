@@ -36,30 +36,27 @@ export async function POST(
     communityId: data.community_id,
   })
 
-  // Send approval email
+  // Bust cache + send approval email
   try {
+    const adminClient = createAdminClient()
+    const [ownerResult, communityResult] = await Promise.all([
+      data.owner_id ? adminClient.auth.admin.getUserById(data.owner_id) : Promise.resolve(null),
+      (adminClient as any).from('communities').select('slug').eq('id', data.community_id).single(),
+    ])
+
+    const communitySlug = (communityResult.data as any)?.slug ?? ''
+    if (communitySlug) revalidateTag(`businesses-${communitySlug}`, 'default')
+
     if (!data.owner_id) {
       console.error(`Approval email: business ${id} missing owner_id`)
-    } else {
-      const adminClient = createAdminClient()
-      const [ownerResult, communityResult] = await Promise.all([
-        adminClient.auth.admin.getUserById(data.owner_id),
-        adminClient.from('communities').select('slug').eq('id', data.community_id).single(),
-      ])
-
-      // Unconditionally bust cache after communitySlug is derived
-      const communitySlug = (communityResult.data as any)?.slug ?? ''
-      if (communitySlug) revalidateTag(`businesses-${communitySlug}`, 'default')
-
-      if (ownerResult.error) {
-        console.error(`Approval email: getUserById failed for business ${id}:`, ownerResult.error.message)
+    } else if (ownerResult && 'error' in ownerResult && ownerResult.error) {
+      console.error(`Approval email: getUserById failed for business ${id}:`, ownerResult.error.message)
+    } else if (ownerResult) {
+      const ownerEmail = (ownerResult as any).data?.user?.email
+      if (ownerEmail && data.name) {
+        await sendBusinessApprovedEmail(ownerEmail, data.name, communitySlug)
       } else {
-        const ownerEmail = ownerResult.data?.user?.email
-        if (ownerEmail && data.name) {
-          await sendBusinessApprovedEmail(ownerEmail, data.name, communitySlug)
-        } else {
-          console.error(`Approval email: missing data for business ${id} — email: ${ownerEmail}, name: ${data.name}`)
-        }
+        console.error(`Approval email: missing data for business ${id} — email: ${ownerEmail}, name: ${data.name}`)
       }
     }
   } catch (e: any) {
