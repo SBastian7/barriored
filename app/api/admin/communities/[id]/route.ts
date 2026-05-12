@@ -205,16 +205,36 @@ export async function DELETE(
   const permanent = url.searchParams.get('permanent') === 'true'
 
   if (permanent) {
-    // Safety check: block if community has associated data
-    const [{ count: bizCount }, { count: userCount }, { count: postCount }] = await Promise.all([
-      supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('community_id', id),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('community_id', id),
-      supabase.from('community_posts').select('id', { count: 'exact', head: true }).eq('community_id', id),
-    ])
+    // Verify community exists
+    const { data: existing } = await supabase
+      .from('communities')
+      .select('id')
+      .eq('id', id)
+      .single()
 
-    if ((bizCount ?? 0) > 0 || (userCount ?? 0) > 0 || (postCount ?? 0) > 0) {
+    if (!existing) {
+      return NextResponse.json({ error: 'Community not found' }, { status: 404 })
+    }
+
+    // Safety check: block if community has associated data
+    const [{ count: bizCount }, { count: userCount }, { count: postCount }, { count: bannerCount }] =
+      await Promise.all([
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('community_id', id),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('community_id', id),
+        supabase.from('community_posts').select('id', { count: 'exact', head: true }).eq('community_id', id),
+        supabase.from('banner_ads').select('id', { count: 'exact', head: true }).eq('community_id', id),
+      ])
+
+    if (
+      (bizCount ?? 0) > 0 ||
+      (userCount ?? 0) > 0 ||
+      (postCount ?? 0) > 0 ||
+      (bannerCount ?? 0) > 0
+    ) {
       return NextResponse.json(
-        { error: `No se puede eliminar: ${bizCount} negocio(s), ${userCount} usuario(s), ${postCount} publicación(es)` },
+        {
+          error: `No se puede eliminar: ${bizCount} negocio(s), ${userCount} usuario(s), ${postCount} publicación(es), ${bannerCount} banner(es)`,
+        },
         { status: 409 }
       )
     }
