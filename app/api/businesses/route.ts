@@ -19,13 +19,10 @@ export async function GET(request: Request) {
     .from('businesses')
     .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
     .eq('status', 'approved')
+    .eq('community_id', communityId)
     .order('is_featured', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(50)
-
-  if (communityId) {
-    query = query.eq('community_id', communityId)
-  }
 
   const { data: businesses, error } = await query
 

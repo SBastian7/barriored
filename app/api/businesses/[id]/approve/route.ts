@@ -47,12 +47,14 @@ export async function POST(
         adminClient.from('communities').select('slug').eq('id', data.community_id).single(),
       ])
 
+      // Unconditionally bust cache after communitySlug is derived
+      const communitySlug = (communityResult.data as any)?.slug ?? ''
+      if (communitySlug) revalidateTag(`businesses-${communitySlug}`, 'default')
+
       if (ownerResult.error) {
         console.error(`Approval email: getUserById failed for business ${id}:`, ownerResult.error.message)
       } else {
         const ownerEmail = ownerResult.data?.user?.email
-        const communitySlug = (communityResult.data as any)?.slug ?? ''
-        if (communitySlug) revalidateTag(`businesses-${communitySlug}`, 'default')
         if (ownerEmail && data.name) {
           await sendBusinessApprovedEmail(ownerEmail, data.name, communitySlug)
         } else {
