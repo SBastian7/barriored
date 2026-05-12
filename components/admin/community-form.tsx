@@ -23,6 +23,7 @@ export function CommunityForm({ mode, initialData }: Props) {
     department: initialData?.department || '',
     description: initialData?.description || '',
     logo_url: initialData?.logo_url || null,
+    cover_image_url: initialData?.cover_image_url || null,
   })
 
   // Auto-generate slug from name
@@ -165,6 +166,16 @@ export function CommunityForm({ mode, initialData }: Props) {
         maxSizeMB={5}
         aspectRatio="1/1"
         maxWidth="200px"
+      />
+
+      <ImageUploadField
+        label="Imagen de Portada"
+        value={formData.cover_image_url}
+        onChange={(url) => setFormData({ ...formData, cover_image_url: url })}
+        bucket="community-images"
+        maxSizeMB={5}
+        aspectRatio="16/9"
+        maxWidth="100%"
       />
 
       <div className="flex gap-4 pt-4 border-t-2 border-black">
