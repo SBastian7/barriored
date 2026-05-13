@@ -53,32 +53,45 @@ export default function AdminMarketplacePage() {
   }
 
   async function fetchStats() {
-    // Fetch active count
-    const { count: activeCount } = await supabase
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+
+    let activeQuery = supabase
       .from('classifieds')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active')
 
-    // Fetch sold this week
-    const weekAgo = new Date()
-    weekAgo.setDate(weekAgo.getDate() - 7)
-    const { count: soldCount } = await supabase
+    let soldQuery = supabase
       .from('classifieds')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'sold')
       .gte('sold_at', weekAgo.toISOString())
 
-    // Fetch flagged count
-    const { count: flaggedCount } = await supabase
+    let flaggedQuery = supabase
       .from('classifieds')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'flagged')
 
-    // Fetch banned users count
-    const { count: bannedCount } = await supabase
-      .from('marketplace_user_bans')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
+    if (communityIdParam) {
+      activeQuery = activeQuery.eq('community_id', communityIdParam)
+      soldQuery = soldQuery.eq('community_id', communityIdParam)
+      flaggedQuery = flaggedQuery.eq('community_id', communityIdParam)
+    }
+
+    const [
+      { count: activeCount },
+      { count: soldCount },
+      { count: flaggedCount },
+      { count: bannedCount },
+    ] = await Promise.all([
+      activeQuery,
+      soldQuery,
+      flaggedQuery,
+      supabase
+        .from('marketplace_user_bans')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true),
+    ])
 
     setStats({
       active: activeCount || 0,

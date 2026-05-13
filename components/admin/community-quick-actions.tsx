@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Building2, Users, Bell, ShoppingBag, BarChart3 } from 'lucide-react'
+import { Building2, Users, Bell, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface Props {
@@ -11,7 +11,6 @@ const actions = [
   { label: 'Ver Usuarios',     href: '/admin/users',       icon: Users },
   { label: 'Ver Alertas',      href: '/admin/alerts',      icon: Bell },
   { label: 'Ver Marketplace',  href: '/admin/marketplace', icon: ShoppingBag },
-  { label: 'Ver Estadísticas', href: '/admin/statistics',  icon: BarChart3 },
 ]
 
 export function CommunityQuickActions({ communityId }: Props) {

@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     fetchUsers()
-  }, [roleFilter])
+  }, [roleFilter, communityIdParam])
 
   // Re-fetch users when page becomes visible (after navigation back)
   useEffect(() => {

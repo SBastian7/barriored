@@ -86,13 +86,26 @@ export default function AdminAlertsPage() {
             // Continue anyway
         }
 
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        const { data: profile } = currentUser
+            ? await supabase
+                .from('profiles')
+                .select('community_id, is_super_admin')
+                .eq('id', currentUser.id)
+                .single()
+            : { data: null }
+
+        const effectiveCommunityId = profile?.is_super_admin
+            ? communityIdParam
+            : profile?.community_id
+
         let alertQuery = supabase
             .from('community_alerts')
             .select('*, communities(name, slug)')
             .order('created_at', { ascending: false })
 
-        if (communityIdParam) {
-            alertQuery = alertQuery.eq('community_id', communityIdParam)
+        if (effectiveCommunityId) {
+            alertQuery = alertQuery.eq('community_id', effectiveCommunityId)
         }
 
         const [alertsRes, communitiesRes] = await Promise.all([

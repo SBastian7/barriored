@@ -166,11 +166,11 @@ export default function AdminBusinessesPage() {
   useEffect(() => {
     fetchCategories()
     fetchBusinesses()
-  }, [])
+  }, [communityIdParam])
 
   useEffect(() => {
     fetchBusinesses()
-  }, [statusFilter, categoryFilter, searchQuery])
+  }, [statusFilter, categoryFilter, searchQuery, communityIdParam])
 
   const pending = businesses.filter((b) => b.status === 'pending')
   const approved = businesses.filter((b) => b.status === 'approved')
