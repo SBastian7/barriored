@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { Siren, Plus, Trash2, HeartPulse, Landmark, Bus, Wrench, Edit, Loader2, Eye } from 'lucide-react'
+import { Siren, Plus, Trash2, Loader2, Eye } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import Link from 'next/link'
-import type { PublicService, ServiceCategory } from '@/lib/types'
+import type { PublicService } from '@/lib/types'
 
 export default function AdminServicesPage() {
     const supabase = createClient()
@@ -21,11 +22,12 @@ export default function AdminServicesPage() {
     const [communities, setCommunities] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [serviceCategories, setServiceCategories] = useState<{ id: string; name: string; slug: string; icon: string }[]>([])
 
     // Form state
     const [formData, setFormData] = useState({
         community_id: '',
-        category: 'emergency' as ServiceCategory,
+        service_category_id: '',
         name: '',
         description: '',
         phone: '',
@@ -41,13 +43,15 @@ export default function AdminServicesPage() {
 
     async function fetchData() {
         setLoading(true)
-        const [servicesRes, communitiesRes] = await Promise.all([
-            supabase.from('public_services').select('*, communities(name)').order('category').order('sort_order'),
-            supabase.from('communities').select('id, name').order('name')
+        const [servicesRes, communitiesRes, catsRes] = await Promise.all([
+            supabase.from('public_services').select('*, communities(name), service_categories(name, icon, slug)').order('sort_order'),
+            supabase.from('communities').select('id, name').order('name'),
+            supabase.from('service_categories').select('id, name, slug, icon').eq('is_active', true).order('sort_order')
         ])
 
         setServices(servicesRes.data || [])
         setCommunities(communitiesRes.data || [])
+        setServiceCategories(catsRes.data || [])
         setLoading(false)
     }
 
@@ -66,7 +70,7 @@ export default function AdminServicesPage() {
             toast.error('Error al crear servicio: ' + error.message)
         } else {
             toast.success('Servicio creado con éxito')
-            setFormData({ ...formData, name: '', description: '', phone: '', address: '', hours: '' })
+            setFormData({ ...formData, name: '', description: '', phone: '', address: '', hours: '', service_category_id: '' })
             fetchData()
         }
     }
@@ -78,12 +82,13 @@ export default function AdminServicesPage() {
         else fetchData()
     }
 
-    const categoryIcons: any = {
-        emergency: Siren,
-        health: HeartPulse,
-        government: Landmark,
-        transport: Bus,
-        utilities: Wrench
+    function toIconName(slug: string) {
+        return slug.split('-').filter(Boolean).map((w: string) => w[0].toUpperCase() + w.slice(1)).join('')
+    }
+
+    function getServiceIcon(svc: any) {
+        const icon = svc.service_categories?.icon || svc.category || 'circle'
+        return (LucideIcons as any)[toIconName(icon)] || Siren
     }
 
     if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
@@ -117,16 +122,12 @@ export default function AdminServicesPage() {
 
                             <div className="space-y-1">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">Categoría</Label>
-                                <Select onValueChange={(v) => setFormData({ ...formData, category: v as ServiceCategory })} value={formData.category}>
+                                <Select onValueChange={(v) => setFormData({ ...formData, service_category_id: v })} value={formData.service_category_id}>
                                     <SelectTrigger className="border-2 border-black rounded-none h-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                                        <SelectValue />
+                                        <SelectValue placeholder="Seleccionar categoría" />
                                     </SelectTrigger>
                                     <SelectContent className="border-2 border-black rounded-none">
-                                        <SelectItem value="emergency">Emergencias</SelectItem>
-                                        <SelectItem value="health">Salud</SelectItem>
-                                        <SelectItem value="government">Gobierno / CAI</SelectItem>
-                                        <SelectItem value="transport">Transporte / Terminal</SelectItem>
-                                        <SelectItem value="utilities">Servicios Públicos</SelectItem>
+                                        {serviceCategories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -151,7 +152,7 @@ export default function AdminServicesPage() {
                                 <Input value={formData.hours} onChange={e => setFormData({ ...formData, hours: e.target.value })} placeholder="24/7 o Lun-Vie 8am-5pm" />
                             </div>
 
-                            <Button disabled={submitting} className="w-full bg-emerald-500 hover:bg-emerald-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all font-black uppercase tracking-widest text-xs h-12">
+                            <Button disabled={submitting} className="w-full bg-emerald-500 hover:bg-emerald-600 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all font-black uppercase tracking-widest text-xs h-12">
                                 {submitting ? <Loader2 className="animate-spin" /> : <><Plus className="h-4 w-4 mr-2" /> Añadir Servicio</>}
                             </Button>
                         </form>
@@ -165,7 +166,7 @@ export default function AdminServicesPage() {
                             <h3 className="text-xl font-heading font-black uppercase tracking-tighter italic border-l-4 border-emerald-500 pl-4">{commName}</h3>
                             <div className="grid gap-3">
                                 {services.filter(s => s.communities?.name === commName).map(svc => {
-                                    const Icon = categoryIcons[svc.category] || Siren
+                                    const Icon = getServiceIcon(svc)
                                     return (
                                         <Card key={svc.id} className="border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-white">
                                             <CardContent className="p-0">
@@ -178,7 +179,7 @@ export default function AdminServicesPage() {
                                                             <h4 className="font-bold text-sm uppercase tracking-tight">{svc.name}</h4>
                                                             <p className="text-[10px] font-bold text-primary italic leading-none">{svc.phone || 'Sin teléfono'}</p>
                                                         </div>
-                                                        <Badge variant="outline" className="text-[9px] rounded-none border-black font-black uppercase">{svc.category}</Badge>
+                                                        <Badge variant="outline" className="text-[9px] rounded-none border-black font-black uppercase">{svc.service_categories?.name || svc.category}</Badge>
                                                     </div>
                                                     <Link
                                                         href={`/admin/services/${svc.id}`}

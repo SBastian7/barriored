@@ -27,7 +27,7 @@ export type PostType = 'announcement' | 'event' | 'job' | 'promotion'
 export type PostStatus = 'pending' | 'approved' | 'rejected'
 export type AlertType = 'water' | 'power' | 'security' | 'construction' | 'general'
 export type AlertSeverity = 'info' | 'warning' | 'critical'
-export type ServiceCategory = 'emergency' | 'health' | 'government' | 'transport' | 'utilities'
+export type ServiceCategory = string
 
 export type EventMetadata = {
   date: string
@@ -89,6 +89,7 @@ export type CommunityAlert = {
 export type PublicService = {
   id: string
   community_id: string
+  service_category_id: string | null
   category: ServiceCategory
   name: string
   description: string | null
