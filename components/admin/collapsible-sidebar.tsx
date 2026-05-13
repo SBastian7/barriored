@@ -79,6 +79,11 @@ export function CollapsibleSidebar() {
     checkSuperAdmin()
   }, [])
 
+  const sectionLabels: Record<string, string> = {
+    monetization: 'Monetización',
+    platform: 'Plataforma',
+  }
+
   // Filter nav items based on role
   const visibleNavItems = navItems.filter((item) => {
     if (!item.roles) return true // No role restriction
@@ -119,10 +124,6 @@ export function CollapsibleSidebar() {
             const isActive = pathname === item.href
             const prevItem = index > 0 ? visibleNavItems[index - 1] : null
             const showSectionLabel = item.section && (!prevItem || prevItem.section !== item.section)
-            const sectionLabels: Record<string, string> = {
-              monetization: 'Monetización',
-              platform: 'Plataforma',
-            }
 
             return (
               <div key={item.href}>
