@@ -44,7 +44,7 @@ export async function DELETE(
   if (!p?.is_super_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { count } = await supabase
-    .from('public_services').select('id', { count: 'exact', head: true }).eq('service_category_id', id)
+    .from('public_services').select('id', { count: 'exact', head: true }).eq('service_category_id', id).eq('is_active', true)
 
   if ((count ?? 0) > 0) {
     return NextResponse.json({ error: `No se puede desactivar: ${count} servicio(s) usan esta categoría` }, { status: 409 })

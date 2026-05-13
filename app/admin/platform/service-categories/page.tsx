@@ -69,10 +69,16 @@ export default function ServiceCategoriesPage() {
   )
 
   async function fetchCategories() {
-    const res = await fetch('/api/admin/platform/service-categories')
-    const json = await res.json()
-    setCategories((json.categories || []).filter((c: ServiceCategory) => c.is_active))
-    setLoading(false)
+    try {
+      const res = await fetch('/api/admin/platform/service-categories')
+      if (!res.ok) throw new Error('Error al cargar categorías')
+      const json = await res.json()
+      setCategories((json.categories || []).filter((c: ServiceCategory) => c.is_active))
+    } catch {
+      toast.error('Error al cargar categorías de servicios')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { fetchCategories() }, [])
@@ -84,13 +90,22 @@ export default function ServiceCategoriesPage() {
     const newIdx = categories.findIndex((c) => c.id === over.id)
     const reordered = arrayMove(categories, oldIdx, newIdx)
     setCategories(reordered)
-    await Promise.all(reordered.map((c, i) =>
-      fetch(`/api/admin/platform/service-categories/${c.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...c, sort_order: i + 1 }),
-      })
-    ))
+    try {
+      const results = await Promise.all(reordered.map((c, i) =>
+        fetch(`/api/admin/platform/service-categories/${c.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: c.name, slug: c.slug, icon: c.icon, sort_order: i + 1 }),
+        })
+      ))
+      if (results.some((r) => !r.ok)) {
+        toast.error('Error al guardar el orden')
+        await fetchCategories()
+      }
+    } catch {
+      toast.error('Error de red al reordenar')
+      await fetchCategories()
+    }
   }
 
   function openCreate() {
