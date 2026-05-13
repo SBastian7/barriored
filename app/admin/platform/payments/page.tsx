@@ -64,7 +64,7 @@ export default function PlatformPaymentsPage() {
         body: JSON.stringify(drafts[gateway]),
       })
       const json = await res.json()
-      if (!res.ok) { toast.error(json.error ?? 'Error al guardar'); return }
+      if (!res.ok) { toast.error(json.error ?? 'Error al guardar'); setSaving(null); return }
       // Update drafts with the masked response
       setDrafts((prev) => ({ ...prev, [gateway]: { ...prev[gateway], ...json.gateway } }))
       toast.success(`${GATEWAY_LABELS[gateway]} actualizado`)
@@ -148,7 +148,7 @@ export default function PlatformPaymentsPage() {
                   <Label className="uppercase tracking-widest font-bold text-xs">Tasa de Comisión (%)</Label>
                   <Input
                     type="number" step="0.01" min="0" max="100"
-                    value={d.commission_rate ? (Number(d.commission_rate) * 100).toFixed(2) : '3.00'}
+                    value={d.commission_rate != null ? (Number(d.commission_rate) * 100).toFixed(2) : '3.00'}
                     onChange={(e) => updateDraft(g.gateway, 'commission_rate', parseFloat(e.target.value) / 100)}
                     className="brutalist-input"
                   />

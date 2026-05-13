@@ -7,6 +7,11 @@ export async function PATCH(
   { params }: { params: Promise<{ gateway: string }> }
 ) {
   const { gateway } = await params
+  const VALID_GATEWAYS = ['wompi', 'nequi', 'mercadopago'] as const
+  if (!(VALID_GATEWAYS as readonly string[]).includes(gateway)) {
+    return NextResponse.json({ error: 'Gateway inválido' }, { status: 400 })
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

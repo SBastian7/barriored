@@ -20,6 +20,10 @@ export type AuditAction =
   | 'create_community'
   | 'update_community'
   | 'archive_community'
+  | 'delete_community'
+  | 'update_platform_config'
+  | 'update_platform_policy'
+  | 'update_payment_gateway'
 
 export type EntityType =
   | 'business'
@@ -29,6 +33,9 @@ export type EntityType =
   | 'community'
   | 'service'
   | 'report'
+  | 'platform_config'
+  | 'platform_policies'
+  | 'platform_payment_config'
 
 interface LogAuditParams {
   action: AuditAction
