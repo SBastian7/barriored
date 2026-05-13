@@ -5,10 +5,11 @@ import type { Database } from '@/lib/types/database'
 import { isValidUUID } from '@/lib/validations/common'
 
 type BannerUpdate = Database['public']['Tables']['banner_ads']['Update']
-type BannerStatus = 'pending' | 'active' | 'paused' | 'expired'
+type BannerStatus = 'requested' | 'active' | 'paused' | 'expired' | 'rejected'
 
 interface UpdateBannerStatusRequest {
   status: BannerStatus
+  rejection_reason?: string
 }
 
 // Type guard for banner with community_id
@@ -79,7 +80,7 @@ export async function PATCH(
       )
     }
 
-    const allowedStatuses: BannerStatus[] = ['pending', 'active', 'paused', 'expired']
+    const allowedStatuses: BannerStatus[] = ['requested', 'active', 'paused', 'expired', 'rejected']
 
     if (!allowedStatuses.includes(body.status)) {
       return NextResponse.json(
@@ -88,7 +89,14 @@ export async function PATCH(
       )
     }
 
-    const { status } = body as UpdateBannerStatusRequest
+    if (body.status === 'rejected' && !body.rejection_reason?.trim()) {
+      return NextResponse.json(
+        { error: 'Se requiere una razón de rechazo' },
+        { status: 400 }
+      )
+    }
+
+    const { status, rejection_reason } = body as UpdateBannerStatusRequest
 
     // Get banner and verify community access
     const { data: banner, error: fetchError } = await supabase
@@ -126,7 +134,12 @@ export async function PATCH(
     // Update banner status
     const bannerUpdate: BannerUpdate = {
       status,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      ...(status === 'rejected' && {
+        rejection_reason: rejection_reason!.trim(),
+        rejected_at: new Date().toISOString(),
+        rejected_by: user.id
+      })
     }
 
     const { data: updated, error: updateError } = await supabase

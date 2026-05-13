@@ -16,13 +16,13 @@ interface ReviewFlag {
   review_id: string
   reason: string
   description: string | null
-  status: 'pending' | 'dismissed' | 'removed'
-  flagged_at: string
-  resolved_at: string | null
+  status: 'pending' | 'dismissed' | 'reviewed'
+  created_at: string
+  reviewed_at: string | null
   business_reviews: {
     id: string
     rating: number
-    comment: string
+    review_text: string
     created_at: string
     business_id: string
     user_id: string
@@ -32,12 +32,10 @@ interface ReviewFlag {
     } | null
     profiles: {
       full_name: string | null
-      email: string | null
     } | null
   } | null
   profiles: {
     full_name: string | null
-    email: string | null
   } | null
 }
 
@@ -54,8 +52,8 @@ const STATUS_CONFIG = {
     variant: 'default' as const,
     color: 'text-gray-600 bg-gray-50'
   },
-  removed: {
-    label: 'Eliminado',
+  reviewed: {
+    label: 'Revisado',
     icon: CheckCircle,
     variant: 'destructive' as const,
     color: 'text-red-600 bg-red-50'
@@ -85,7 +83,7 @@ export default function AdminReviewFlagDetailPage() {
           business_reviews!inner(
             id,
             rating,
-            comment,
+            review_text,
             created_at,
             business_id,
             user_id,
@@ -93,9 +91,9 @@ export default function AdminReviewFlagDetailPage() {
               name,
               owner_id
             ),
-            profiles!business_reviews_user_id_fkey(full_name, email)
+            profiles!business_reviews_user_id_fkey(full_name)
           ),
-          profiles!review_flags_flagger_id_fkey(full_name, email)
+          profiles!review_flags_flagged_by_fkey(full_name)
         `)
         .eq('id', id)
         .single()
@@ -108,7 +106,7 @@ export default function AdminReviewFlagDetailPage() {
         business_reviews: {
           id: (data.business_reviews as any)?.id,
           rating: (data.business_reviews as any)?.rating,
-          comment: (data.business_reviews as any)?.comment,
+          review_text: (data.business_reviews as any)?.review_text,
           created_at: (data.business_reviews as any)?.created_at,
           business_id: (data.business_reviews as any)?.business_id,
           user_id: (data.business_reviews as any)?.user_id,
@@ -242,16 +240,13 @@ export default function AdminReviewFlagDetailPage() {
                   Reportado Por
                 </p>
                 <p className="font-bold">{flag.profiles?.full_name || 'Anónimo'}</p>
-                {flag.profiles?.email && (
-                  <p className="text-sm text-gray-600">{flag.profiles.email}</p>
-                )}
               </div>
               <div>
                 <p className="text-xs uppercase tracking-widest font-bold text-gray-600 mb-1">
                   Fecha de Reporte
                 </p>
                 <p className="font-bold">
-                  {new Date(flag.flagged_at).toLocaleDateString('es-CO', {
+                  {new Date(flag.created_at).toLocaleDateString('es-CO', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -268,13 +263,13 @@ export default function AdminReviewFlagDetailPage() {
                   {flag.reason}
                 </Badge>
               </div>
-              {flag.resolved_at && (
+              {flag.reviewed_at && (
                 <div>
                   <p className="text-xs uppercase tracking-widest font-bold text-gray-600 mb-1">
                     Fecha de Resolución
                   </p>
                   <p className="font-bold">
-                    {new Date(flag.resolved_at).toLocaleDateString('es-CO', {
+                    {new Date(flag.reviewed_at).toLocaleDateString('es-CO', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
@@ -315,9 +310,6 @@ export default function AdminReviewFlagDetailPage() {
                   Usuario que Reseñó
                 </p>
                 <p className="font-bold">{flag.business_reviews?.profiles?.full_name || 'Anónimo'}</p>
-                {flag.business_reviews?.profiles?.email && (
-                  <p className="text-sm text-gray-600">{flag.business_reviews.profiles.email}</p>
-                )}
               </div>
               <div>
                 <p className="text-xs uppercase tracking-widest font-bold text-gray-600 mb-1">
@@ -354,7 +346,7 @@ export default function AdminReviewFlagDetailPage() {
               </p>
               <div className="brutalist-card p-4 bg-gray-50">
                 <p className="text-sm whitespace-pre-wrap">
-                  {flag.business_reviews?.comment || 'Sin comentario'}
+                  {flag.business_reviews?.review_text || 'Sin comentario'}
                 </p>
               </div>
             </div>
@@ -417,7 +409,7 @@ export default function AdminReviewFlagDetailPage() {
               <p className="text-sm text-gray-600 mt-2">
                 {flag.status === 'dismissed'
                   ? 'El reporte fue desestimado y la reseña permanece visible.'
-                  : 'La reseña fue eliminada de la plataforma.'
+                  : 'El reporte fue revisado y la reseña fue eliminada de la plataforma.'
                 }
               </p>
             </CardContent>

@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const PUBLIC_ROUTES = ['/api', '/_next', '/favicon.ico', '/manifest.json', '/sw.js']
 const PROTECTED_ROUTES = ['/dashboard', '/admin', '/profile']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Handle Auth routes (Login/Signup)

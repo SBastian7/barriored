@@ -150,6 +150,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         id,
+        user_id,
         rating,
         review_text,
         created_at,

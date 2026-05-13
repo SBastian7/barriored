@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 export function ResetPasswordForm() {
   const supabase = createClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,22 +20,27 @@ export function ResetPasswordForm() {
   const [timedOut, setTimedOut] = useState(false)
 
   useEffect(() => {
-    // Check for existing recovery session set by /auth/callback
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true)
-    })
+    const code = searchParams.get('code')
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+      if (event === 'PASSWORD_RECOVERY') {
         setReady(true)
       }
     })
+
+    if (code) {
+      // Exchange the recovery code client-side so PASSWORD_RECOVERY event fires
+      supabase.auth.exchangeCodeForSession(code).catch(() => {
+        setTimedOut(true)
+      })
+    }
+
     const timeout = setTimeout(() => setTimedOut(true), 8000)
     return () => {
       subscription.unsubscribe()
       clearTimeout(timeout)
     }
-  }, [supabase])
+  }, [supabase, searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -53,7 +59,7 @@ export function ResetPasswordForm() {
       toast.error(error.message)
     } else {
       toast.success('Contraseña actualizada')
-      router.push('/auth/login')
+      router.push('/')
     }
   }
 

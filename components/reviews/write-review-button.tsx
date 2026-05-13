@@ -59,7 +59,10 @@ export function WriteReviewButton({
     return null
   }
 
-  const buttonText = existingReview ? 'Editar Reseña' : 'Escribir Reseña'
+  // Hide button completely if user already reviewed (they can edit/delete from the review card)
+  if (existingReview) {
+    return null
+  }
 
   return (
     <>
@@ -69,7 +72,7 @@ export function WriteReviewButton({
         disabled={isLoading}
       >
         <Star className="mr-2 h-4 w-4" />
-        {buttonText}
+        Escribir Reseña
       </Button>
 
       <ReviewForm
@@ -77,7 +80,7 @@ export function WriteReviewButton({
         onOpenChange={setIsFormOpen}
         businessId={businessId}
         businessName={businessName}
-        existingReview={existingReview}
+        existingReview={null}
         onSuccess={() => {
           window.location.reload() // Simple refresh to update all components
         }}

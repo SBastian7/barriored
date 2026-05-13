@@ -16,13 +16,13 @@ interface ReviewFlag {
   review_id: string
   reason: string
   description: string | null
-  status: 'pending' | 'dismissed' | 'removed'
-  flagged_at: string
-  resolved_at: string | null
+  status: 'pending' | 'dismissed' | 'reviewed'
+  created_at: string
+  reviewed_at: string | null
   business_reviews: {
     id: string
     rating: number
-    comment: string
+    review_text: string
     businesses: {
       name: string
     } | null
@@ -52,8 +52,8 @@ const STATUS_CONFIG = {
     variant: 'default' as const,
     color: 'text-gray-600'
   },
-  removed: {
-    label: 'Eliminado',
+  reviewed: {
+    label: 'Revisado',
     icon: CheckCircle,
     variant: 'destructive' as const,
     color: 'text-red-600'
@@ -83,13 +83,13 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
           reason,
           description,
           status,
-          flagged_at,
-          resolved_at,
-          flagger_id,
+          created_at,
+          reviewed_at,
+          flagged_by,
           business_reviews!inner(
             id,
             rating,
-            comment,
+            review_text,
             business_id,
             user_id,
             businesses!inner(
@@ -98,10 +98,10 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
             ),
             profiles!business_reviews_user_id_fkey(full_name)
           ),
-          profiles!review_flags_flagger_id_fkey(full_name)
+          profiles!review_flags_flagged_by_fkey(full_name)
         `)
         .eq('business_reviews.businesses.community_id', communityId)
-        .order('flagged_at', { ascending: false })
+        .order('created_at', { ascending: false })
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter)
@@ -117,7 +117,7 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
         business_reviews: {
           id: (flag.business_reviews as any)?.id,
           rating: (flag.business_reviews as any)?.rating,
-          comment: (flag.business_reviews as any)?.comment,
+          review_text: (flag.business_reviews as any)?.review_text,
           businesses: {
             name: (flag.business_reviews as any)?.businesses?.name || 'Unknown'
           },
@@ -206,7 +206,7 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="pending">Pendientes</SelectItem>
             <SelectItem value="dismissed">Desestimados</SelectItem>
-            <SelectItem value="removed">Eliminados</SelectItem>
+            <SelectItem value="reviewed">Revisados</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -224,7 +224,7 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
           {flags.map((flag) => {
             const statusInfo = STATUS_CONFIG[flag.status]
             const Icon = statusInfo.icon
-            const flaggedDate = new Date(flag.flagged_at).toLocaleDateString('es-CO', {
+            const flaggedDate = new Date(flag.created_at).toLocaleDateString('es-CO', {
               day: 'numeric',
               month: 'short',
               year: 'numeric'
@@ -292,7 +292,7 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
                           </div>
                         </div>
                         <p className="text-sm line-clamp-2">
-                          {flag.business_reviews?.comment || 'Sin comentario'}
+                          {flag.business_reviews?.review_text || 'Sin comentario'}
                         </p>
                       </div>
 

@@ -34,6 +34,17 @@ export async function POST(request: NextRequest) {
     const placement = formData.get('placement') as string | null
     const linkUrl = formData.get('linkUrl') as string | null
 
+    // Debug logging
+    console.log('=== Banner Request Debug ===')
+    console.log('businessId:', businessId)
+    console.log('title:', title)
+    console.log('imageFile:', imageFile)
+    console.log('imageFile type:', typeof imageFile)
+    console.log('imageFile instanceof File:', imageFile instanceof File)
+    console.log('placement:', placement)
+    console.log('All FormData keys:', Array.from(formData.keys()))
+    console.log('=========================')
+
     // 3. Validate required fields
     if (!businessId || !title || !imageFile || !placement) {
       return NextResponse.json(

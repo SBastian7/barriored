@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { ClassifiedGrid } from './classified-grid'
 import { ClassifiedCard } from './classified-card'
 import { Input } from '@/components/ui/input'
@@ -25,13 +25,12 @@ export function MarketplaceHub({
     category: 'all',
     search: ''
   })
-  const [filteredClassifieds, setFilteredClassifieds] = useState(classifieds)
 
   // Get 3 newest for featured section
-  const featuredClassifieds = classifieds.slice(0, 3)
+  const featuredClassifieds = useMemo(() => classifieds.slice(0, 3), [classifieds])
 
-  // Client-side filtering
-  useEffect(() => {
+  // Client-side filtering with useMemo (no useEffect needed)
+  const filteredClassifieds = useMemo(() => {
     let filtered = classifieds
 
     // Filter by category
@@ -50,8 +49,8 @@ export function MarketplaceHub({
       )
     }
 
-    setFilteredClassifieds(filtered)
-  }, [filters, classifieds])
+    return filtered
+  }, [classifieds, filters])
 
   return (
     <div className="space-y-8">
@@ -99,7 +98,7 @@ export function MarketplaceHub({
               value={filters.category}
               onValueChange={(v) => setFilters(prev => ({ ...prev, category: v }))}
             >
-              <SelectTrigger className="brutalist-input w-full md:w-40 h-10">
+              <SelectTrigger className="brutalist-input w-full md:w-40 h-10" suppressHydrationWarning>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="border-2 border-black rounded-none">

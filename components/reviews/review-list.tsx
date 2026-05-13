@@ -45,6 +45,9 @@ export function ReviewList({
   const [page, setPage] = useState(0)
   const [reviewToEdit, setReviewToEdit] = useState<ReviewWithRelations | null>(null)
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null)
+  const [reviewToRespond, setReviewToRespond] = useState<ReviewWithRelations | null>(null)
+  const [responseText, setResponseText] = useState('')
+  const [isSubmittingResponse, setIsSubmittingResponse] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
 
   const pageSize = 10
@@ -95,6 +98,35 @@ export function ReviewList({
       toast.error('Error al eliminar reseña')
     } finally {
       setReviewToDelete(null)
+    }
+  }
+
+  const handleSubmitResponse = async () => {
+    if (!reviewToRespond || !responseText.trim()) return
+
+    setIsSubmittingResponse(true)
+    try {
+      const response = await fetch(`/api/reviews/${reviewToRespond.id}/response`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response_text: responseText.trim() }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('Respuesta publicada')
+        setReviewToRespond(null)
+        setResponseText('')
+        fetchReviews()
+      } else {
+        toast.error(data.error || 'Error al publicar respuesta')
+      }
+    } catch (error) {
+      console.error('Error submitting response:', error)
+      toast.error('Error al publicar respuesta')
+    } finally {
+      setIsSubmittingResponse(false)
     }
   }
 
@@ -168,6 +200,10 @@ export function ReviewList({
                 setIsFormOpen(true)
               }}
               onDelete={() => setReviewToDelete(review.id)}
+              onRespond={() => {
+                setReviewToRespond(review)
+                setResponseText('')
+              }}
             />
           )
         })}
@@ -232,6 +268,80 @@ export function ReviewList({
             >
               Eliminar
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Response Dialog */}
+      <AlertDialog open={!!reviewToRespond} onOpenChange={(open) => {
+        if (!open) {
+          setReviewToRespond(null)
+          setResponseText('')
+        }
+      }}>
+        <AlertDialogContent className="brutalist-card max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-heading font-black uppercase italic text-xl">
+              Responder a la reseña
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              {reviewToRespond && (
+                <>
+                  <div className="brutalist-card p-3 bg-gray-50">
+                    <p className="font-bold text-sm text-foreground mb-1">
+                      {reviewToRespond.user?.full_name || 'Usuario'}
+                    </p>
+                    <div className="flex gap-0.5 mb-2">
+                      {[1, 2, 3, 4, 5].map((position) => (
+                        <span
+                          key={position}
+                          className={position <= reviewToRespond.rating ? '⭐' : '☆'}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-sm text-foreground italic">
+                      "{reviewToRespond.review_text || 'Sin comentario'}"
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-foreground block">
+                      Tu respuesta *
+                    </label>
+                    <textarea
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      placeholder="Escribe tu respuesta aquí... (mínimo 10 caracteres)"
+                      className="brutalist-input w-full min-h-[120px] resize-none"
+                      maxLength={500}
+                      disabled={isSubmittingResponse}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {responseText.length}/500 caracteres
+                    </p>
+                  </div>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmittingResponse}>
+              Cancelar
+            </AlertDialogCancel>
+            <Button
+              onClick={handleSubmitResponse}
+              disabled={isSubmittingResponse || responseText.trim().length < 10}
+              className="brutalist-button bg-primary text-white hover:bg-primary/90"
+            >
+              {isSubmittingResponse ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Publicando...
+                </>
+              ) : (
+                'Publicar Respuesta'
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

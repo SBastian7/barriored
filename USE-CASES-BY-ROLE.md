@@ -44,9 +44,9 @@
 - [ ] Click WhatsApp to contact seller (redirects to app)
 
 ### Phase 2: Monetization
-- [x] View business reviews and ratings
-- [x] View business average rating score
-- [x] See premium/featured badge on businesses
+- [ ] View business reviews and ratings
+- [ ] View business average rating score
+- [ ] See premium/featured badge on businesses
 
 ### Cross-Cutting
 - [ ] View 404 error page
@@ -95,11 +95,11 @@
 - [ ] Save favorite classifieds
 
 ### Phase 2: Monetization
-- [x] Submit review for a business
-- [x] Rate a business (1-5 stars)
-- [x] Edit own reviews
-- [x] Delete own reviews
-- [x] View own review history
+- [ ] Submit review for a business
+- [ ] Rate a business (1-5 stars)
+- [ ] Edit own reviews
+- [ ] Delete own reviews
+- [ ] View own review history
 
 ### Cross-Cutting
 - [ ] Receive push notifications (PWA)
@@ -147,9 +147,9 @@
 - [ ] Download payment invoices
 - [ ] Cancel subscription
 - [ ] Update payment method
-- [x] Respond to reviews on own business
+- [ ] Respond to reviews on own business
 - [ ] Flag inappropriate reviews
-- [x] View review statistics
+- [ ] View review statistics
 - [ ] Export business analytics data
 
 ### Phase 3: Community (Red Vecinal)
@@ -243,10 +243,10 @@
 - [ ] Manage banner ad placements
 - [ ] Approve banner ad creatives
 - [ ] Set banner ad rotation schedule
-- [x] View all reviews across platform
-- [x] Moderate reviews
-- [x] Delete inappropriate reviews
-- [x] View review statistics
+- [ ] View all reviews across platform
+- [ ] Moderate reviews
+- [ ] Delete inappropriate reviews
+- [ ] View review statistics
 - [ ] Ban users from reviewing
 - [ ] Export revenue reports
 - [ ] Set pricing for premium features

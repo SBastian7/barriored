@@ -261,3 +261,5 @@ All platform sections are now active and accessible. Navigation components can b
 
 #Memory 
 For ui ux designs or implementations use the UIUX promax skill
+
+IMPORTANT: When writing down output messages, just write what it's strictally necessary. Avoid onlg explanations. Just perform required tasks. 

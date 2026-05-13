@@ -69,51 +69,139 @@ export function BannerAdUpload({ businessId, onSuccess }: BannerAdUploadProps) {
     if (file) handleImageSelect(file)
   }, [handleImageSelect])
 
+  const validateForm = (): string | null => {
+    // Validate business ID
+    if (!businessId || businessId.trim() === '') {
+      return 'ID de negocio no válido. Por favor recarga la página.'
+    }
+
+    // Validate title
+    if (!title || title.trim() === '') {
+      return 'El título del banner es obligatorio.'
+    }
+
+    if (title.trim().length < 3) {
+      return 'El título debe tener al menos 3 caracteres.'
+    }
+
+    if (title.length > 100) {
+      return 'El título no puede exceder 100 caracteres.'
+    }
+
+    // Validate image file
+    if (!imageFile) {
+      return 'Debes seleccionar una imagen para el banner.'
+    }
+
+    // Validate file is actually a File object
+    if (!(imageFile instanceof File)) {
+      return 'El archivo seleccionado no es válido. Por favor selecciona una imagen.'
+    }
+
+    // Validate file size
+    if (imageFile.size === 0) {
+      return 'El archivo está vacío. Por favor selecciona una imagen válida.'
+    }
+
+    if (imageFile.size > 5 * 1024 * 1024) {
+      return 'La imagen debe ser menor a 5MB.'
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(imageFile.type)) {
+      return 'Solo se permiten imágenes JPG, PNG o WebP.'
+    }
+
+    // Validate placement
+    if (!placement || !['homepage', 'directory'].includes(placement)) {
+      return 'Debes seleccionar una ubicación válida para el banner.'
+    }
+
+    // Validate link URL if provided
+    if (linkUrl && linkUrl.trim() !== '') {
+      try {
+        new URL(linkUrl.trim())
+      } catch {
+        return 'La URL de destino no es válida. Debe comenzar con http:// o https://'
+      }
+    }
+
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!imageFile) {
-      setError('Debes seleccionar una imagen.')
+    // Clear any previous errors
+    setError(null)
+
+    // Run validation
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
       return
     }
 
-    if (!title.trim()) {
-      setError('Debes ingresar un título.')
+    // Double-check critical fields before submission
+    if (!imageFile || !title.trim() || !businessId || !placement) {
+      setError('Por favor completa todos los campos obligatorios.')
+      console.error('Form validation passed but required fields are missing:', {
+        hasImageFile: !!imageFile,
+        hasTitle: !!title.trim(),
+        hasBusinessId: !!businessId,
+        hasPlacement: !!placement,
+      })
       return
     }
 
     setUploading(true)
-    setError(null)
 
     try {
+      // Build FormData
       const formData = new FormData()
       formData.append('businessId', businessId)
       formData.append('title', title.trim())
-      formData.append('image', imageFile)
+      formData.append('imageFile', imageFile)
       formData.append('placement', placement)
-      if (linkUrl.trim()) {
+
+      if (linkUrl && linkUrl.trim()) {
         formData.append('linkUrl', linkUrl.trim())
       }
 
-      const res = await fetch('/api/banners/request', {
-        method: 'POST',
-        body: formData
+      // Debug log before sending
+      console.log('Submitting banner request:', {
+        businessId,
+        title: title.trim(),
+        imageFileName: imageFile.name,
+        imageFileSize: imageFile.size,
+        imageFileType: imageFile.type,
+        placement,
+        linkUrl: linkUrl.trim() || '(none)',
       })
 
+      const res = await fetch('/api/banners/request', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await res.json()
+
       if (!res.ok) {
-        const data = await res.json()
         throw new Error(data.error || 'Error al enviar solicitud')
       }
 
-      // Reset form
+      // Success! Reset form
       setTitle('')
       setImageFile(null)
       setImagePreview(null)
       setLinkUrl('')
       setSizeWarning(null)
+      setError(null)
 
       if (onSuccess) onSuccess()
     } catch (err: any) {
+      console.error('Banner submission error:', err)
       setError(err.message || 'Error al enviar solicitud')
     } finally {
       setUploading(false)
@@ -265,8 +353,8 @@ export function BannerAdUpload({ businessId, onSuccess }: BannerAdUploadProps) {
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={uploading}
-        className="brutalist-button bg-primary text-white hover:bg-primary/90 w-full"
+        disabled={uploading || !title.trim() || !imageFile || !placement}
+        className="brutalist-button bg-primary text-white hover:bg-primary/90 w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {uploading ? 'Enviando...' : 'Enviar Solicitud'}
       </Button>

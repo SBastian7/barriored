@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*)",
       "Bash(node scripts/build-sw.js:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
@@ -32,7 +33,31 @@
       "Bash(git log:*)",
       "Bash(git merge:*)",
       "Bash(npx supabase:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(taskkill:*)",
+      "Bash(node -e:*)",
+      "Bash(node test-concurrent-analytics.js:*)",
+      "Bash(git show:*)",
+      "Bash(xargs:*)",
+      "Bash(npx next build:*)",
+      "Bash(node -c:*)",
+      "Bash(where:*)",
+      "Bash(powershell.exe -Command \"[Environment]::SetEnvironmentVariable\\(''Path'', [Environment]::GetEnvironmentVariable\\(''Path'', ''User''\\) + '';C:\\\\Users\\\\Sebastian\\\\.local\\\\bin'', ''User''\\)\")",
+      "Bash(powershell.exe -Command \"[Environment]::GetEnvironmentVariable\\(''Path'', ''User''\\)\")",
+      "Bash(setx PATH:*)",
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Bash(echo \"PID: $!\")",
+      "Bash(echo \"PID=$!\")",
+      "mcp__plugin_supabase_supabase__list_tables",
+      "mcp__plugin_supabase_supabase__list_projects",
+      "Read(//c/Users/Sebastian/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/subagent-driven-development/**)",
+      "Read(//c/Users/Sebastian/.claude/plugins/cache/claude-plugins-official/superpowers/**)",
+      "Read(//c/Users/Sebastian/Documents/Code/Personal/Potential Projects/BarrioRed/app/**)",
+      "Skill(code-review:code-review)",
+      "Skill(code-review:code-review:*)"
     ]
   }
 }

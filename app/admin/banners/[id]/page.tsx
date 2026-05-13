@@ -29,7 +29,7 @@ interface BannerAd {
     owner_id: string
     profiles: {
       full_name: string | null
-      email: string | null
+      phone: string | null
     } | null
   } | null
 }
@@ -96,7 +96,7 @@ export default function AdminBannerDetailPage() {
           businesses!inner(
             name,
             owner_id,
-            profiles!businesses_owner_id_profiles_fkey(full_name, email)
+            profiles!businesses_owner_id_profiles_fkey(full_name, phone)
           )
         `)
         .eq('id', id)
@@ -131,10 +131,18 @@ export default function AdminBannerDetailPage() {
     }
 
     try {
+      const startsAt = new Date().toISOString()
+      const endsAt = new Date(Date.now() + parseInt(approveData.duration_days) * 24 * 60 * 60 * 1000).toISOString()
+
       const res = await fetch(`/api/admin/banners/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(approveData)
+        body: JSON.stringify({
+          startsAt,
+          endsAt,
+          paymentAmount: parseFloat(approveData.amount),
+          paymentMethod: approveData.payment_method
+        })
       })
 
       if (!res.ok) {
@@ -342,9 +350,9 @@ export default function AdminBannerDetailPage() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-widest font-bold text-gray-600 mb-1">
-                  Email
+                  Teléfono
                 </p>
-                <p className="font-bold">{banner.businesses?.profiles?.email || 'N/A'}</p>
+                <p className="font-bold">{banner.businesses?.profiles?.phone || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-widest font-bold text-gray-600 mb-1">
