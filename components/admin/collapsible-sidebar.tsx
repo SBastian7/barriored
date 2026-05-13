@@ -45,6 +45,10 @@ const navItems = [
   { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3, divider: true },
   { href: '/admin/engagement', label: 'Engagement', icon: Activity },
   { href: '/admin/communities', label: 'Comunidades', icon: Globe, roles: ['super_admin'], divider: true },
+  { href: '/admin/platform/settings', label: 'Config. Plataforma', icon: Settings, roles: ['super_admin'], section: 'platform', divider: true },
+  { href: '/admin/platform/policies', label: 'Políticas', icon: FileText, roles: ['super_admin'], section: 'platform' },
+  { href: '/admin/platform/payments', label: 'Pasarelas Pago', icon: DollarSign, roles: ['super_admin'], section: 'platform' },
+  { href: '/admin/platform/service-categories', label: 'Cat. Servicios', icon: Briefcase, roles: ['super_admin'], section: 'platform' },
   { href: '/admin/logs', label: 'Logs', icon: FileText },
   { href: '/admin/tools', label: 'Herramientas', icon: Settings },
 ]
@@ -93,16 +97,11 @@ export function CollapsibleSidebar() {
       <div className="p-6 space-y-6">
         {/* Header with toggle */}
         <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <h2 className="text-2xl font-black uppercase tracking-tighter italic truncate">
-              Navegación
-            </h2>
-          )}
           <Button
             variant="outline"
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="brutalist-button shrink-0"
+            className="brutalist-button shrink-0 w-full"
             aria-label={isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
           >
             {isCollapsed ? (
@@ -120,6 +119,10 @@ export function CollapsibleSidebar() {
             const isActive = pathname === item.href
             const prevItem = index > 0 ? visibleNavItems[index - 1] : null
             const showSectionLabel = item.section && (!prevItem || prevItem.section !== item.section)
+            const sectionLabels: Record<string, string> = {
+              monetization: 'Monetización',
+              platform: 'Plataforma',
+            }
 
             return (
               <div key={item.href}>
@@ -129,7 +132,7 @@ export function CollapsibleSidebar() {
                 {showSectionLabel && !isCollapsed && (
                   <div className="px-3 py-2">
                     <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">
-                      Monetización
+                      {sectionLabels[item.section!] || item.section}
                     </h3>
                   </div>
                 )}
