@@ -98,8 +98,8 @@ export default function AdminStatisticsPage() {
         .eq('id', user.id)
         .single() as { data: any }
 
+      setIsSuperAdmin(!!profile?.is_super_admin)
       if (profile?.is_super_admin) {
-        setIsSuperAdmin(true)
         const { data: comms } = await supabase.from('communities').select('id, name').eq('is_active', true).order('name')
         setCommunities(comms || [])
         await fetchComparativeStats()
@@ -218,21 +218,43 @@ export default function AdminStatisticsPage() {
         buildPostsQuery().gte('created_at', date7d.toISOString()),
       ])
 
+      // Helper to build fresh reports query
+      const buildReportsQuery = () => {
+        let query = supabase.from('content_reports').select('*', { count: 'exact' })
+        if (effectiveCommunityId) {
+          query = query.eq('community_id', effectiveCommunityId)
+        }
+        return query
+      }
+
       // Fetch moderation stats
       const [allReports, pendingReports, resolvedReports] = await Promise.all([
-        supabase.from('content_reports').select('*', { count: 'exact' }),
-        supabase.from('content_reports').select('*', { count: 'exact' }).eq('status', 'pending'),
-        supabase.from('content_reports').select('*', { count: 'exact' }).eq('status', 'resolved'),
+        buildReportsQuery(),
+        buildReportsQuery().eq('status', 'pending'),
+        buildReportsQuery().eq('status', 'resolved'),
       ])
 
       // Fetch revenue stats
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
+      const buildBannerQuery = () => {
+        let query = supabase.from('banner_ads').select('*', { count: 'exact' }).eq('status', 'approved')
+        if (effectiveCommunityId) {
+          query = query.eq('community_id', effectiveCommunityId)
+        }
+        return query
+      }
+
+      let bannerPaymentsQuery = supabase.from('banner_ads').select('amount_paid').eq('status', 'approved').not('amount_paid', 'is', null)
+      if (effectiveCommunityId) {
+        bannerPaymentsQuery = bannerPaymentsQuery.eq('community_id', effectiveCommunityId)
+      }
+
       const [activeSubscriptions, activeBanners, subPayments, bannerPayments] = await Promise.all([
         supabase.from('business_subscriptions').select('*', { count: 'exact' }).eq('status', 'active'),
-        supabase.from('banner_ads').select('*', { count: 'exact' }).eq('status', 'approved'),
+        buildBannerQuery(),
         supabase.from('subscription_payments').select('amount'),
-        supabase.from('banner_ads').select('amount_paid').eq('status', 'approved').not('amount_paid', 'is', null),
+        bannerPaymentsQuery,
       ])
 
       const totalSubRevenue = (subPayments.data || []).reduce((sum, p) => sum + (p.amount || 0), 0)
@@ -245,12 +267,16 @@ export default function AdminStatisticsPage() {
         .select('amount')
         .gte('payment_date', firstDayOfMonth.toISOString())
 
-      const monthlyBanners = await supabase
+      let monthlyBannersQuery = supabase
         .from('banner_ads')
         .select('amount_paid')
         .eq('status', 'approved')
         .not('amount_paid', 'is', null)
         .gte('approved_at', firstDayOfMonth.toISOString())
+      if (effectiveCommunityId) {
+        monthlyBannersQuery = monthlyBannersQuery.eq('community_id', effectiveCommunityId)
+      }
+      const monthlyBanners = await monthlyBannersQuery
 
       const monthlySubRevenue = (monthlySubPayments.data || []).reduce((sum, p) => sum + (p.amount || 0), 0)
       const monthlyBanRevenue = (monthlyBanners.data || []).reduce((sum, b) => sum + (b.amount_paid || 0), 0)
