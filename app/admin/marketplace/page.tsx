@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
@@ -11,6 +12,8 @@ import type { ClassifiedWithRelations } from '@/lib/types/database'
 
 export default function AdminMarketplacePage() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const communityIdParam = searchParams.get('community_id')
   const [classifieds, setClassifieds] = useState<ClassifiedWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
@@ -35,6 +38,7 @@ export default function AdminMarketplacePage() {
     const params = new URLSearchParams()
     if (filters.category !== 'all') params.append('category', filters.category)
     if (filters.status !== 'all') params.append('status', filters.status)
+    if (communityIdParam) params.append('community_id', communityIdParam)
 
     const response = await fetch(`/api/admin/marketplace?${params.toString()}`)
     const data = await response.json()

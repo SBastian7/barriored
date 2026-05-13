@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +33,8 @@ export default function AdminBusinessesPage() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const communityIdParam = searchParams.get('community_id')
 
   async function fetchBusinesses() {
     setLoading(true)
@@ -44,11 +47,15 @@ export default function AdminBusinessesPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('community_id')
+        .select('community_id, is_super_admin')
         .eq('id', user.id)
-        .single<{ community_id: string | null }>()
+        .single<{ community_id: string | null; is_super_admin: boolean | null }>()
 
-      if (!profile?.community_id) {
+      const effectiveCommunityId = profile?.is_super_admin
+        ? communityIdParam
+        : profile?.community_id
+
+      if (!profile?.is_super_admin && !effectiveCommunityId) {
         setLoading(false)
         return
       }
@@ -56,8 +63,11 @@ export default function AdminBusinessesPage() {
       let query = supabase
         .from('businesses')
         .select('id, name, status, created_at, featured_requested, deletion_requested, deletion_reason, categories(name), profiles!businesses_owner_id_profiles_fkey(full_name)')
-        .eq('community_id', profile.community_id)
         .order('created_at', { ascending: false })
+
+      if (effectiveCommunityId) {
+        query = query.eq('community_id', effectiveCommunityId)
+      }
 
       if (statusFilter === 'deletion_requested') {
         query = query.eq('deletion_requested', true)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +18,8 @@ import type { CommunityAlert } from '@/lib/types'
 
 export default function AdminAlertsPage() {
     const supabase = createClient()
+    const searchParams = useSearchParams()
+    const communityIdParam = searchParams.get('community_id')
     const [alerts, setAlerts] = useState<any[]>([])
     const [communities, setCommunities] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -83,8 +86,17 @@ export default function AdminAlertsPage() {
             // Continue anyway
         }
 
+        let alertQuery = supabase
+            .from('community_alerts')
+            .select('*, communities(name, slug)')
+            .order('created_at', { ascending: false })
+
+        if (communityIdParam) {
+            alertQuery = alertQuery.eq('community_id', communityIdParam)
+        }
+
         const [alertsRes, communitiesRes] = await Promise.all([
-            supabase.from('community_alerts').select('*, communities(name, slug)').order('created_at', { ascending: false }),
+            alertQuery,
             supabase.from('communities').select('id, name').order('name')
         ])
 

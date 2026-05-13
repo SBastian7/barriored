@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -30,6 +31,8 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const communityIdParam = searchParams.get('community_id')
 
   useEffect(() => {
     fetchUsers()
@@ -65,10 +68,13 @@ export default function AdminUsersPage() {
         .select('id, full_name, role, is_super_admin, is_suspended, created_at')
         .order('created_at', { ascending: false })
 
-      // Filter by community for non-super-admins
+      // Filter by community
       if (!currentProfile?.is_super_admin && currentProfile?.community_id) {
         query = query.eq('community_id', currentProfile.community_id)
+      } else if (currentProfile?.is_super_admin && communityIdParam) {
+        query = query.eq('community_id', communityIdParam)
       }
+      // Super admin with no param: no filter (see all)
 
       // Filter by role
       if (roleFilter !== 'all') {

@@ -8,6 +8,7 @@ import { CommunityStatsPanel } from '@/components/admin/community-stats-panel'
 import { CommunityStaffPanel } from '@/components/admin/community-staff-panel'
 import { CommunityOwnershipPanel } from '@/components/admin/community-ownership-panel'
 import { CommunityDangerZone } from '@/components/admin/community-danger-zone'
+import { CommunityQuickActions } from '@/components/admin/community-quick-actions'
 import { Edit, ArrowLeft } from 'lucide-react'
 import type { Database } from '@/lib/types/database'
 
@@ -122,6 +123,8 @@ export default async function CommunityDetailPage({
           </Button>
         </Link>
       </div>
+
+      <CommunityQuickActions communityId={id} />
 
       <Tabs defaultValue="stats" className="space-y-6">
         <TabsList className="brutalist-card inline-flex">
