@@ -28,8 +28,13 @@ export default function PlatformSettingsPage() {
 
   useEffect(() => {
     fetch('/api/admin/platform/settings')
-      .then((r) => r.json())
-      .then(({ config }) => { setConfig(config); setLoading(false) })
+      .then(async (r) => {
+        const json = await r.json()
+        if (!r.ok) throw new Error(json.error ?? 'Error al cargar configuración')
+        setConfig(json.config)
+      })
+      .catch((err) => toast.error(err.message))
+      .finally(() => setLoading(false))
   }, [])
 
   async function handleSave(e: React.FormEvent) {
