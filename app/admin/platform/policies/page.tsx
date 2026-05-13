@@ -45,7 +45,7 @@ export default function PlatformPoliciesPage() {
         body: JSON.stringify({ content: drafts[type] }),
       })
       const json = await res.json()
-      if (!res.ok) { toast.error(json.error); return }
+      if (!res.ok) { toast.error(json.error ?? 'Error al guardar la política'); return }
       setPolicies((prev) => prev.map((p) => p.type === type ? { ...p, ...json.policy } : p))
       toast.success('Política guardada')
     } finally {
