@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/admin/stat-card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Store,
   Clock,
@@ -74,11 +76,15 @@ export default function AdminStatisticsPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<'7d' | '30d'>('30d')
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [communities, setCommunities] = useState<{ id: string; name: string }[]>([])
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string | 'all'>('all')
+  const [communityStats, setCommunityStats] = useState<any[]>([])
   const supabase = createClient()
 
   useEffect(() => {
     fetchStatistics()
-  }, [])
+  }, [selectedCommunityId])
 
   async function fetchStatistics() {
     setLoading(true)
@@ -92,6 +98,17 @@ export default function AdminStatisticsPage() {
         .eq('id', user.id)
         .single() as { data: any }
 
+      if (profile?.is_super_admin) {
+        setIsSuperAdmin(true)
+        const { data: comms } = await supabase.from('communities').select('id, name').eq('is_active', true).order('name')
+        setCommunities(comms || [])
+        await fetchComparativeStats()
+      }
+
+      const effectiveCommunityId = profile?.is_super_admin
+        ? (selectedCommunityId === 'all' ? null : selectedCommunityId)
+        : profile?.community_id
+
       const now = new Date()
       const date7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
       const date30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -99,8 +116,8 @@ export default function AdminStatisticsPage() {
       // Helper to build fresh business query
       const buildBusinessQuery = () => {
         let query = supabase.from('businesses').select('*', { count: 'exact' })
-        if (!profile?.is_super_admin && profile?.community_id) {
-          query = query.eq('community_id', profile.community_id)
+        if (effectiveCommunityId) {
+          query = query.eq('community_id', effectiveCommunityId)
         }
         return query
       }
@@ -131,8 +148,8 @@ export default function AdminStatisticsPage() {
         .from('businesses')
         .select('category_id, categories(name)')
 
-      if (!profile?.is_super_admin && profile?.community_id) {
-        categoryQuery = categoryQuery.eq('community_id', profile.community_id)
+      if (effectiveCommunityId) {
+        categoryQuery = categoryQuery.eq('community_id', effectiveCommunityId)
       }
 
       const { data: bizWithCategories } = await categoryQuery
@@ -151,8 +168,8 @@ export default function AdminStatisticsPage() {
       // Helper to build fresh user query
       const buildUserQuery = () => {
         let query = supabase.from('profiles').select('*', { count: 'exact' })
-        if (!profile?.is_super_admin && profile?.community_id) {
-          query = query.eq('community_id', profile.community_id)
+        if (effectiveCommunityId) {
+          query = query.eq('community_id', effectiveCommunityId)
         }
         return query
       }
@@ -167,8 +184,8 @@ export default function AdminStatisticsPage() {
       // Role distribution
       let roleQuery = supabase.from('profiles').select('role')
 
-      if (!profile?.is_super_admin && profile?.community_id) {
-        roleQuery = roleQuery.eq('community_id', profile.community_id)
+      if (effectiveCommunityId) {
+        roleQuery = roleQuery.eq('community_id', effectiveCommunityId)
       }
 
       const { data: roleData } = await roleQuery
@@ -187,8 +204,8 @@ export default function AdminStatisticsPage() {
       // Helper to build fresh posts query
       const buildPostsQuery = () => {
         let query = supabase.from('community_posts').select('*', { count: 'exact' })
-        if (!profile?.is_super_admin && profile?.community_id) {
-          query = query.eq('community_id', profile.community_id)
+        if (effectiveCommunityId) {
+          query = query.eq('community_id', effectiveCommunityId)
         }
         return query
       }
@@ -287,41 +304,21 @@ export default function AdminStatisticsPage() {
     }
   }
 
-  if (loading || !stats) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+  async function fetchComparativeStats() {
+    const { data: comms } = await supabase.from('communities').select('id, name').eq('is_active', true)
+    if (!comms) return
+
+    const statsPerCommunity = await Promise.all(
+      comms.map(async (c) => {
+        const { data: s } = await (supabase as any).rpc('get_community_stats', { community_uuid: c.id })
+        return { community: c.name, ...(s?.[0] || {}) }
+      })
     )
+    setCommunityStats(statsPerCommunity)
   }
 
-  return (
-    <div className="space-y-8">
-      <div className="flex items-end justify-between border-b-4 border-black pb-4">
-        <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
-          Estadísticas de la <span className="text-primary italic">Plataforma</span>
-        </h1>
-
-        <div className="flex gap-2">
-          <Button
-            variant={period === '7d' ? 'default' : 'outline'}
-            onClick={() => setPeriod('7d')}
-            className="brutalist-button"
-            size="sm"
-          >
-            7 Días
-          </Button>
-          <Button
-            variant={period === '30d' ? 'default' : 'outline'}
-            onClick={() => setPeriod('30d')}
-            className="brutalist-button"
-            size="sm"
-          >
-            30 Días
-          </Button>
-        </div>
-      </div>
-
+  const statsContent = stats && (
+    <>
       {/* Business Stats */}
       <div>
         <h2 className="text-2xl font-black uppercase italic mb-4 flex items-center gap-2">
@@ -628,6 +625,111 @@ export default function AdminStatisticsPage() {
           />
         </div>
       </div>
+    </>
+  )
+
+  if (loading || !stats) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-end justify-between border-b-4 border-black pb-4">
+        <h1 className="text-4xl font-heading font-black uppercase italic tracking-tighter">
+          Estadísticas de la <span className="text-primary italic">Plataforma</span>
+        </h1>
+
+        <div className="flex gap-2">
+          <Button
+            variant={period === '7d' ? 'default' : 'outline'}
+            onClick={() => setPeriod('7d')}
+            className="brutalist-button"
+            size="sm"
+          >
+            7 Días
+          </Button>
+          <Button
+            variant={period === '30d' ? 'default' : 'outline'}
+            onClick={() => setPeriod('30d')}
+            className="brutalist-button"
+            size="sm"
+          >
+            30 Días
+          </Button>
+        </div>
+      </div>
+
+      {isSuperAdmin && (
+        <div className="mb-6 flex gap-4 items-center">
+          <Select value={selectedCommunityId} onValueChange={(v) => setSelectedCommunityId(v)}>
+            <SelectTrigger className="brutalist-input w-70">
+              <SelectValue placeholder="Comunidad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las comunidades</SelectItem>
+              {communities.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedCommunityId !== 'all' && (
+            <Button variant="outline" size="sm" className="brutalist-button" onClick={() => setSelectedCommunityId('all')}>
+              Ver todas
+            </Button>
+          )}
+        </div>
+      )}
+
+      {isSuperAdmin ? (
+        <Tabs defaultValue="overview" className="mt-6">
+          <TabsList className="brutalist-card inline-flex">
+            <TabsTrigger value="overview" className="uppercase tracking-widest font-bold text-xs">Resumen</TabsTrigger>
+            <TabsTrigger value="comparativa" className="uppercase tracking-widest font-bold text-xs">Comparativa</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-8 mt-6">
+            {statsContent}
+          </TabsContent>
+
+          <TabsContent value="comparativa" className="mt-6">
+            <div className="brutalist-card overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-black">
+                    {['Comunidad', 'Negocios', 'Usuarios', 'Posts', 'Alertas'].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left uppercase tracking-widest font-black text-xs">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {communityStats.map((row, i) => (
+                    <tr key={i} className="border-b border-gray-200 hover:bg-gray-50">
+                      <td className="px-4 py-3 font-bold">{row.community}</td>
+                      <td className="px-4 py-3">{row.businesses_count ?? 0}</td>
+                      <td className="px-4 py-3">{row.users_count ?? 0}</td>
+                      <td className="px-4 py-3">{row.posts_count ?? 0}</td>
+                      <td className="px-4 py-3">{row.alerts_count ?? 0}</td>
+                    </tr>
+                  ))}
+                  {communityStats.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-black/40">No hay datos disponibles</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="space-y-8">
+          {statsContent}
+        </div>
+      )}
     </div>
   )
 }
