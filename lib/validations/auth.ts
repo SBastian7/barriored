@@ -13,12 +13,23 @@ export const signupSchema = z.object({
   community_id: z.string().uuid(),
 })
 
+// Phone without + sign: 57XXXXXXXXXX
+const colombianPhone = z.string().regex(/^57[0-9]{10}$/, 'Numero colombiano invalido (formato: 57XXXXXXXXXX)')
+
 export const whatsappOtpSendSchema = z.object({
-  phone: z.string().regex(/^57[0-9]{10}$/, 'Numero colombiano invalido'),
+  phone: colombianPhone,
 })
 
+// request_id removed — Twilio manages OTP state by phone number
 export const whatsappOtpVerifySchema = z.object({
-  phone: z.string().regex(/^57[0-9]{10}$/),
+  phone: colombianPhone,
   otp: z.string().length(6, 'Codigo de 6 digitos'),
-  request_id: z.string(),
+  // Optional signup metadata — used only when creating a new account
+  full_name: z.string().min(2).optional(),
+  community_id: z.string().uuid().optional(),
+})
+
+export const whatsappOtpLinkSchema = z.object({
+  phone: colombianPhone,
+  otp: z.string().length(6, 'Codigo de 6 digitos'),
 })
