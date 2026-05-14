@@ -1,16 +1,10 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Phone } from 'lucide-react'
 
-const COUNTRY_PREFIXES = [
-  { code: '+57', country: 'CO', flag: '🇨🇴', label: 'Colombia' },
-  { code: '+58', country: 'VE', flag: '🇻🇪', label: 'Venezuela' },
-  { code: '+593', country: 'EC', flag: '🇪🇨', label: 'Ecuador' },
-  { code: '+51', country: 'PE', flag: '🇵🇪', label: 'Peru' },
-  { code: '+1', country: 'US', flag: '🇺🇸', label: 'Estados Unidos' },
-]
+const PREFIX = '+57'
 
 type PhoneInputProps = {
   value: string
@@ -21,51 +15,28 @@ type PhoneInputProps = {
 }
 
 export function PhoneInput({ value, onChange, placeholder = '300 123 4567', error, className }: PhoneInputProps) {
-  // Parse prefix and local number from full value
-  const parseValue = useCallback((val: string) => {
-    if (!val) return { prefix: '+57', local: '' }
+  // Parse local number from full value (handles both "57XXXXXXXXXX" and "+57XXXXXXXXXX")
+  function parseLocal(val: string): string {
+    if (!val) return ''
+    if (val.startsWith(PREFIX)) return val.slice(PREFIX.length)
+    const codeWithoutPlus = PREFIX.replace('+', '')
+    if (val.startsWith(codeWithoutPlus)) return val.slice(codeWithoutPlus.length)
+    return val
+  }
 
-    for (const p of COUNTRY_PREFIXES) {
-      // Check with + sign first
-      if (val.startsWith(p.code)) {
-        return { prefix: p.code, local: val.slice(p.code.length) }
-      }
-      // Fallback: check without + sign (for backward compatibility)
-      const codeWithoutPlus = p.code.replace('+', '')
-      if (val.startsWith(codeWithoutPlus)) {
-        return { prefix: p.code, local: val.slice(codeWithoutPlus.length) }
-      }
-    }
-    return { prefix: '+57', local: val }
-  }, [])
+  const [localNumber, setLocalNumber] = useState(() => parseLocal(value))
 
-  const parsed = parseValue(value)
-  const [prefix, setPrefix] = useState(parsed.prefix)
-  const [localNumber, setLocalNumber] = useState(parsed.local)
-  const [showDropdown, setShowDropdown] = useState(false)
-
-  // Sync state when value prop changes (e.g., form restoration from sessionStorage)
+  // Sync when value prop changes (e.g., form restoration from sessionStorage)
   useEffect(() => {
-    const newParsed = parseValue(value)
-    setPrefix(newParsed.prefix)
-    setLocalNumber(newParsed.local)
+    setLocalNumber(parseLocal(value))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
-
-  const selectedCountry = COUNTRY_PREFIXES.find(p => p.code === prefix) ?? COUNTRY_PREFIXES[0]
 
   function handleLocalChange(raw: string) {
     const digits = raw.replace(/\D/g, '')
     setLocalNumber(digits)
-    // Remove + sign for validation compatibility (57XXXXXXXXXX format)
-    onChange(prefix.replace('+', '') + digits)
-  }
-
-  function handlePrefixChange(newPrefix: string) {
-    setPrefix(newPrefix)
-    setShowDropdown(false)
-    // Remove + sign for validation compatibility (57XXXXXXXXXX format)
-    onChange(newPrefix.replace('+', '') + localNumber)
+    // Emit without + sign for validation compatibility (57XXXXXXXXXX format)
+    onChange(PREFIX.replace('+', '') + digits)
   }
 
   // Format display: 300 123 4567
@@ -82,39 +53,10 @@ export function PhoneInput({ value, onChange, placeholder = '300 123 4567', erro
         'flex border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all focus-within:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus-within:translate-x-[-1px] focus-within:translate-y-[-1px]',
         error && 'border-red-500'
       )}>
-        {/* Prefix selector */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-1.5 h-full px-3 border-r-2 border-black bg-black/5 hover:bg-black/10 transition-colors font-bold text-sm min-w-[90px]"
-          >
-            <span className="text-lg">{selectedCountry.flag}</span>
-            <span className="font-black">{selectedCountry.code}</span>
-            <svg className="w-3 h-3 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {showDropdown && (
-            <div className="absolute top-full left-0 z-50 mt-1 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] min-w-[180px]">
-              {COUNTRY_PREFIXES.map((p) => (
-                <button
-                  key={p.code}
-                  type="button"
-                  onClick={() => handlePrefixChange(p.code)}
-                  className={cn(
-                    'flex items-center gap-2 w-full px-3 py-2 text-left text-sm font-bold hover:bg-secondary/50 transition-colors',
-                    p.code === prefix && 'bg-primary/10'
-                  )}
-                >
-                  <span className="text-lg">{p.flag}</span>
-                  <span className="font-black">{p.code}</span>
-                  <span className="text-black/50 text-xs uppercase tracking-wider ml-auto">{p.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Static Colombia prefix */}
+        <div className="flex items-center gap-1.5 h-full px-3 border-r-2 border-black bg-black/5 font-bold text-sm min-w-22.5">
+          <span className="text-lg">🇨🇴</span>
+          <span className="font-black">+57</span>
         </div>
 
         {/* Phone number input */}
