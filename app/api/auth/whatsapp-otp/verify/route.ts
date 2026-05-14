@@ -46,11 +46,13 @@ export async function POST(request: Request) {
     userId = newUser.user.id
 
     // Populate profile with signup metadata if provided
-    await supabaseAdmin.from('profiles').update({
+    const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
+      id: userId,
       phone,
       full_name: full_name || null,
       community_id: community_id || null,
-    }).eq('id', userId)
+    }, { onConflict: 'id' })
+    if (profileError) console.error('[whatsapp-otp/verify] profile upsert failed', profileError)
   }
 
   // Generate session via magic link → verifyOtp
