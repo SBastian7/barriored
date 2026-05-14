@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { Button } from '@/components/ui/button'
-import { ProfileForm } from '@/components/profile/profile-form'
+import { ProfileForm, LinkWhatsApp } from '@/components/profile/profile-form'
 import { User, Edit } from 'lucide-react'
 
 type Props = {
@@ -131,6 +131,12 @@ export function ProfileView({ profile, communities }: Props) {
             </div>
           )}
         </div>
+
+        {!isEditing && !profile.phone && (
+          <div className="mt-6">
+            <LinkWhatsApp onLinked={() => router.refresh()} />
+          </div>
+        )}
       </div>
     </div>
   )
