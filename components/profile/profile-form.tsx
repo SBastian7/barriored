@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -197,5 +197,86 @@ export function ProfileForm({ profile, communities, onCancel, onSave }: Props) {
         </Button>
       </div>
     </form>
+  )
+}
+
+type LinkWhatsAppProps = {
+  onLinked: () => void
+}
+
+export function LinkWhatsApp({ onLinked }: LinkWhatsAppProps) {
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState('')
+  const [step, setStep] = useState<'phone' | 'otp'>('phone')
+  const [loading, setLoading] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setTimeout(() => setCooldown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [cooldown])
+
+  async function sendOTP(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    const res = await fetch('/api/auth/whatsapp-otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (data.error) toast.error(data.error)
+    else { setStep('otp'); setCooldown(60); toast.success('Codigo enviado') }
+  }
+
+  async function linkPhone(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    const res = await fetch('/api/auth/whatsapp-otp/link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp }),
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (data.error) {
+      toast.error(data.error)
+    } else {
+      toast.success('Numero de WhatsApp vinculado correctamente')
+      onLinked()
+    }
+  }
+
+  return (
+    <div className="border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3">
+      <p className="font-black uppercase tracking-widest text-xs">Vincular WhatsApp</p>
+      <p className="text-xs text-black/60">Vincula tu numero de WhatsApp para poder iniciar sesion sin contrasena.</p>
+
+      {step === 'phone' ? (
+        <form onSubmit={sendOTP} className="space-y-3">
+          <PhoneInput value={phone} onChange={setPhone} placeholder="300 123 4567" />
+          <Button type="submit" size="sm" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
+            {loading ? 'Enviando...' : 'Enviar codigo por WhatsApp'}
+          </Button>
+        </form>
+      ) : (
+        <form onSubmit={linkPhone} className="space-y-3">
+          <Input placeholder="Codigo de 6 digitos" value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} required />
+          <Button type="submit" size="sm" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
+            {loading ? 'Verificando...' : 'Vincular numero'}
+          </Button>
+          <button
+            type="button"
+            onClick={() => { if (cooldown === 0) sendOTP({ preventDefault: () => {} } as any) }}
+            disabled={cooldown > 0 || loading}
+            className="w-full text-xs text-black/60 hover:text-black disabled:opacity-40"
+          >
+            {cooldown > 0 ? `Reenviar en ${cooldown}s` : 'Reenviar codigo'}
+          </button>
+        </form>
+      )}
+    </div>
   )
 }
