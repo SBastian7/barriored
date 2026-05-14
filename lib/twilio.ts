@@ -21,3 +21,22 @@ export async function sendWhatsAppMessage(to: string, body: string): Promise<voi
     body,
   })
 }
+
+export async function sendWhatsAppOTP(phone: string): Promise<void> {
+  const e164 = normalizeColombianPhone(phone)
+  await getClient().verify.v2
+    .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
+    .verifications.create({ to: e164, channel: 'whatsapp' })
+}
+
+export async function checkWhatsAppOTP(phone: string, code: string): Promise<boolean> {
+  const e164 = normalizeColombianPhone(phone)
+  try {
+    const check = await getClient().verify.v2
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
+      .verificationChecks.create({ to: e164, code })
+    return check.status === 'approved'
+  } catch {
+    return false
+  }
+}
