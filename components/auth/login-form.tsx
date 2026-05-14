@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { toast } from 'sonner'
 
 export function LoginForm() {
@@ -70,11 +71,19 @@ export function LoginForm() {
 
 function WhatsAppOTPLogin({ returnUrl }: { returnUrl: string }) {
   const router = useRouter()
+  const supabase = createClient()
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
-  const [requestId, setRequestId] = useState('')
   const [step, setStep] = useState<'phone' | 'otp'>('phone')
   const [loading, setLoading] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setTimeout(() => setCooldown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [cooldown])
 
   async function sendOTP(e: React.FormEvent) {
     e.preventDefault()
@@ -89,9 +98,27 @@ function WhatsAppOTPLogin({ returnUrl }: { returnUrl: string }) {
     if (data.error) {
       toast.error(data.error)
     } else {
-      setRequestId(data.request_id)
       setStep('otp')
+      setCooldown(60)
       toast.success('Codigo enviado por WhatsApp')
+    }
+  }
+
+  async function resendOTP() {
+    if (cooldown > 0) return
+    setLoading(true)
+    const res = await fetch('/api/auth/whatsapp-otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (data.error) {
+      toast.error(data.error)
+    } else {
+      setCooldown(60)
+      toast.success('Nuevo codigo enviado')
     }
   }
 
@@ -101,13 +128,18 @@ function WhatsAppOTPLogin({ returnUrl }: { returnUrl: string }) {
     const res = await fetch('/api/auth/whatsapp-otp/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, otp, request_id: requestId }),
+      body: JSON.stringify({ phone, otp }),
     })
     const data = await res.json()
-    setLoading(false)
     if (data.error) {
       toast.error(data.error)
+      setLoading(false)
     } else {
+      // Critical fix: set session from returned tokens
+      await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      })
       router.push(returnUrl)
       router.refresh()
     }
@@ -117,9 +149,12 @@ function WhatsAppOTPLogin({ returnUrl }: { returnUrl: string }) {
     return (
       <form onSubmit={sendOTP} className="space-y-4">
         <div>
-          <Label htmlFor="phone">Numero WhatsApp</Label>
-          <Input id="phone" placeholder="573001234567" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-          <p className="text-xs text-gray-500 mt-1">Formato: 57 + 10 digitos</p>
+          <Label htmlFor="wa-phone">Numero WhatsApp</Label>
+          <PhoneInput
+            value={phone}
+            onChange={setPhone}
+            placeholder="300 123 4567"
+          />
         </div>
         <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
           {loading ? 'Enviando...' : 'Enviar codigo por WhatsApp'}
@@ -131,13 +166,30 @@ function WhatsAppOTPLogin({ returnUrl }: { returnUrl: string }) {
   return (
     <form onSubmit={verifyOTP} className="space-y-4">
       <div>
-        <Label htmlFor="otp">Codigo de verificacion</Label>
-        <Input id="otp" placeholder="123456" value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} required />
-        <p className="text-xs text-gray-500 mt-1">Ingresa el codigo de 6 digitos enviado a tu WhatsApp</p>
+        <Label htmlFor="wa-otp">Codigo de verificacion</Label>
+        <Input
+          id="wa-otp"
+          placeholder="123456"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          maxLength={6}
+          required
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Codigo de 6 digitos enviado a tu WhatsApp
+        </p>
       </div>
       <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
         {loading ? 'Verificando...' : 'Verificar'}
       </Button>
+      <button
+        type="button"
+        onClick={resendOTP}
+        disabled={cooldown > 0 || loading}
+        className="w-full text-sm text-black/60 hover:text-black disabled:opacity-40 transition-colors"
+      >
+        {cooldown > 0 ? `Reenviar en ${cooldown}s` : 'Reenviar codigo'}
+      </button>
     </form>
   )
 }
