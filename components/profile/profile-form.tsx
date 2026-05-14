@@ -249,6 +249,20 @@ export function LinkWhatsApp({ onLinked }: LinkWhatsAppProps) {
     }
   }
 
+  async function resendOTP() {
+    if (cooldown > 0) return
+    setLoading(true)
+    const res = await fetch('/api/auth/whatsapp-otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (data.error) toast.error(data.error)
+    else { setCooldown(60); toast.success('Nuevo codigo enviado') }
+  }
+
   return (
     <div className="border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3">
       <p className="font-black uppercase tracking-widest text-xs">Vincular WhatsApp</p>
@@ -269,7 +283,7 @@ export function LinkWhatsApp({ onLinked }: LinkWhatsAppProps) {
           </Button>
           <button
             type="button"
-            onClick={() => { if (cooldown === 0) sendOTP({ preventDefault: () => {} } as any) }}
+            onClick={resendOTP}
             disabled={cooldown > 0 || loading}
             className="w-full text-xs text-black/60 hover:text-black disabled:opacity-40"
           >

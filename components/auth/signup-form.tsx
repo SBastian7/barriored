@@ -142,6 +142,10 @@ function WhatsAppSignupForm({ communities, supabase, router }: {
 
   async function sendOTP(e: React.FormEvent) {
     e.preventDefault()
+    if (!form.full_name.trim()) {
+      toast.error('Ingresa tu nombre completo')
+      return
+    }
     if (!form.community_id) {
       toast.error('Selecciona tu comunidad')
       return
