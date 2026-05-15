@@ -53,10 +53,8 @@ export function EditBusinessForm({ business }: { business: any }) {
   const [geocoding, setGeocoding] = useState(false)
   const [requestedGeo, setRequestedGeo] = useState(false)
 
-  // Extract lat/lng from PostGIS geography
-  const location = business.location as any
-  const initialLat = location?.coordinates?.[1] ?? 4.8133
-  const initialLng = location?.coordinates?.[0] ?? -75.6961
+  const initialLat = (business.latitude as number | null) ?? 4.8133
+  const initialLng = (business.longitude as number | null) ?? -75.6961
 
   const [form, setForm] = useState({
     name: business.name ?? '',

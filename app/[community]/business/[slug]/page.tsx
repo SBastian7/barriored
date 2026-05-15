@@ -88,10 +88,8 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const linkedEvents = linkedEventsRes.data || []
   const linkedJobs = linkedJobsRes.data || []
 
-  // Extract lat/lng from PostGIS geography
-  const location = business.location as any
-  const lat = location?.coordinates?.[1]
-  const lng = location?.coordinates?.[0]
+  const lat = business?.latitude as number | undefined
+  const lng = business?.longitude as number | undefined
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 pb-24">

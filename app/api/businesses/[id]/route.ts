@@ -51,8 +51,7 @@ export async function PATCH(
   const updateData: Record<string, unknown> = { ...parsed.data }
   if (parsed.data.latitude && parsed.data.longitude) {
     updateData.location = `POINT(${parsed.data.longitude} ${parsed.data.latitude})`
-    delete updateData.latitude
-    delete updateData.longitude
+    // latitude/longitude columns are kept — trigger also syncs them from location
   }
 
   // Update business
