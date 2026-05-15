@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { updateBusinessSchema } from '@/lib/validations/business'
 import { getPermissions } from '@/lib/auth/permissions'
@@ -68,6 +69,9 @@ export async function PATCH(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  revalidatePath('/dashboard')
+  revalidateTag(`businesses-${data.community_id}`)
 
   return NextResponse.json(data)
 }

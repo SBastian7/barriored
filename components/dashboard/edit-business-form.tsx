@@ -158,6 +158,7 @@ export function EditBusinessForm({ business }: { business: any }) {
       return
     }
     toast.success('Negocio actualizado exitosamente')
+    router.refresh()
     router.push('/dashboard')
   }
 
