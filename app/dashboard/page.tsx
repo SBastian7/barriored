@@ -3,17 +3,16 @@ import { redirect } from 'next/navigation'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DashboardTabsClient } from '@/components/dashboard/dashboard-tabs-client'
 import { UserClassifiedCard } from '@/components/marketplace/user-classified-card'
-import { Plus, ShoppingBag, Heart, Edit, Zap, MessageSquare, Calendar, Briefcase, Megaphone } from 'lucide-react'
+import { Plus, ShoppingBag, Heart, Edit, Zap, MessageSquare, Calendar, Megaphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { JobFilledToggle } from '@/components/community/job-filled-toggle'
 import { PostDeleteButton } from '@/components/community/post-delete-button'
 import { DeletionRequestButton } from '@/components/business/deletion-request-button'
+import { ResubmitButton } from '@/components/business/resubmit-button'
 import { BusinessAnalytics } from '@/components/business/business-analytics'
 import { PremiumStatusWidget } from '@/components/subscription/premium-status-widget'
 import { BannerAdsManager } from '@/components/banners/banner-ads-manager'
-import type { JobMetadata } from '@/lib/types'
 import Link from 'next/link'
 
 export default async function DashboardPage({
@@ -99,7 +98,7 @@ async function BusinessTabContent({
   // Fetch user's businesses
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('id, name, status, created_at, deletion_requested, deletion_reason, categories(name)')
+    .select('id, name, status, created_at, deletion_requested, deletion_reason, rejection_reason, rejection_details, categories(name)')
     .eq('owner_id', userId)
     .order('created_at', { ascending: false }) as { data: any }
 
@@ -177,13 +176,27 @@ async function BusinessTabContent({
                     </div>
                     <div className="flex items-center gap-4">
                       <Badge variant={s.variant as any} className="text-[10px] px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">{s.label}</Badge>
-                      <Link href={`/dashboard/business/${biz.id}/edit`}>
-                        <Button variant="outline" size="icon" className="h-12 w-12 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-secondary transition-all rounded-none">
-                          <Edit className="h-6 w-6" />
-                        </Button>
-                      </Link>
+                      {biz.status !== 'rejected' && (
+                        <Link href={`/dashboard/business/${biz.id}/edit`}>
+                          <Button variant="outline" size="icon" className="h-12 w-12 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-secondary transition-all rounded-none">
+                            <Edit className="h-6 w-6" />
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </CardHeader>
+                  {biz.status === 'rejected' && (
+                    <CardContent className="px-6 pb-6">
+                      <div className="border-2 border-red-600 bg-red-50 p-4 mb-4">
+                        <p className="text-xs font-black uppercase tracking-widest text-red-700 mb-1">Motivo de Rechazo</p>
+                        <p className="text-sm text-red-800">{biz.rejection_reason || 'Sin motivo especificado'}</p>
+                        {biz.rejection_details && (
+                          <p className="text-xs text-red-700 mt-2">{biz.rejection_details}</p>
+                        )}
+                      </div>
+                      <ResubmitButton businessId={biz.id} />
+                    </CardContent>
+                  )}
                 </Card>
               )
             })}
@@ -302,7 +315,7 @@ async function BusinessTabContent({
         {(!communityPosts || communityPosts.length === 0) ? (
           <div className="text-center py-20 border-4 border-dashed border-black bg-white/50">
             <p className="text-2xl font-black uppercase italic tracking-tighter text-black/40">No tienes publicaciones</p>
-            <p className="font-bold text-black/60 mt-2">Comparte anuncios, eventos o empleos con tu comunidad</p>
+            <p className="font-bold text-black/60 mt-2">Comparte anuncios y eventos con tu comunidad</p>
             <Link href={`/${communitySlug}/community`} className="inline-block mt-6">
               <Button className="h-12 px-8 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all font-black uppercase">
                 <Plus className="h-6 w-6 mr-2" /> Crear Publicación
@@ -316,7 +329,6 @@ async function BusinessTabContent({
               const typeIcons = {
                 announcement: { icon: MessageSquare, label: 'Anuncio', color: 'bg-primary', urlPath: 'anuncios' },
                 event: { icon: Calendar, label: 'Evento', color: 'bg-accent', urlPath: 'eventos' },
-                job: { icon: Briefcase, label: 'Empleo', color: 'bg-secondary', urlPath: 'empleos' },
               }
               const typeInfo = typeIcons[post.type as keyof typeof typeIcons] || typeIcons.announcement
               const Icon = typeInfo.icon
@@ -340,18 +352,6 @@ async function BusinessTabContent({
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
                       <Badge variant={s.variant as any} className="text-[10px] px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">{s.label}</Badge>
-                      {post.type === 'job' && (post.metadata as JobMetadata)?.is_filled && (
-                        <Badge className="bg-gray-500 text-white border-black border rounded-none text-[10px] px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                          LLENO
-                        </Badge>
-                      )}
-                      {post.type === 'job' && commSlug && (
-                        <JobFilledToggle
-                          postId={post.id}
-                          isFilled={(post.metadata as JobMetadata)?.is_filled || false}
-                          variant="compact"
-                        />
-                      )}
                       <div className="flex gap-2">
                         {commSlug && (
                           <Link href={`/${commSlug}/community/${typeInfo.urlPath}/${post.id}/edit`}>
