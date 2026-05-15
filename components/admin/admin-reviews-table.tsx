@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,15 +19,16 @@ interface Review {
 }
 
 export function AdminReviewsTable({ communityId }: { communityId: string | null }) {
-  const [reviews, setReviews] = useState<Review[]>([])
+  const [allReviews, setAllReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [ratingFilter, setRatingFilter] = useState('all')
-  const supabase = createClient()
+  const supabaseRef = useRef(createClient())
 
   const fetchReviews = useCallback(async () => {
     setLoading(true)
     try {
+      const supabase = supabaseRef.current
       let query = (supabase as any)
         .from('business_reviews')
         .select(`
@@ -49,31 +50,29 @@ export function AdminReviewsTable({ communityId }: { communityId: string | null 
       const { data, error } = await query
       if (error) throw error
 
-      const transformed: Review[] = (data || []).map((r: any) => ({
+      setAllReviews((data || []).map((r: any) => ({
         id: r.id,
         rating: r.rating,
         review_text: r.review_text,
         created_at: r.created_at,
         businesses: r.businesses ? { name: r.businesses.name, slug: r.businesses.slug } : null,
         profiles: r.profiles ?? null,
-      }))
-
-      const filtered = search.trim()
-        ? transformed.filter((r) =>
-            r.businesses?.name.toLowerCase().includes(search.toLowerCase()) ||
-            r.review_text?.toLowerCase().includes(search.toLowerCase()) ||
-            r.profiles?.full_name?.toLowerCase().includes(search.toLowerCase())
-          )
-        : transformed
-
-      setReviews(filtered)
+      })))
     } catch (err) {
       console.error(err)
       toast.error('Error al cargar reseñas')
     } finally {
       setLoading(false)
     }
-  }, [ratingFilter, search, communityId])
+  }, [ratingFilter, communityId])
+
+  const reviews = search.trim()
+    ? allReviews.filter((r) =>
+        r.businesses?.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.review_text?.toLowerCase().includes(search.toLowerCase()) ||
+        r.profiles?.full_name?.toLowerCase().includes(search.toLowerCase())
+      )
+    : allReviews
 
   useEffect(() => { fetchReviews() }, [fetchReviews])
 
