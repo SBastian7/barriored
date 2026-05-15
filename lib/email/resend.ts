@@ -384,3 +384,37 @@ export async function sendErrorAlertEmail(
     `,
   })
 }
+
+export async function sendNewReviewEmail(
+  ownerEmail: string,
+  businessName: string,
+  rating: number,
+  reviewText: string | null,
+  communitySlug: string
+) {
+  const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating)
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `Nueva reseña en "${escapeHtml(businessName)}" — BarrioRed`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">
+          Barrio<span style="color: #c0392b;">Red</span>
+        </h1>
+        <p>Tu negocio <strong>${escapeHtml(businessName)}</strong> recibió una nueva reseña.</p>
+        <div style="background: #f5f5f5; border-left: 4px solid #c0392b; padding: 12px 16px; margin: 16px 0;">
+          <p style="font-size: 20px; margin: 0 0 8px;">${stars}</p>
+          ${reviewText ? `<p style="margin: 0; color: #333;">"${escapeHtml(reviewText)}"</p>` : ''}
+        </div>
+        <p>
+          <a href="https://barriored.co/${communitySlug}/directory"
+             style="background: #c0392b; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; display: inline-block;">
+            Ver mi negocio
+          </a>
+        </p>
+        <p style="color: #666; font-size: 12px; margin-top: 32px;">BarrioRed — Comunidad Parque Industrial, Pereira</p>
+      </div>
+    `,
+  })
+}

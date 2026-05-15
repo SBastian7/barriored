@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { sendNewReviewEmail } from '@/lib/email/resend';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // Validation schema for review submission
 const reviewSchema = z.object({
@@ -108,6 +110,30 @@ export async function POST(request: NextRequest) {
         { error: 'Error al publicar reseña. Intenta de nuevo.' },
         { status: 500 }
       );
+    }
+
+    // Fire-and-forget: notify business owner of new review
+    try {
+      const adminClient = createAdminClient();
+      const { data: biz } = await (supabase as any)
+        .from('businesses')
+        .select('name, owner_id, community_id')
+        .eq('id', business_id)
+        .single();
+
+      if (biz?.owner_id) {
+        const [ownerResult, commResult] = await Promise.all([
+          adminClient.auth.admin.getUserById(biz.owner_id),
+          (adminClient as any).from('communities').select('slug').eq('id', biz.community_id).single(),
+        ]);
+        const ownerEmail = (ownerResult as any).data?.user?.email;
+        const communitySlug = (commResult.data as any)?.slug || '';
+        if (ownerEmail) {
+          sendNewReviewEmail(ownerEmail, biz.name, rating, review_text || null, communitySlug).catch(console.error);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to send review notification:', e);
     }
 
     return NextResponse.json(
