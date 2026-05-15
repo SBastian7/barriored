@@ -37,11 +37,17 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
     return null
   }
 
-  const postTypeSpanish = {
+  const postTypePath = {
+    announcement: 'announcements',
+    event: 'events',
+    job: 'jobs',
+  }[postType] ?? 'announcements'
+
+  const postTypeEditPath = {
     announcement: 'anuncios',
     event: 'eventos',
     job: 'empleos',
-  }[postType]
+  }[postType] ?? 'anuncios'
 
   async function handleDelete() {
     setIsDeleting(true)
@@ -57,7 +63,7 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
       }
 
       toast.success('Publicación eliminada correctamente')
-      router.push(`/${communitySlug}/community/${postTypeSpanish}`)
+      router.push(`/${communitySlug}/community/${postTypePath}`)
       router.refresh()
     } catch (error: any) {
       toast.error(error.message || 'Error al eliminar publicación')
@@ -68,7 +74,7 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
 
   return (
     <div className="flex gap-3 flex-wrap">
-      <Link href={`/${communitySlug}/community/${postTypeSpanish}/${postId}/edit`}>
+      <Link href={`/${communitySlug}/community/${postTypeEditPath}/${postId}/edit`}>
         <Button
           variant="outline"
           size="sm"

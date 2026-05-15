@@ -62,8 +62,8 @@ export function PostEditForm({ post, communitySlug }: Props) {
                 description: 'Tu publicación ha sido actualizada correctamente.'
             })
 
-            const postTypeSpanish = post.type === 'announcement' ? 'anuncios' : post.type === 'event' ? 'eventos' : 'empleos'
-            router.push(`/${communitySlug}/community/${postTypeSpanish}/${post.id}`)
+            const postTypePath = post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : 'jobs'
+            router.push(`/${communitySlug}/community/${postTypePath}/${post.id}`)
             router.refresh()
         } catch (error: any) {
             toast.error('Error', {
