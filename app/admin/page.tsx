@@ -48,7 +48,7 @@ export default async function AdminDashboard() {
     .eq('id', user.id)
     .single() as { data: { role: string } | null }
 
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'moderator')) {
     redirect('/')
   }
 
