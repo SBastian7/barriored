@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DirectoryView } from '@/components/directory/directory-view'
 import { BannerRotator } from '@/components/banners/banner-rotator'
+import { BusinessesMap } from '@/components/business/businesses-map'
 
 function getDirectoryData(slug: string) {
   return unstable_cache(
@@ -25,7 +26,7 @@ function getDirectoryData(slug: string) {
 
       const { data: businesses } = await (admin as any)
         .from('businesses')
-        .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
+        .select('id, name, slug, description, photos, whatsapp, address, latitude, longitude, location, created_at, is_featured, categories(name, slug)')
         .eq('community_id', community.id)
         .eq('status', 'approved')
         .order('is_featured', { ascending: false })
@@ -77,6 +78,15 @@ export default async function DirectoryPage({
           <BannerRotator placement="directory" communityId={community.id} />
         </div>
 
+        <div className="mb-8">
+          <p className="text-xs font-black uppercase tracking-widest text-black/40 mb-3">
+            Negocios en el mapa
+          </p>
+          <BusinessesMap
+            businesses={businesses.map((b: any) => ({ ...b, communitySlug: slug }))}
+          />
+        </div>
+
         <DirectoryView
           businesses={businesses}
           categories={categories}
@@ -105,7 +115,7 @@ export default async function DirectoryPage({
     const ids = data.map((b: any) => b.id)
     const { data: full } = await supabase
       .from('businesses')
-      .select('id, name, slug, description, photos, whatsapp, address, location, created_at, is_featured, categories(name, slug)')
+      .select('id, name, slug, description, photos, whatsapp, address, latitude, longitude, location, created_at, is_featured, categories(name, slug)')
       .in('id', ids)
       .eq('status', 'approved')
     businesses = full ?? []
@@ -127,6 +137,15 @@ export default async function DirectoryPage({
 
       <div className="mb-8">
         <BannerRotator placement="directory" communityId={community.id} />
+      </div>
+
+      <div className="mb-8">
+        <p className="text-xs font-black uppercase tracking-widest text-black/40 mb-3">
+          Negocios en el mapa
+        </p>
+        <BusinessesMap
+          businesses={businesses.map((b: any) => ({ ...b, communitySlug: slug }))}
+        />
       </div>
 
       <DirectoryView
