@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -145,17 +145,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "banner_ads_rejected_by_fkey"
-            columns: ["rejected_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "banner_ads_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banner_ads_rejected_by_fkey"
+            columns: ["rejected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -392,7 +392,9 @@ export type Database = {
           is_verified: boolean | null
           last_analytics_update: string | null
           last_edited_by: string | null
+          latitude: number | null
           location: unknown
+          longitude: number | null
           name: string
           owner_id: string
           phone: string | null
@@ -430,7 +432,9 @@ export type Database = {
           is_verified?: boolean | null
           last_analytics_update?: string | null
           last_edited_by?: string | null
+          latitude?: number | null
           location?: unknown
+          longitude?: number | null
           name: string
           owner_id: string
           phone?: string | null
@@ -468,7 +472,9 @@ export type Database = {
           is_verified?: boolean | null
           last_analytics_update?: string | null
           last_edited_by?: string | null
+          latitude?: number | null
           location?: unknown
+          longitude?: number | null
           name?: string
           owner_id?: string
           phone?: string | null
@@ -707,6 +713,7 @@ export type Database = {
           logo_url: string | null
           municipality: string
           name: string
+          primary_admin_id: string | null
           primary_color: string | null
           slug: string
         }
@@ -721,6 +728,7 @@ export type Database = {
           logo_url?: string | null
           municipality: string
           name: string
+          primary_admin_id?: string | null
           primary_color?: string | null
           slug: string
         }
@@ -735,10 +743,19 @@ export type Database = {
           logo_url?: string | null
           municipality?: string
           name?: string
+          primary_admin_id?: string | null
           primary_color?: string | null
           slug?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "communities_primary_admin_id_fkey"
+            columns: ["primary_admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       community_alerts: {
         Row: {
@@ -808,6 +825,7 @@ export type Database = {
           is_pinned: boolean
           last_promoted_at: string | null
           metadata: Json
+          moderation_flag: boolean | null
           status: string
           title: string
           type: string
@@ -823,6 +841,7 @@ export type Database = {
           is_pinned?: boolean
           last_promoted_at?: string | null
           metadata?: Json
+          moderation_flag?: boolean | null
           status?: string
           title: string
           type: string
@@ -838,6 +857,7 @@ export type Database = {
           is_pinned?: boolean
           last_promoted_at?: string | null
           metadata?: Json
+          moderation_flag?: boolean | null
           status?: string
           title?: string
           type?: string
@@ -856,6 +876,54 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          community_id: string
+          created_at: string | null
+          id: string
+          reason: string
+          reported_entity_id: string
+          reported_entity_type: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string | null
+          id?: string
+          reason: string
+          reported_entity_id: string
+          reported_entity_type: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string | null
+          id?: string
+          reason?: string
+          reported_entity_id?: string
+          reported_entity_type?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -965,6 +1033,35 @@ export type Database = {
           },
         ]
       }
+      cron_reminder_logs: {
+        Row: {
+          id: string
+          post_id: string
+          sent_at: string | null
+          type: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          sent_at?: string | null
+          type: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          sent_at?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cron_reminder_logs_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       error_logs: {
         Row: {
           community_id: string | null
@@ -1052,6 +1149,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leads: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
       }
       marketplace_categories: {
         Row: {
@@ -1141,6 +1262,141 @@ export type Database = {
           },
         ]
       }
+      platform_config: {
+        Row: {
+          community_posts_enabled: boolean
+          id: string
+          marketplace_enabled: boolean
+          max_businesses_per_community: number | null
+          new_registrations_open: boolean
+          platform_name: string
+          singleton: boolean
+          support_email: string | null
+          support_phone: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          community_posts_enabled?: boolean
+          id?: string
+          marketplace_enabled?: boolean
+          max_businesses_per_community?: number | null
+          new_registrations_open?: boolean
+          platform_name?: string
+          singleton?: boolean
+          support_email?: string | null
+          support_phone?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          community_posts_enabled?: boolean
+          id?: string
+          marketplace_enabled?: boolean
+          max_businesses_per_community?: number | null
+          new_registrations_open?: boolean
+          platform_name?: string
+          singleton?: boolean
+          support_email?: string | null
+          support_phone?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_payment_config: {
+        Row: {
+          account_identifier: string | null
+          commission_rate: number | null
+          environment: string
+          gateway: string
+          id: string
+          is_enabled: boolean
+          private_key: string | null
+          public_key: string | null
+          updated_at: string | null
+          updated_by: string | null
+          webhook_secret: string | null
+        }
+        Insert: {
+          account_identifier?: string | null
+          commission_rate?: number | null
+          environment?: string
+          gateway: string
+          id?: string
+          is_enabled?: boolean
+          private_key?: string | null
+          public_key?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          webhook_secret?: string | null
+        }
+        Update: {
+          account_identifier?: string | null
+          commission_rate?: number | null
+          environment?: string
+          gateway?: string
+          id?: string
+          is_enabled?: boolean
+          private_key?: string | null
+          public_key?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_payment_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_policies: {
+        Row: {
+          content: string
+          id: string
+          title: string
+          type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          id?: string
+          title: string
+          type: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_policies_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1212,6 +1468,7 @@ export type Database = {
           is_active: boolean
           name: string
           phone: string | null
+          service_category_id: string | null
           sort_order: number
         }
         Insert: {
@@ -1224,6 +1481,7 @@ export type Database = {
           is_active?: boolean
           name: string
           phone?: string | null
+          service_category_id?: string | null
           sort_order?: number
         }
         Update: {
@@ -1236,6 +1494,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           phone?: string | null
+          service_category_id?: string | null
           sort_order?: number
         }
         Relationships: [
@@ -1244,6 +1503,13 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_services_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -1430,6 +1696,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_categories: {
+        Row: {
+          created_at: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       spatial_ref_sys: {
         Row: {
@@ -1830,6 +2126,14 @@ export type Database = {
         }[]
       }
       gettransactionid: { Args: never; Returns: unknown }
+      increment_business_analytics: {
+        Args: { p_business_id: string; p_event_type: string }
+        Returns: undefined
+      }
+      increment_daily_analytics: {
+        Args: { p_business_id: string; p_date: string; p_event_type: string }
+        Returns: undefined
+      }
       is_community_admin: {
         Args: { check_community_id: string }
         Returns: boolean
@@ -1869,7 +2173,9 @@ export type Database = {
           is_verified: boolean | null
           last_analytics_update: string | null
           last_edited_by: string | null
+          latitude: number | null
           location: unknown
+          longitude: number | null
           name: string
           owner_id: string
           phone: string | null
@@ -1960,7 +2266,9 @@ export type Database = {
           is_verified: boolean | null
           last_analytics_update: string | null
           last_edited_by: string | null
+          latitude: number | null
           location: unknown
+          longitude: number | null
           name: string
           owner_id: string
           phone: string | null

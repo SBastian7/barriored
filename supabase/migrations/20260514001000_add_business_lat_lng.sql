@@ -14,6 +14,9 @@ BEGIN
   IF NEW.location IS NOT NULL THEN
     NEW.latitude  := ST_Y(NEW.location::geometry);
     NEW.longitude := ST_X(NEW.location::geometry);
+  ELSE
+    NEW.latitude  := NULL;
+    NEW.longitude := NULL;
   END IF;
   RETURN NEW;
 END;
