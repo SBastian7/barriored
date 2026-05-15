@@ -14,6 +14,7 @@ import { BusinessRating } from '@/components/reviews/business-rating'
 import { ReviewList } from '@/components/reviews/review-list'
 import { WriteReviewButton } from '@/components/reviews/write-review-button'
 import { AnalyticsTracker } from '@/components/analytics/analytics-tracker'
+import { BusinessFavoriteButton } from '@/components/business/business-favorite-button'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; slug: string }> }) {
   const { community: commSlug, slug } = await params
@@ -52,6 +53,17 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
 
   // Fetch current user
   const { data: { user } } = await supabase.auth.getUser()
+
+  let isFavorited = false
+  if (user) {
+    const { data: fav } = await (supabase as any)
+      .from('business_favorites')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('business_id', business.id)
+      .single()
+    isFavorited = !!fav
+  }
 
   // Fetch review stats
   const { data: reviewStats } = await supabase
@@ -114,6 +126,11 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
 
       {/* Action buttons row */}
       <div className="flex justify-end gap-3 mb-6">
+        <BusinessFavoriteButton
+          businessId={business.id}
+          initialFavorited={isFavorited}
+          isLoggedIn={!!user}
+        />
         <ShareButton
           title={business.name}
           description={business.description || `${business.name} en BarrioRed`}

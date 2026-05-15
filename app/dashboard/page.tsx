@@ -36,10 +36,11 @@ export default async function DashboardPage({
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
 
-  const { count: favoritesCount } = await supabase
-    .from('classified_favorites')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
+  const [{ count: classifiedFavCount }, { count: bizFavCount }] = await Promise.all([
+    supabase.from('classified_favorites').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    (supabase as any).from('business_favorites').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+  ])
+  const favoritesCount = (classifiedFavCount || 0) + (bizFavCount || 0)
 
   // Fetch user's community slug
   const { data: profile } = await supabase
@@ -458,7 +459,7 @@ async function FavoritesTabContent({
 }) {
   const supabase = await createClient()
 
-  // Fetch user's favorites with classified data
+  // Fetch user's favorite classifieds
   const { data: favorites } = await supabase
     .from('classified_favorites')
     .select(`
@@ -483,6 +484,23 @@ async function FavoritesTabContent({
 
   const classifieds = favorites?.map(f => f.classifieds).filter(Boolean) || []
 
+  // Fetch user's favorite businesses
+  const { data: businessFavs } = await (supabase as any)
+    .from('business_favorites')
+    .select(`
+      id,
+      created_at,
+      businesses (
+        id, name, slug, photos, status,
+        categories(name),
+        communities(slug)
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  const favoritedBusinesses = businessFavs?.map((f: any) => f.businesses).filter(Boolean) || []
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -491,29 +509,58 @@ async function FavoritesTabContent({
           Favoritos
         </h2>
         <p className="text-sm text-black/60 uppercase tracking-widest">
-          {classifieds.length} clasificados guardados
+          {favoritedBusinesses.length} negocios · {classifieds.length} clasificados guardados
         </p>
       </div>
 
-      {/* Favorites grid */}
-      {classifieds.length > 0 ? (
-        <div className="grid gap-4">
-          {classifieds.map((classified: any) => (
-            <UserClassifiedCard
-              key={classified.id}
-              classified={classified}
-              communitySlug={communitySlug}
-            />
-          ))}
+      {/* Saved businesses */}
+      {favoritedBusinesses.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-black uppercase tracking-widest text-lg">Negocios Guardados</h3>
+          <div className="grid gap-4">
+            {favoritedBusinesses.map((biz: any) => (
+              <Link
+                key={biz.id}
+                href={`/${(biz.communities as any)?.slug}/business/${biz.slug}`}
+                className="flex items-center gap-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all bg-white p-4"
+              >
+                {biz.photos?.[0] && (
+                  <div className="w-16 h-16 border-2 border-black overflow-hidden shrink-0">
+                    <img src={biz.photos[0]} alt={biz.name} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-black uppercase tracking-tight">{biz.name}</p>
+                  <p className="text-xs text-black/50 uppercase tracking-widest">{(biz.categories as any)?.name}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      ) : (
+      )}
+
+      {/* Favorite classifieds */}
+      {classifieds.length > 0 ? (
+        <div className="space-y-4">
+          <h3 className="font-black uppercase tracking-widest text-lg">Clasificados Guardados</h3>
+          <div className="grid gap-4">
+            {classifieds.map((classified: any) => (
+              <UserClassifiedCard
+                key={classified.id}
+                classified={classified}
+                communitySlug={communitySlug}
+              />
+            ))}
+          </div>
+        </div>
+      ) : favoritedBusinesses.length === 0 ? (
         <div className="brutalist-card p-12 text-center space-y-4">
           <Heart className="h-16 w-16 mx-auto text-black/20" />
           <h3 className="font-heading font-black uppercase text-2xl">
             Sin Favoritos
           </h3>
           <p className="text-black/60">
-            Guarda clasificados que te interesen para encontrarlos fácilmente después
+            Guarda negocios y clasificados que te interesen para encontrarlos fácilmente después
           </p>
           <Link href={`/${communitySlug}/marketplace`}>
             <Button className="brutalist-button bg-primary inline-flex gap-2">
@@ -522,7 +569,7 @@ async function FavoritesTabContent({
             </Button>
           </Link>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
