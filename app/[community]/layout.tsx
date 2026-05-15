@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CommunityProvider } from '@/components/community/community-provider'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
+import { PushNotificationPrompt } from '@/components/community/push-notification-prompt'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string }> }) {
   const { community: slug } = await params
@@ -55,6 +56,7 @@ export default async function CommunityLayout({
         <TopBar />
         <main>{children}</main>
         <BottomNav />
+        <PushNotificationPrompt />
       </div>
     </CommunityProvider>
   )

@@ -26,7 +26,7 @@ const sections = [
     icon: ShoppingBag,
     description: 'Compra y vende en tu barrio',
     path: '/marketplace',
-    enabled: false,
+    enabled: true,
     color: 'bg-secondary',
     iconColor: 'text-secondary-foreground',
   },

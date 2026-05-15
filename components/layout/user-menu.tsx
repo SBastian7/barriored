@@ -109,7 +109,7 @@ export function UserMenu() {
             Mi Panel
           </Link>
         </DropdownMenuItem>
-        {userState.role === 'admin' && (
+        {(userState.role === 'admin' || userState.role === 'moderator') && (
           <DropdownMenuItem asChild>
             <Link href="/admin" className="flex items-center gap-2 w-full">
               <Shield className="h-4 w-4" />
