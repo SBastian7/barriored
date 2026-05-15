@@ -8,8 +8,10 @@ type BannerUpdate = Database['public']['Tables']['banner_ads']['Update']
 type BannerStatus = 'requested' | 'active' | 'paused' | 'expired' | 'rejected'
 
 interface UpdateBannerStatusRequest {
-  status: BannerStatus
+  status?: BannerStatus
   rejection_reason?: string
+  starts_at?: string
+  ends_at?: string
 }
 
 // Type guard for banner with community_id
@@ -71,32 +73,33 @@ export async function PATCH(
     }
 
     // Parse and validate request body
-    const body = await request.json() as Partial<UpdateBannerStatusRequest>
-
-    if (!body.status) {
-      return NextResponse.json(
-        { error: 'El campo status es requerido' },
-        { status: 400 }
-      )
-    }
+    const body = await request.json() as UpdateBannerStatusRequest
 
     const allowedStatuses: BannerStatus[] = ['requested', 'active', 'paused', 'expired', 'rejected']
 
-    if (!allowedStatuses.includes(body.status)) {
+    if (body.status !== undefined) {
+      if (!allowedStatuses.includes(body.status)) {
+        return NextResponse.json(
+          { error: `Estado inválido. Debe ser uno de: ${allowedStatuses.join(', ')}` },
+          { status: 400 }
+        )
+      }
+      if (body.status === 'rejected' && !body.rejection_reason?.trim()) {
+        return NextResponse.json(
+          { error: 'Se requiere una razón de rechazo' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (!body.status && !body.starts_at && !body.ends_at) {
       return NextResponse.json(
-        { error: `Estado inválido. Debe ser uno de: ${allowedStatuses.join(', ')}` },
+        { error: 'Se requiere al menos un campo para actualizar' },
         { status: 400 }
       )
     }
 
-    if (body.status === 'rejected' && !body.rejection_reason?.trim()) {
-      return NextResponse.json(
-        { error: 'Se requiere una razón de rechazo' },
-        { status: 400 }
-      )
-    }
-
-    const { status, rejection_reason } = body as UpdateBannerStatusRequest
+    const { status, rejection_reason } = body
 
     // Get banner and verify community access
     const { data: banner, error: fetchError } = await supabase
@@ -131,15 +134,17 @@ export async function PATCH(
       )
     }
 
-    // Update banner status
+    // Update banner status and/or schedule
     const bannerUpdate: BannerUpdate = {
-      status,
       updated_at: new Date().toISOString(),
+      ...(status !== undefined && { status }),
       ...(status === 'rejected' && {
         rejection_reason: rejection_reason!.trim(),
         rejected_at: new Date().toISOString(),
         rejected_by: user.id
-      })
+      }),
+      ...(body.starts_at !== undefined && { starts_at: body.starts_at }),
+      ...(body.ends_at !== undefined && { ends_at: body.ends_at }),
     }
 
     const { data: updated, error: updateError } = await supabase
