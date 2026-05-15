@@ -24,6 +24,7 @@ import {
   Image as ImageIcon,
   DollarSign,
   AlertCircle,
+  Star,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -42,6 +43,7 @@ const navItems = [
   { href: '/admin/banners', label: 'Banners', icon: ImageIcon, section: 'monetization' },
   { href: '/admin/payments', label: 'Pagos', icon: DollarSign, section: 'monetization' },
   { href: '/admin/review-flags', label: 'Reseñas Reportadas', icon: AlertCircle, section: 'monetization' },
+  { href: '/admin/reviews', label: 'Reseñas', icon: Star, section: 'monetization' },
   { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3, divider: true },
   { href: '/admin/engagement', label: 'Engagement', icon: Activity },
   { href: '/admin/communities', label: 'Comunidades', icon: Globe, roles: ['super_admin'], divider: true },

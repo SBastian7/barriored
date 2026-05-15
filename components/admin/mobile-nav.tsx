@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, BarChart3, Building2, Users, FolderTree, Bell } from 'lucide-react'
+import { Menu, X, BarChart3, Building2, Users, FolderTree, Bell, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -20,6 +20,7 @@ const navItems = [
   { href: '/admin/categories', label: 'Categorías', icon: FolderTree },
   { href: '/admin/alerts', label: 'Alertas', icon: Bell },
   { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3 },
+  { href: '/admin/reviews', label: 'Reseñas', icon: Star },
 ]
 
 export function MobileNav() {
