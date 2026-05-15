@@ -71,6 +71,8 @@ export default function AdminSubscriptionDetailPage() {
   const [loading, setLoading] = useState(true)
   const [showActivateForm, setShowActivateForm] = useState(false)
   const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const [showRevokeForm, setShowRevokeForm] = useState(false)
+  const [revokeReason, setRevokeReason] = useState('')
 
   // Activate form state
   const [activateData, setActivateData] = useState({
@@ -161,6 +163,29 @@ export default function AdminSubscriptionDetailPage() {
       fetchSubscriptionData()
     } catch (err: any) {
       toast.error(err.message || 'Error al activar suscripción')
+    }
+  }
+
+  async function handleRevokeSubscription() {
+    if (!revokeReason.trim()) {
+      toast.error('Ingresa el motivo de la revocación')
+      return
+    }
+    try {
+      const res = await fetch(`/api/admin/subscriptions/${id}/revoke`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancellation_reason: revokeReason.trim() })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Error al revocar')
+      }
+      toast.success('Suscripción revocada')
+      setShowRevokeForm(false)
+      fetchSubscriptionData()
+    } catch (err: any) {
+      toast.error(err.message || 'Error al revocar suscripción')
     }
   }
 
@@ -486,6 +511,58 @@ export default function AdminSubscriptionDetailPage() {
                     </Button>
                     <Button
                       onClick={() => setShowPaymentForm(false)}
+                      variant="outline"
+                      className="brutalist-button"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {subscription.status === 'active' && (
+          <Card className="brutalist-card border-red-600">
+            <CardHeader>
+              <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2 text-red-600">
+                <XCircle className="w-4 h-4" />
+                Revocar Acceso Premium
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!showRevokeForm ? (
+                <Button
+                  onClick={() => setShowRevokeForm(true)}
+                  variant="outline"
+                  className="brutalist-button border-red-600 text-red-600 hover:bg-red-50 w-full"
+                >
+                  Revocar Premium
+                </Button>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-widest mb-2 block">
+                      Motivo de Revocación
+                    </label>
+                    <textarea
+                      value={revokeReason}
+                      onChange={(e) => setRevokeReason(e.target.value)}
+                      placeholder="Ej: Incumplimiento de términos, solicitud del negocio..."
+                      className="brutalist-input w-full min-h-20"
+                      maxLength={300}
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleRevokeSubscription}
+                      className="brutalist-button bg-red-600 text-white hover:bg-red-700 flex-1"
+                    >
+                      Confirmar Revocación
+                    </Button>
+                    <Button
+                      onClick={() => setShowRevokeForm(false)}
                       variant="outline"
                       className="brutalist-button"
                     >
