@@ -61,16 +61,14 @@ export async function PATCH(
         return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { data, error } = await (supabase as any)
+    const { error: updateError } = await supabase
         .from('community_posts')
-        .update({ ...parsed.data, metadata: parsed.data.metadata as any, updated_at: new Date().toISOString() })
+        .update({ ...parsed.data, updated_at: new Date().toISOString() })
         .eq('id', id)
-        .select()
-        .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
 
-    return NextResponse.json(data)
+    return NextResponse.json({ success: true })
 }
 
 export async function DELETE(
