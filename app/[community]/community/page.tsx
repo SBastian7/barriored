@@ -4,7 +4,6 @@ import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { AlertsBanner } from '@/components/community/alerts-banner'
 import { AnnouncementsSection } from '@/components/community/announcements-section'
 import { EventsSection } from '@/components/community/events-section'
-import { JobsSection } from '@/components/community/jobs-section'
 import { PromotionsSection } from '@/components/community/promotions-section'
 import { CommunityCTA } from '@/components/community/community-cta'
 import type { CommunityPost, CommunityAlert, AlertSeverity } from '@/lib/types'
@@ -34,7 +33,7 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
     if (!community) notFound()
 
     // Parallel data fetching for initial hub view
-    const [alertsRes, announcementsRes, eventsRes, jobsRes, promotionsRes] = await Promise.all([
+    const [alertsRes, announcementsRes, eventsRes, promotionsRes, userRes] = await Promise.all([
         supabase.from('community_alerts')
             .select('*')
             .eq('community_id', community.id)
@@ -62,19 +61,28 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
             .select('*, profiles(full_name, avatar_url)')
             .eq('community_id', community.id)
             .eq('status', 'approved')
-            .eq('type', 'job')
-            .not('metadata->>is_filled', 'eq', 'true')
-            .order('created_at', { ascending: false })
-            .limit(3),
-
-        supabase.from('community_posts')
-            .select('*, profiles(full_name, avatar_url)')
-            .eq('community_id', community.id)
-            .eq('status', 'approved')
             .eq('type', 'promotion')
             .order('created_at', { ascending: false })
             .limit(3),
+
+        supabase.auth.getUser(),
     ])
+
+    const user = userRes.data.user
+    const allPostIds = [
+        ...(announcementsRes.data ?? []),
+        ...(eventsRes.data ?? []),
+    ].map((p: any) => p.id)
+
+    let favoritedPostIds = new Set<string>()
+    if (user && allPostIds.length > 0) {
+        const { data: favs } = await (supabase as any)
+            .from('community_post_favorites')
+            .select('post_id')
+            .eq('user_id', user.id)
+            .in('post_id', allPostIds)
+        favoritedPostIds = new Set((favs || []).map((f: any) => f.post_id))
+    }
 
     return (
         <div className="container mx-auto max-w-5xl px-4 py-8 pb-24 space-y-12">
@@ -100,9 +108,8 @@ export default async function CommunityHubPage({ params }: { params: Promise<{ c
 
                 {/* Content Sections */}
                 <div className="grid gap-20">
-                    <AnnouncementsSection posts={(announcementsRes.data ?? []) as any} communitySlug={slug} />
-                    <EventsSection posts={(eventsRes.data ?? []) as any} communitySlug={slug} />
-                    <JobsSection posts={(jobsRes.data ?? []) as any} communitySlug={slug} />
+                    <AnnouncementsSection posts={(announcementsRes.data ?? []) as any} communitySlug={slug} favoritedPostIds={favoritedPostIds} isLoggedIn={!!user} />
+                    <EventsSection posts={(eventsRes.data ?? []) as any} communitySlug={slug} favoritedPostIds={favoritedPostIds} isLoggedIn={!!user} />
                     <PromotionsSection posts={(promotionsRes.data ?? []) as any} communitySlug={slug} />
                 </div>
 

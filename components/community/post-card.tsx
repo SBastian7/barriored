@@ -1,15 +1,26 @@
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Briefcase, Pin, User, CheckCircle, Building } from 'lucide-react'
+import { Calendar, MapPin, Pin, User, Building } from 'lucide-react'
 import { ImageLoader } from '@/components/ui/image-loader'
-import type { CommunityPost, EventMetadata, JobMetadata, PromotionMetadata } from '@/lib/types'
+import { PostFavoriteButton } from '@/components/community/post-favorite-button'
+import type { CommunityPost, EventMetadata, PromotionMetadata } from '@/lib/types'
 
-export function PostCard({ post, communitySlug }: { post: CommunityPost; communitySlug: string }) {
-    const typeLabels = { announcement: 'Anuncio', event: 'Evento', job: 'Empleo', promotion: 'Promoción' }
-    const typeColors = { announcement: 'default', event: 'outline', job: 'secondary', promotion: 'secondary' } as const
+export function PostCard({
+    post,
+    communitySlug,
+    isFavorited = false,
+    isLoggedIn = false,
+}: {
+    post: CommunityPost
+    communitySlug: string
+    isFavorited?: boolean
+    isLoggedIn?: boolean
+}) {
+    const typeLabels = { announcement: 'Anuncio', event: 'Evento', promotion: 'Promoción' }
+    const typeColors = { announcement: 'default', event: 'outline', promotion: 'secondary' } as const
 
-    const linkPath = post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : post.type === 'job' ? 'jobs' : 'promotions'
+    const linkPath = post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : 'promotions'
 
     return (
         <Link href={`/${communitySlug}/community/${linkPath}/${post.id}`}>
@@ -34,11 +45,6 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
                         {post.is_pinned && (
                             <Badge variant="outline" className="gap-1 border-black border uppercase tracking-widest text-[10px] bg-yellow-200">
                                 <Pin className="h-3 w-3" /> Fijado
-                            </Badge>
-                        )}
-                        {post.type === 'job' && (post.metadata as JobMetadata)?.is_filled && (
-                            <Badge className="gap-1 border-black border uppercase tracking-widest text-[10px] bg-gray-500 text-white">
-                                <CheckCircle className="h-3 w-3" /> Lleno
                             </Badge>
                         )}
                         {post.type === 'promotion' && 'linked_business_id' in post.metadata && post.metadata.linked_business_id && (
@@ -78,20 +84,6 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
                             </div>
                         )}
 
-                        {post.type === 'job' && (
-                            <div className="flex flex-col gap-1.5 p-2 bg-secondary/5 border border-black/10 text-xs font-bold text-black/70">
-                                <span className="flex items-center gap-2">
-                                    <Briefcase className="h-3.5 w-3.5 text-secondary-foreground" />
-                                    {(post.metadata as JobMetadata).category}
-                                </span>
-                                {(post.metadata as JobMetadata).salary_range && (
-                                    <span className="text-secondary-foreground font-black uppercase tracking-tight pl-5">
-                                        {(post.metadata as JobMetadata).salary_range}
-                                    </span>
-                                )}
-                            </div>
-                        )}
-
                         {/* Author + date footer */}
                         <div className="flex items-center gap-2 pt-3 border-t-2 border-dashed border-black/10 text-[10px] font-black uppercase tracking-widest text-black/40">
                             <div className="w-5 h-5 rounded-none border border-black bg-accent/20 flex items-center justify-center overflow-hidden">
@@ -112,6 +104,14 @@ export function PostCard({ post, communitySlug }: { post: CommunityPost; communi
                             <span className="ml-auto flex-shrink-0">
                                 {new Date(post.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
                             </span>
+                        </div>
+
+                        <div className="flex justify-end mt-2">
+                            <PostFavoriteButton
+                                postId={post.id}
+                                initialFavorited={isFavorited}
+                                isLoggedIn={isLoggedIn}
+                            />
                         </div>
                     </div>
                 </CardContent>

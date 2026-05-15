@@ -36,11 +36,12 @@ export default async function DashboardPage({
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
 
-  const [{ count: classifiedFavCount }, { count: bizFavCount }] = await Promise.all([
+  const [{ count: classifiedFavCount }, { count: bizFavCount }, { count: postFavCount }] = await Promise.all([
     supabase.from('classified_favorites').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     (supabase as any).from('business_favorites').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    (supabase as any).from('community_post_favorites').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
   ])
-  const favoritesCount = (classifiedFavCount || 0) + (bizFavCount || 0)
+  const favoritesCount = (classifiedFavCount || 0) + (bizFavCount || 0) + (postFavCount || 0)
 
   // Fetch user's community slug
   const { data: profile } = await supabase
@@ -501,6 +502,22 @@ async function FavoritesTabContent({
 
   const favoritedBusinesses = businessFavs?.map((f: any) => f.businesses).filter(Boolean) || []
 
+  // Fetch user's favorite community posts
+  const { data: postFavs } = await (supabase as any)
+    .from('community_post_favorites')
+    .select(`
+      id,
+      created_at,
+      community_posts (
+        id, title, type, status,
+        communities(slug, name)
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  const favoritedPosts = postFavs?.map((f: any) => f.community_posts).filter(Boolean) || []
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -509,7 +526,7 @@ async function FavoritesTabContent({
           Favoritos
         </h2>
         <p className="text-sm text-black/60 uppercase tracking-widest">
-          {favoritedBusinesses.length} negocios · {classifieds.length} clasificados guardados
+          {favoritedBusinesses.length} negocios · {classifieds.length} clasificados · {favoritedPosts.length} publicaciones guardadas
         </p>
       </div>
 
@@ -539,6 +556,33 @@ async function FavoritesTabContent({
         </div>
       )}
 
+      {/* Saved community posts */}
+      {favoritedPosts.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-black uppercase tracking-widest text-lg">Publicaciones Guardadas</h3>
+          <div className="grid gap-4">
+            {favoritedPosts.map((post: any) => {
+              const commSlug = (post.communities as any)?.slug
+              const pathSegment = post.type === 'event' ? 'events' : 'announcements'
+              return (
+                <Link
+                  key={post.id}
+                  href={commSlug ? `/${commSlug}/community/${pathSegment}/${post.id}` : '#'}
+                  className="flex items-center gap-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-white p-4"
+                >
+                  <div>
+                    <p className="font-black uppercase tracking-tight">{post.title}</p>
+                    <p className="text-xs text-black/50 uppercase tracking-widest">
+                      {post.type === 'event' ? 'Evento' : 'Anuncio'} · {(post.communities as any)?.name}
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Favorite classifieds */}
       {classifieds.length > 0 ? (
         <div className="space-y-4">
@@ -553,7 +597,7 @@ async function FavoritesTabContent({
             ))}
           </div>
         </div>
-      ) : favoritedBusinesses.length === 0 ? (
+      ) : favoritedBusinesses.length === 0 && favoritedPosts.length === 0 ? (
         <div className="brutalist-card p-12 text-center space-y-4">
           <Heart className="h-16 w-16 mx-auto text-black/20" />
           <h3 className="font-heading font-black uppercase text-2xl">

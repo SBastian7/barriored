@@ -3,7 +3,17 @@ import { PostCard } from './post-card'
 import { ArrowRight, Megaphone } from 'lucide-react'
 import type { CommunityPost } from '@/lib/types'
 
-export function AnnouncementsSection({ posts, communitySlug }: { posts: CommunityPost[]; communitySlug: string }) {
+export function AnnouncementsSection({
+    posts,
+    communitySlug,
+    favoritedPostIds = new Set(),
+    isLoggedIn = false,
+}: {
+    posts: CommunityPost[]
+    communitySlug: string
+    favoritedPostIds?: Set<string>
+    isLoggedIn?: boolean
+}) {
     if (posts.length === 0) return null
 
     return (
@@ -25,7 +35,13 @@ export function AnnouncementsSection({ posts, communitySlug }: { posts: Communit
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {posts.map((post) => (
-                    <PostCard key={post.id} post={post} communitySlug={communitySlug} />
+                    <PostCard
+                        key={post.id}
+                        post={post}
+                        communitySlug={communitySlug}
+                        isFavorited={favoritedPostIds.has(post.id)}
+                        isLoggedIn={isLoggedIn}
+                    />
                 ))}
             </div>
         </section>
