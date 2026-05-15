@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Loader2, Search, Image as ImageIcon, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Eye, Loader2, Search, Image as ImageIcon, Calendar, CheckCircle, XCircle, Clock, PauseCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface BannerAd {
@@ -18,7 +18,7 @@ interface BannerAd {
   image_url: string
   placement: 'homepage' | 'directory'
   link_url: string | null
-  status: 'requested' | 'approved' | 'rejected' | 'paused'
+  status: 'requested' | 'active' | 'paused' | 'expired' | 'rejected'
   requested_at: string
   approved_at: string | null
   starts_at: string | null
@@ -43,8 +43,8 @@ const STATUS_CONFIG = {
     variant: 'secondary' as const,
     color: 'text-secondary'
   },
-  approved: {
-    label: 'Aprobado',
+  active: {
+    label: 'Activo',
     icon: CheckCircle,
     variant: 'default' as const,
     color: 'text-primary'
@@ -57,9 +57,15 @@ const STATUS_CONFIG = {
   },
   paused: {
     label: 'Pausado',
-    icon: Clock,
+    icon: PauseCircle,
     variant: 'secondary' as const,
     color: 'text-gray-600'
+  },
+  expired: {
+    label: 'Expirado',
+    icon: Clock,
+    variant: 'outline' as const,
+    color: 'text-gray-400'
   }
 }
 
@@ -73,7 +79,7 @@ export function BannersTable({ communityId }: BannersTableProps) {
 
   // Stats
   const totalRequested = banners.filter(b => b.status === 'requested').length
-  const totalApproved = banners.filter(b => b.status === 'approved').length
+  const totalApproved = banners.filter(b => b.status === 'active').length
   const totalRejected = banners.filter(b => b.status === 'rejected').length
   const totalPaused = banners.filter(b => b.status === 'paused').length
 
@@ -213,9 +219,10 @@ export function BannersTable({ communityId }: BannersTableProps) {
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="requested">Pendientes</SelectItem>
-            <SelectItem value="approved">Aprobados</SelectItem>
+            <SelectItem value="active">Activos</SelectItem>
             <SelectItem value="rejected">Rechazados</SelectItem>
             <SelectItem value="paused">Pausados</SelectItem>
+            <SelectItem value="expired">Expirados</SelectItem>
           </SelectContent>
         </Select>
 
@@ -303,7 +310,7 @@ export function BannersTable({ communityId }: BannersTableProps) {
                       </div>
 
                       {/* Dates */}
-                      {banner.status === 'approved' && (banner.starts_at || banner.ends_at) && (
+                      {banner.status === 'active' && (banner.starts_at || banner.ends_at) && (
                         <div className="flex items-center gap-4 text-xs text-gray-600 mt-2">
                           {banner.starts_at && (
                             <div className="flex items-center gap-1">
