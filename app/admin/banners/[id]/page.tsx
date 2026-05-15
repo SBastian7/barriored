@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, ArrowLeft, Image as ImageIcon, Clock, CheckCircle, XCircle, Pause, Play, Trash2 } from 'lucide-react'
+import { Loader2, ArrowLeft, Image as ImageIcon, Clock, CheckCircle, XCircle, Pause, Play, Trash2, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
@@ -18,7 +18,7 @@ interface BannerAd {
   image_url: string
   placement: 'homepage' | 'directory'
   link_url: string | null
-  status: 'requested' | 'approved' | 'rejected' | 'paused'
+  status: 'requested' | 'active' | 'paused' | 'expired' | 'rejected'
   requested_at: string
   approved_at: string | null
   starts_at: string | null
@@ -41,23 +41,29 @@ const STATUS_CONFIG = {
     variant: 'secondary' as const,
     color: 'text-secondary bg-secondary/10'
   },
-  approved: {
-    label: 'Aprobado',
+  active: {
+    label: 'Activo',
     icon: CheckCircle,
     variant: 'default' as const,
     color: 'text-primary bg-primary/10'
-  },
-  rejected: {
-    label: 'Rechazado',
-    icon: XCircle,
-    variant: 'destructive' as const,
-    color: 'text-red-600 bg-red-50'
   },
   paused: {
     label: 'Pausado',
     icon: Pause,
     variant: 'secondary' as const,
     color: 'text-gray-600 bg-gray-50'
+  },
+  expired: {
+    label: 'Expirado',
+    icon: Clock,
+    variant: 'outline' as const,
+    color: 'text-gray-400 bg-gray-50'
+  },
+  rejected: {
+    label: 'Rechazado',
+    icon: XCircle,
+    variant: 'destructive' as const,
+    color: 'text-red-600 bg-red-50'
   }
 }
 
@@ -74,13 +80,17 @@ export default function AdminBannerDetailPage() {
 
   // Approve form state
   const [approveData, setApproveData] = useState({
-    duration_days: '30',
+    starts_at: new Date().toISOString().split('T')[0],
+    ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     amount: '',
     payment_method: 'manual_transfer'
   })
 
   // Reject form state
   const [rejectReason, setRejectReason] = useState('')
+
+  const [showScheduleForm, setShowScheduleForm] = useState(false)
+  const [scheduleData, setScheduleData] = useState({ starts_at: '', ends_at: '' })
 
   useEffect(() => {
     fetchBanner()
@@ -129,17 +139,22 @@ export default function AdminBannerDetailPage() {
       toast.error('Ingresa el monto del pago')
       return
     }
+    if (!approveData.starts_at || !approveData.ends_at) {
+      toast.error('Ingresa las fechas de inicio y fin')
+      return
+    }
+    if (new Date(approveData.ends_at) <= new Date(approveData.starts_at)) {
+      toast.error('La fecha de fin debe ser posterior a la fecha de inicio')
+      return
+    }
 
     try {
-      const startsAt = new Date().toISOString()
-      const endsAt = new Date(Date.now() + parseInt(approveData.duration_days) * 24 * 60 * 60 * 1000).toISOString()
-
       const res = await fetch(`/api/admin/banners/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          startsAt,
-          endsAt,
+          startsAt: new Date(approveData.starts_at).toISOString(),
+          endsAt: new Date(approveData.ends_at).toISOString(),
           paymentAmount: parseFloat(approveData.amount),
           paymentMethod: approveData.payment_method
         })
@@ -209,7 +224,7 @@ export default function AdminBannerDetailPage() {
       const res = await fetch(`/api/admin/banners/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'approved' })
+        body: JSON.stringify({ status: 'active' })
       })
 
       if (!res.ok) throw new Error('Error al reanudar banner')
@@ -237,6 +252,33 @@ export default function AdminBannerDetailPage() {
       router.push('/admin/banners')
     } catch (err) {
       toast.error('Error al eliminar banner')
+    }
+  }
+
+  async function handleUpdateSchedule() {
+    if (!scheduleData.starts_at || !scheduleData.ends_at) {
+      toast.error('Ingresa ambas fechas')
+      return
+    }
+    if (new Date(scheduleData.ends_at) <= new Date(scheduleData.starts_at)) {
+      toast.error('La fecha de fin debe ser posterior')
+      return
+    }
+    try {
+      const res = await fetch(`/api/admin/banners/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          starts_at: new Date(scheduleData.starts_at).toISOString(),
+          ends_at: new Date(scheduleData.ends_at).toISOString(),
+        })
+      })
+      if (!res.ok) throw new Error('Error al actualizar fechas')
+      toast.success('Fechas actualizadas')
+      setShowScheduleForm(false)
+      fetchBanner()
+    } catch (err) {
+      toast.error('Error al actualizar fechas')
     }
   }
 
@@ -447,21 +489,29 @@ export default function AdminBannerDetailPage() {
                   </Button>
                 ) : (
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-xs font-bold uppercase tracking-widest mb-2 block">
-                        Duración (Días)
-                      </label>
-                      <select
-                        value={approveData.duration_days}
-                        onChange={(e) => setApproveData({ ...approveData, duration_days: e.target.value })}
-                        className="brutalist-input w-full"
-                      >
-                        <option value="7">7 Días</option>
-                        <option value="15">15 Días</option>
-                        <option value="30">30 Días</option>
-                        <option value="60">60 Días</option>
-                        <option value="90">90 Días</option>
-                      </select>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block">
+                          Fecha Inicio
+                        </label>
+                        <input
+                          type="date"
+                          value={approveData.starts_at}
+                          onChange={(e) => setApproveData({ ...approveData, starts_at: e.target.value })}
+                          className="brutalist-input w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block">
+                          Fecha Fin
+                        </label>
+                        <input
+                          type="date"
+                          value={approveData.ends_at}
+                          onChange={(e) => setApproveData({ ...approveData, ends_at: e.target.value })}
+                          className="brutalist-input w-full"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -566,41 +616,94 @@ export default function AdminBannerDetailPage() {
         )}
 
         {/* Action Buttons - Approved/Paused */}
-        {(banner.status === 'approved' || banner.status === 'paused') && (
+        {(banner.status === 'active' || banner.status === 'paused') && (
           <Card className="brutalist-card">
             <CardHeader>
               <CardTitle className="font-black uppercase tracking-widest">
                 Acciones
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex gap-3">
-              {banner.status === 'approved' && (
+            <CardContent className="space-y-4">
+              <div className="flex gap-3">
+                {banner.status === 'active' && (
+                  <Button
+                    onClick={handlePauseBanner}
+                    variant="outline"
+                    className="brutalist-button gap-2"
+                  >
+                    <Pause className="w-4 h-4" />
+                    Pausar Banner
+                  </Button>
+                )}
+                {banner.status === 'paused' && (
+                  <Button
+                    onClick={handleResumeBanner}
+                    className="brutalist-button bg-primary text-white hover:bg-primary/90 gap-2"
+                  >
+                    <Play className="w-4 h-4" />
+                    Reanudar Banner
+                  </Button>
+                )}
                 <Button
-                  onClick={handlePauseBanner}
+                  onClick={handleDeleteBanner}
                   variant="outline"
-                  className="brutalist-button gap-2"
+                  className="brutalist-button border-red-600 text-red-600 hover:bg-red-50 gap-2"
                 >
-                  <Pause className="w-4 h-4" />
-                  Pausar Banner
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar
                 </Button>
-              )}
-              {banner.status === 'paused' && (
-                <Button
-                  onClick={handleResumeBanner}
-                  className="brutalist-button bg-primary text-white hover:bg-primary/90 gap-2"
-                >
-                  <Play className="w-4 h-4" />
-                  Reanudar Banner
-                </Button>
-              )}
-              <Button
-                onClick={handleDeleteBanner}
-                variant="outline"
-                className="brutalist-button border-red-600 text-red-600 hover:bg-red-50 gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Eliminar
-              </Button>
+              </div>
+
+              {/* Edit Schedule */}
+              <div className="border-t-2 border-black pt-4">
+                {!showScheduleForm ? (
+                  <Button
+                    onClick={() => {
+                      setScheduleData({
+                        starts_at: banner.starts_at ? banner.starts_at.split('T')[0] : '',
+                        ends_at: banner.ends_at ? banner.ends_at.split('T')[0] : '',
+                      })
+                      setShowScheduleForm(true)
+                    }}
+                    variant="outline"
+                    className="brutalist-button gap-2"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Editar Fechas
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block">Inicio</label>
+                        <input
+                          type="date"
+                          value={scheduleData.starts_at}
+                          onChange={(e) => setScheduleData({ ...scheduleData, starts_at: e.target.value })}
+                          className="brutalist-input w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block">Fin</label>
+                        <input
+                          type="date"
+                          value={scheduleData.ends_at}
+                          onChange={(e) => setScheduleData({ ...scheduleData, ends_at: e.target.value })}
+                          className="brutalist-input w-full"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button onClick={handleUpdateSchedule} className="brutalist-button bg-primary text-white flex-1">
+                        Guardar Fechas
+                      </Button>
+                      <Button onClick={() => setShowScheduleForm(false)} variant="outline" className="brutalist-button">
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
