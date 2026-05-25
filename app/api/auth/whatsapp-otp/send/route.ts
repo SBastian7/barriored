@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { whatsappOtpSendSchema } from '@/lib/validations/auth'
-import { sendWhatsAppOTP } from '@/lib/twilio'
+import { sendOTP } from '@/lib/whatsapp-otp'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -10,12 +10,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    await sendWhatsAppOTP(parsed.data.phone)
+    await sendOTP(parsed.data.phone)
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    // Twilio rate limit
     if (err?.status === 429) {
-      return NextResponse.json({ error: 'Demasiados intentos. Espera antes de pedir otro codigo.' }, { status: 429 })
+      return NextResponse.json({ error: err.message }, { status: 429 })
     }
     console.error('[whatsapp-otp/send]', err)
     return NextResponse.json({ error: 'Error enviando OTP' }, { status: 500 })
