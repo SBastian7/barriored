@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { whatsappOtpVerifySchema } from '@/lib/validations/auth'
 import { verifyOTP } from '@/lib/whatsapp-otp'
+import { normalizeColombianPhone } from '@/lib/twilio'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -22,11 +23,14 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Check if user exists with this phone
+  const e164 = normalizeColombianPhone(phone)
+
+  // Check if user exists with this phone (try both formats for compatibility)
   const { data: existingProfile } = await supabaseAdmin
     .from('profiles')
     .select('id')
-    .eq('phone', phone)
+    .or(`phone.eq.${e164},phone.eq.${phone}`)
+    .limit(1)
     .single()
 
   let userId: string
@@ -48,15 +52,18 @@ export async function POST(request: Request) {
     // Populate profile with signup metadata if provided
     const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
       id: userId,
-      phone,
+      phone: e164,
       full_name: full_name || null,
       community_id: community_id || null,
     }, { onConflict: 'id' })
     if (profileError) console.error('[whatsapp-otp/verify] profile upsert failed', profileError)
   }
 
+  // Look up the user's actual auth email (may differ from phone-based synthetic email)
+  const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId)
+  const email = authUser?.email ?? `${phone}@phone.barriored.co`
+
   // Generate session via magic link → verifyOtp
-  const email = `${phone}@phone.barriored.co`
   const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
     type: 'magiclink',
     email,
