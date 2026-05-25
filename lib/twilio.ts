@@ -16,7 +16,7 @@ function getClient() {
 
 export async function sendWhatsAppMessage(to: string, body: string): Promise<void> {
   await getClient().messages.create({
-    from: process.env.TWILIO_WHATSAPP_FROM!,
+    from: `whatsapp:${process.env.TWILIO_WHATSAPP_FROM!}`,
     to: `whatsapp:${normalizeColombianPhone(to)}`,
     body,
   })
