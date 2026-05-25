@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { whatsappOtpVerifySchema } from '@/lib/validations/auth'
-import { checkWhatsAppOTP } from '@/lib/twilio'
+import { verifyOTP } from '@/lib/whatsapp-otp'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 
   const { phone, otp, full_name, community_id } = parsed.data
 
-  const valid = await checkWhatsAppOTP(phone, otp)
+  const valid = await verifyOTP(phone, otp)
   if (!valid) {
     return NextResponse.json({ error: 'Codigo invalido o expirado' }, { status: 400 })
   }
