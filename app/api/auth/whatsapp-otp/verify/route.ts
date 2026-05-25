@@ -65,15 +65,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Error generando sesion' }, { status: 500 })
   }
 
-  const url = new URL(linkData.properties.action_link)
-  const tokenHash = url.searchParams.get('token')
+  const tokenHash = linkData.properties.hashed_token
   if (!tokenHash) {
     return NextResponse.json({ error: 'Error generando sesion' }, { status: 500 })
   }
 
   const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.verifyOtp({
     token_hash: tokenHash,
-    type: 'magiclink',
+    type: 'email',
   })
   if (sessionError || !sessionData.session) {
     return NextResponse.json({ error: 'Error generando sesion' }, { status: 500 })
