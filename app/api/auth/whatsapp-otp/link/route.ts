@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { whatsappOtpLinkSchema } from '@/lib/validations/auth'
-import { checkWhatsAppOTP } from '@/lib/twilio'
+import { verifyOTP } from '@/lib/whatsapp-otp'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   }
 
   // Verify OTP
-  const valid = await checkWhatsAppOTP(phone, otp)
+  const valid = await verifyOTP(phone, otp)
   if (!valid) {
     return NextResponse.json({ error: 'Codigo invalido o expirado' }, { status: 400 })
   }
