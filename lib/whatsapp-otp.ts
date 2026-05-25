@@ -39,7 +39,7 @@ export async function sendOTP(phone: string): Promise<void> {
   if (error) throw new Error('Error guardando OTP')
 
   await sendWhatsAppMessage(
-    phone,
+    e164,
     `Tu código de verificación BarrioRed es: *${code}*. Válido por 5 minutos.`
   )
 }
