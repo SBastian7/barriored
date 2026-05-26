@@ -58,11 +58,11 @@ export function EventAttendanceButtons({
         setCount(data.count)
       } else {
         setAttending(wasAttending)
-        setCount(wasAttending ? count : count - 1)
+        setCount(count)
       }
     } catch {
       setAttending(wasAttending)
-      setCount(wasAttending ? count : count - 1)
+      setCount(count)
     } finally {
       setLoading(false)
     }
@@ -98,6 +98,7 @@ export function EventAttendanceButtons({
       'BEGIN:VEVENT',
       `DTSTART:${fmt(start)}`,
       `DTEND:${fmt(end)}`,
+      `UID:${postId}-${start.getTime()}@barriored.co`,
       `SUMMARY:${eventTitle}`,
       `DESCRIPTION:${eventContent.replace(/\n/g, '\\n')}`,
       `LOCATION:${eventLocation ?? ''}`,
@@ -131,11 +132,7 @@ export function EventAttendanceButtons({
           attending ? 'bg-white text-black' : 'bg-primary text-white'
         }`}
       >
-        {attending ? (
-          <><Check className="w-3 h-3" /> YA VOY</>
-        ) : (
-          '✓ VOY A IR'
-        )}
+        <><Check className="w-3 h-3" /> {attending ? 'YA VOY' : 'VOY A IR'}</>
       </button>
 
       {eventDate && (
