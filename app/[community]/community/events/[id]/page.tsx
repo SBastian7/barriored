@@ -1,20 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { PostEditActions } from '@/components/community/post-edit-actions'
 import { SharePostButton } from '@/components/community/share-post-button'
 import { ReportButton } from '@/components/shared/report-button'
-import { User, Pin, CalendarDays, MapPin, Clock } from 'lucide-react'
+import { CommunityEventCard } from '@/components/community/community-event-card'
+import { CalendarDays, MapPin, Clock, Users, Pin, ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { CommunityPost, EventMetadata } from '@/lib/types'
+import { EventAttendanceButtons } from '@/components/community/event-attendance-buttons'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string; id: string }> }) {
     const { id } = await params
     const supabase = await createClient()
     const { data: post } = await supabase
         .from('community_posts').select('title, content').eq('id', id).single<{ title: string; content: string }>()
-
     if (!post) return {}
     return {
         title: `${post.title} | Evento | BarrioRed`,
@@ -54,162 +53,309 @@ export default async function EventDetailPage({
     if (user) {
         isAuthor = post.author_id === user.id
         const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single<{ role: string }>()
+            .from('profiles').select('role').eq('id', user.id).single<{ role: string }>()
         isAdmin = profile?.role === 'admin'
     }
 
+    // Fetch attendance count and current user's status
+    const { count: attendeeCount } = await (supabase as any)
+        .from('event_attendees')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_post_id', id)
+
+    let isAttending = false
+    if (user) {
+        const { data: attendeeRow } = await (supabase as any)
+            .from('event_attendees')
+            .select('id')
+            .eq('event_post_id', id)
+            .eq('user_id', user.id)
+            .single()
+        isAttending = !!attendeeRow
+    }
+
+    // Related events
+    const { data: relatedRes } = await supabase
+        .from('community_posts')
+        .select('*, profiles(full_name, avatar_url)')
+        .eq('community_id', community.id)
+        .eq('status', 'approved')
+        .eq('type', 'event')
+        .neq('id', id)
+        .order('created_at', { ascending: false })
+        .limit(3)
+    const related = (relatedRes ?? []) as any as CommunityPost[]
+
     const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://barriored.co'}/${slug}/community/events/${id}`
+    const organizer = metadata.organizer ?? post.profiles?.full_name ?? 'Comunidad'
+    const publishedDate = new Date(post.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()
+
+    const eventDate = metadata.date ? new Date(metadata.date) : null
+    const eventDay = eventDate ? eventDate.getDate().toString().padStart(2, '0') : '—'
+    const eventMonth = eventDate ? eventDate.toLocaleDateString('es-CO', { month: 'short' }).toUpperCase() : '—'
+    const eventDayShort = eventDate ? eventDate.toLocaleDateString('es-CO', { weekday: 'long' }).toUpperCase() : ''
+    const eventTime = eventDate ? eventDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : ''
+    const eventEndTime = metadata.end_date
+        ? new Date(metadata.end_date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+        : null
 
     return (
-        <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
-            <Breadcrumbs items={[
-                { label: community.name, href: `/${slug}` },
-                { label: 'Comunidad', href: `/${slug}/community` },
-                { label: 'Eventos', href: `/${slug}/community/events` },
-                { label: post.title, active: true },
-            ]} />
+        <div className="min-h-screen bg-background">
 
-            <article className="mt-8 space-y-8">
-                <header className="space-y-6">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Badge variant="default" className="border-black border uppercase tracking-widest text-xs px-3 py-1 bg-accent text-black">
-                            <CalendarDays className="h-3.5 w-3.5 mr-2" /> Evento
-                        </Badge>
-                        {post.is_pinned && (
-                            <Badge variant="outline" className="border-black border uppercase tracking-widest text-xs px-3 py-1 bg-yellow-200">
-                                <Pin className="h-3.5 w-3.5 mr-2" /> Destacado
-                            </Badge>
-                        )}
-                    </div>
-
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-black uppercase italic tracking-tighter leading-[0.9] text-black">
-                        {post.title}
-                    </h1>
-
-                    <div className="flex justify-end gap-3">
-                        <SharePostButton
-                            title={post.title}
-                            content={post.content}
-                            url={shareUrl}
-                        />
-                        <ReportButton entityType="post" entityId={post.id} variant="outline" />
-                        <PostEditActions
-                            postId={post.id}
-                            postType="event"
-                            communitySlug={slug}
-                            isAuthor={isAuthor}
-                            isAdmin={isAdmin}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-6 border-y-2 border-black/10">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 border-2 border-black bg-accent/20 flex items-center justify-center overflow-hidden">
-                                <CalendarDays className="h-6 w-6 text-black/40" />
+            {/* ── SPLIT HERO ── */}
+            <section className="border-b-4 border-black">
+                <div className="grid grid-cols-1 lg:grid-cols-2 min-h-105">
+                    {/* Left slab: accent blue */}
+                    <div className="bg-accent text-white px-6 md:px-8 py-8 relative overflow-hidden">
+                        <div className="absolute inset-0 br-pattern-diag opacity-18" />
+                        <div className="relative">
+                            {/* Breadcrumb */}
+                            <div className="flex items-center gap-1.5 flex-wrap text-[9px] font-mono tracking-widest uppercase mb-5">
+                                <Link href={`/${slug}`} className="opacity-70 hover:opacity-100 transition-opacity">INICIO</Link>
+                                <span className="opacity-40">›</span>
+                                <Link href={`/${slug}/community`} className="opacity-70 hover:opacity-100 transition-opacity">COMUNIDAD</Link>
+                                <span className="opacity-40">›</span>
+                                <Link href={`/${slug}/community/events`} className="opacity-70 hover:opacity-100 transition-opacity">EVENTOS</Link>
+                                <span className="opacity-40">›</span>
+                                <span className="bg-black text-secondary px-1.5 py-0.5 font-bold">
+                                    {post.title.length > 20 ? post.title.slice(0, 18) + '…' : post.title}
+                                </span>
                             </div>
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Organizado por</p>
-                                <p className="font-heading font-black text-xl uppercase italic leading-none">{metadata.organizer || 'Comunidad'}</p>
+
+                            {/* Badges */}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                <span className="font-heading font-black text-[10px] uppercase tracking-wide px-2.5 py-1 border-2 border-black/40 bg-white/20 text-white flex items-center gap-1.5 shadow-[1px_1px_0_black]">
+                                    <CalendarDays className="w-3 h-3" /> EVENTO
+                                </span>
+                                {post.is_pinned && (
+                                    <span className="font-heading font-black text-[10px] uppercase tracking-wide px-2.5 py-1 border-2 border-black bg-secondary text-black flex items-center gap-1.5 shadow-[1px_1px_0_black]">
+                                        <Pin className="w-3 h-3" /> DESTACADO
+                                    </span>
+                                )}
+                                {metadata.organizer && (
+                                    <span className="font-heading font-black text-[10px] uppercase tracking-wide px-2.5 py-1 border-2 border-black/30 bg-black/20 text-white shadow-[1px_1px_0_black]">
+                                        {metadata.organizer}
+                                    </span>
+                                )}
                             </div>
-                        </div>
 
-                        <div className="flex flex-col justify-center text-right md:items-end">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Publicado el</p>
-                            <p className="font-bold text-sm">{new Date(post.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                        </div>
-                    </div>
-                </header>
+                            <h1 className="font-heading font-black italic uppercase tracking-tight leading-[0.88] text-[44px] md:text-[64px] text-white">
+                                {post.title}
+                            </h1>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                        {post.image_url && (
-                            <div className="relative aspect-video w-full border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-                                <img
-                                    src={post.image_url}
-                                    alt={post.title}
-                                    className="w-full h-full object-cover"
+                            {/* Actions */}
+                            <div className="flex flex-wrap gap-2 mt-6">
+                                <SharePostButton title={post.title} content={post.content} url={shareUrl} />
+                                <ReportButton entityType="post" entityId={post.id} variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:text-white" />
+                                <PostEditActions
+                                    postId={post.id}
+                                    postType="event"
+                                    communitySlug={slug}
+                                    isAuthor={isAuthor}
+                                    isAdmin={isAdmin}
                                 />
                             </div>
-                        )}
-
-                        <div className="bg-white border-4 border-black p-8 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                            <div className="prose prose-lg max-w-none text-black font-medium leading-relaxed whitespace-pre-wrap">
-                                {post.content}
-                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        <Card className="border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none bg-accent/10">
-                            <CardContent className="p-6 space-y-6">
-                                {metadata.date && (
-                                <div className="space-y-4">
-                                    <h3 className="font-heading font-black uppercase italic text-xl border-b-2 border-black pb-2">Cuándo</h3>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 border-2 border-black bg-white flex items-center justify-center">
-                                                <CalendarDays className="h-4 w-4 text-primary" />
-                                            </div>
-                                            <span className="font-bold text-sm">
-                                                {new Date(metadata.date).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 border-2 border-black bg-white flex items-center justify-center">
-                                                <Clock className="h-4 w-4 text-primary" />
-                                            </div>
-                                            <span className="font-bold text-sm">
-                                                {new Date(metadata.date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
-                                                {metadata.end_date && ` - ${new Date(metadata.end_date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}`}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                )}
-
-                                {metadata.location && (
-                                <div className="space-y-4">
-                                    <h3 className="font-heading font-black uppercase italic text-xl border-b-2 border-black pb-2">Dónde</h3>
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-8 h-8 border-2 border-black bg-white flex items-center justify-center shrink-0">
-                                            <MapPin className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <span className="font-bold text-sm italic">
-                                            {metadata.location}
-                                        </span>
-                                    </div>
-                                </div>
-                                )}
-
-                                <Card className="border-2 border-black bg-white rounded-none">
-                                    <CardContent className="p-4 text-[10px] font-black uppercase tracking-widest text-black/50 text-center italic">
-                                        Evento abierto a la comunidad de {community.name}
-                                    </CardContent>
-                                </Card>
-                            </CardContent>
-                        </Card>
+                    {/* Right poster: event image or fallback pattern */}
+                    <div className="relative border-t-4 lg:border-t-0 lg:border-l-4 border-black flex items-center justify-center min-h-55 overflow-hidden"
+                        style={post.image_url ? { backgroundColor: '#000' } : { backgroundColor: '#F5E6CB' }}>
+                        {post.image_url ? (
+                            <>
+                                <img src={post.image_url} alt={post.title} className="absolute inset-0 w-full h-full object-cover opacity-80" />
+                                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
+                            </>
+                        ) : (
+                            <>
+                                <div className="absolute inset-0 br-pattern-checker opacity-35" />
+                                <CalendarDays className="w-40 h-40 text-black opacity-10" strokeWidth={1} />
+                            </>
+                        )}
+                        {/* Date sticker */}
+                        <span className="absolute bottom-4 right-4 inline-block px-4 py-1.5 bg-white border-2 border-black shadow-[2px_2px_0_black] font-heading font-black italic uppercase text-sm -rotate-[4deg]">
+                            ★ {eventMonth} {eventDay}
+                        </span>
+                        {/* Day sticker */}
+                        <div className="absolute top-4 right-4 inline-block px-3 py-1 bg-secondary border-2 border-black shadow-[2px_2px_0_black] font-heading font-black italic uppercase text-xs rotate-6">
+                            {eventDayShort || 'EVENTO'}
+                        </div>
+                        {/* Time sticker */}
+                        {eventTime && (
+                            <div className="absolute bottom-4 left-4 inline-block px-3 py-1 bg-primary text-white border-2 border-black shadow-[2px_2px_0_black] font-heading font-black italic uppercase text-xs -rotate-[4deg]">
+                                {eventTime}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Additional content sections */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-12">
-                    <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-accent/5">
-                        <CardContent className="p-6">
-                            <h3 className="font-heading font-black uppercase italic text-lg mb-2">Verificado por Moderadores</h3>
-                            <p className="text-sm text-black/60">Este evento ha sido verificado por los moderadores de BarrioRed para garantizar información confiable para la comunidad.</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-secondary/5">
-                        <CardContent className="p-6">
-                            <h3 className="font-heading font-black uppercase italic text-lg mb-2">Eventos Comunitarios</h3>
-                            <p className="text-sm text-black/60">Participar en eventos fortalece el tejido social del barrio. ¡Tu asistencia hace la diferencia!</p>
-                        </CardContent>
-                    </Card>
+                {/* Meta strip */}
+                <div className="grid grid-cols-2 md:grid-cols-4 border-t-2 border-black bg-background">
+                    {([
+                        ['ORGANIZADO POR', organizer, Users],
+                        ['PUBLICADO EL', publishedDate, CalendarDays],
+                        ['FECHA DEL EVENTO', eventDate ? `${eventDay} ${eventMonth} ${eventDate.getFullYear()}` : 'POR CONFIRMAR', CalendarDays],
+                        ['ALCANCE', 'TODO EL BARRIO', MapPin],
+                    ] as const).map(([label, value, Icon], i) => (
+                        <div key={label} className={`flex items-center gap-3 px-5 py-4 ${i < 3 ? 'border-b-2 md:border-b-0 md:border-r-2 border-black' : ''}`}>
+                            <div className="w-9 h-9 bg-[#FFEFD9] border-2 border-black flex items-center justify-center shrink-0">
+                                <Icon className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <div className="font-mono text-[9px] tracking-widest uppercase opacity-60 font-bold">{label}</div>
+                                <div className="font-heading font-black italic uppercase text-sm leading-tight">{value}</div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            </article>
+            </section>
+
+            {/* ── MAIN CONTENT ── */}
+            <section className="px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-8 items-start max-w-6xl mx-auto">
+
+                {/* Left: content */}
+                <div className="flex flex-col gap-6">
+                    {/* Description */}
+                    <div className="border-2 border-black shadow-[6px_6px_0_black] bg-white">
+                        <div className="bg-black text-white px-4 py-2.5 flex justify-between items-center">
+                            <span className="font-mono text-[10px] tracking-widest uppercase text-secondary font-bold">◉ DESCRIPCIÓN</span>
+                        </div>
+                        <div className="p-6 md:p-8">
+                            <p className="text-lg font-medium leading-relaxed whitespace-pre-wrap text-black">
+                                {post.content}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Verified + Community cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="border-2 border-black shadow-[4px_4px_0_black] p-5 bg-[#FFEFD9]">
+                            <div className="flex items-center gap-2.5 mb-2">
+                                <div className="w-8 h-8 bg-[#16A34A] border-2 border-black flex items-center justify-center shrink-0">
+                                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <span className="font-heading font-black italic uppercase text-sm">VERIFICADO POR MODERADORES</span>
+                            </div>
+                            <p className="text-xs text-black/60 leading-relaxed">
+                                Este evento fue revisado el equipo de BarrioRed para garantizar información confiable.
+                            </p>
+                        </div>
+                        <div className="border-2 border-black shadow-[4px_4px_0_black] p-5 bg-[#F5E6CB]">
+                            <div className="flex items-center gap-2.5 mb-2">
+                                <div className="w-8 h-8 bg-primary border-2 border-black flex items-center justify-center shrink-0">
+                                    <Users className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="font-heading font-black italic uppercase text-sm">EVENTO ABIERTO</span>
+                            </div>
+                            <p className="text-xs text-black/60 leading-relaxed">
+                                Para toda la comunidad de {community.name}. ¡Tu asistencia fortalece el tejido vecinal!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right: sidebar */}
+                <div className="flex flex-col gap-5 lg:sticky lg:top-6">
+                    {/* When + Where card */}
+                    <div className="border-2 border-black shadow-[6px_6px_0_black] overflow-hidden">
+                        <div className="bg-accent text-white px-4 py-2.5 flex justify-between items-center border-b-2 border-black">
+                            <span className="font-mono text-[10px] tracking-widest uppercase text-white font-bold">◉ CUÁNDO + DÓNDE</span>
+                            <span className="font-mono text-[9px] tracking-widest uppercase bg-black text-secondary px-1.5 py-0.5 font-bold">VERIFICADO</span>
+                        </div>
+                        <div className="p-5 bg-white flex flex-col gap-5">
+                            {/* Date */}
+                            {eventDate && (
+                                <div className="grid grid-cols-[auto_1fr] gap-4 items-center">
+                                    <div className="bg-black text-white px-3 py-2 text-center border-2 border-black shadow-[2px_2px_0_black]">
+                                        <div className="font-mono text-[8px] tracking-widest uppercase text-secondary font-bold">{eventMonth}</div>
+                                        <div className="font-heading font-black italic text-4xl leading-none">{eventDay}</div>
+                                    </div>
+                                    <div>
+                                        <div className="font-heading font-black italic uppercase text-base leading-tight">{eventDayShort}</div>
+                                        <div className="font-mono text-[10px] tracking-widest uppercase mt-1 font-bold opacity-70">
+                                            ◷ {eventTime}{eventEndTime ? ` – ${eventEndTime}` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Location */}
+                            {metadata.location && (
+                                <div className="flex gap-3 items-start">
+                                    <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                    <div>
+                                        <div className="font-heading font-black italic uppercase text-base leading-tight">{metadata.location}</div>
+                                        <div className="font-mono text-[9px] tracking-widest uppercase mt-0.5 opacity-60">{community.name}</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <a
+                                href={`https://maps.google.com/?q=${encodeURIComponent(metadata.location ?? community.name)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-black shadow-[2px_2px_0_black] font-heading font-black uppercase tracking-widest text-xs px-4 py-2.5 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_black] transition-all"
+                            >
+                                <MapPin className="w-3 h-3" /> CÓMO LLEGAR
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Action panel */}
+                    <div className="border-2 border-black shadow-[4px_4px_0_black] p-5 bg-secondary">
+                        <div className="font-mono text-[11px] tracking-widest uppercase font-bold mb-2">SUMÁTE</div>
+                        <div className="font-heading font-black italic uppercase text-xl leading-tight">
+                            {eventDate
+                                ? `${eventDate.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}`
+                                : 'Evento próximo'
+                            }
+                        </div>
+                        <div className="mt-4">
+                            <EventAttendanceButtons
+                                postId={post.id}
+                                initialCount={attendeeCount ?? 0}
+                                initialAttending={isAttending}
+                                eventTitle={post.title}
+                                eventContent={post.content}
+                                eventDate={metadata.date ?? null}
+                                eventLocation={metadata.location ?? null}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Community badge */}
+                    <div className="border-2 border-black shadow-[2px_2px_0_black] p-4 bg-[#FFEFD9] flex gap-3 items-center">
+                        <div className="w-10 h-10 bg-primary border-2 border-black flex items-center justify-center shrink-0">
+                            <Users className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <div className="font-mono text-[10px] tracking-widest uppercase font-bold">EVENTO ABIERTO</div>
+                            <div className="text-xs font-bold mt-0.5">Para toda la comunidad de {community.name}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── RELATED EVENTS ── */}
+            {related.length > 0 && (
+                <section className="px-4 md:px-8 py-8 border-t-4 border-black bg-[#F5E6CB]">
+                    <div className="flex justify-between items-end mb-6 flex-wrap gap-3 max-w-5xl mx-auto">
+                        <h2 className="font-heading font-black italic uppercase tracking-tight leading-none text-[36px] md:text-[44px]">
+                            OTROS <span className="text-primary">EVENTOS</span>
+                        </h2>
+                        <Link href={`/${slug}/community/events`}>
+                            <button className="inline-flex items-center gap-1.5 bg-white border-2 border-black shadow-[2px_2px_0_black] font-mono text-[10px] tracking-widest uppercase font-bold px-3 py-2 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_black] transition-all cursor-pointer">
+                                VER TODOS <ArrowLeft className="w-3 h-3 rotate-180" />
+                            </button>
+                        </Link>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+                        {related.map((ev, i) => (
+                            <CommunityEventCard key={ev.id} post={ev} communitySlug={slug} rot={([-1, 1, 0] as const)[i % 3]} />
+                        ))}
+                    </div>
+                </section>
+            )}
         </div>
     )
 }
