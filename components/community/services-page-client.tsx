@@ -22,9 +22,10 @@ type ActiveFilter = 'todos' | GroupKey
 const DISPLAY_GROUPS: GroupKey[] = ['emergency', 'health', 'utilities']
 
 interface Props {
-  services:      PublicService[]
-  communityName: string
-  communityId:   string
+  services:       PublicService[]
+  communityName:  string
+  communityId:    string
+  coverImageUrl?: string | null
 }
 
 // ─── Service Card ────────────────────────────────────────────
@@ -130,7 +131,7 @@ function ServiceCard({
 }
 
 // ─── Page Client ─────────────────────────────────────────────
-export function ServicesPageClient({ services, communityName, communityId }: Props) {
+export function ServicesPageClient({ services, communityName, communityId, coverImageUrl }: Props) {
   const [active, setActive] = useState<ActiveFilter>('todos')
 
   const visibleGroups = active === 'todos' ? DISPLAY_GROUPS : [active as GroupKey]
@@ -150,11 +151,15 @@ export function ServicesPageClient({ services, communityName, communityId }: Pro
   return (
     <div>
       {/* ─── HERO ─── */}
-      <section className="relative overflow-hidden bg-[#FFF7ED] border-b-4 border-black px-4 md:px-8 pt-8 pb-9">
-        <div className="br-pattern-diag absolute inset-0 opacity-30 pointer-events-none" />
-        <div className="absolute -top-16 -right-12 w-56 md:w-72 h-56 md:h-72 bg-primary border-4 border-black rounded-full shadow-[-12px_12px_0_black] pointer-events-none" />
-        <div className="absolute top-16 right-52 w-16 h-16 bg-[#16A34A] border-[3px] border-black rotate-12 shadow-[6px_6px_0px_black] pointer-events-none hidden md:block" />
-        <div className="absolute bottom-5 right-36 w-20 h-20 bg-accent border-[3px] border-black -rotate-[8deg] shadow-[6px_6px_0px_black] pointer-events-none hidden md:block" />
+      <section
+        className={`relative overflow-hidden border-b-4 border-black px-4 md:px-8 pt-8 pb-9 ${coverImageUrl ? '' : 'bg-[#FFF7ED]'}`}
+        style={coverImageUrl ? { backgroundImage: `url(${coverImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
+        {coverImageUrl ? (
+          <div className="absolute inset-0 bg-black/65 pointer-events-none" />
+        ) : (
+          <div className="br-pattern-diag absolute inset-0 opacity-30 pointer-events-none" />
+        )}
 
         <div className="relative grid grid-cols-1 md:grid-cols-[1.45fr_1fr] gap-8 items-end max-w-7xl mx-auto">
           {/* Left */}
@@ -162,16 +167,16 @@ export function ServicesPageClient({ services, communityName, communityId }: Pro
             <div className="flex gap-1.5 items-center flex-wrap">
               {['INICIO', communityName.toUpperCase(), 'SERVICIOS'].map((item, i, arr) => (
                 <span key={i} className="flex items-center gap-1.5">
-                  <span className={`inline-flex items-center border-2 border-black px-3 py-2 font-heading font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0px_black] ${i === arr.length - 1 ? 'bg-primary text-white' : 'bg-white'}`}>
+                  <span className={`inline-flex items-center border-2 border-black px-3 py-2 font-heading font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0px_black] ${i === arr.length - 1 ? 'bg-primary text-white' : coverImageUrl ? 'bg-white/20 text-white' : 'bg-white'}`}>
                     {item}
                   </span>
-                  {i < arr.length - 1 && <span className="text-black/50 text-sm">›</span>}
+                  {i < arr.length - 1 && <span className={`text-sm ${coverImageUrl ? 'text-white/60' : 'text-black/50'}`}>›</span>}
                 </span>
               ))}
             </div>
 
             <div className="flex gap-2.5 items-center mt-3 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary border-2 border-black shadow-[4px_4px_0px_black] font-heading font-black italic uppercase text-sm tracking-widest -rotate-[3deg]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary border-2 border-black shadow-[4px_4px_0px_black] font-heading font-black italic uppercase text-sm tracking-widest -rotate-3">
                 <Siren className="w-3.5 h-3.5" /> DIRECTORIO PÚBLICO
               </span>
               <span className="font-mono text-[13px] uppercase tracking-widest bg-black text-white px-2.5 py-1">
@@ -183,11 +188,11 @@ export function ServicesPageClient({ services, communityName, communityId }: Pro
               className="font-heading font-black italic uppercase mt-3.5 leading-[0.84]"
               style={{ fontSize: 'clamp(3rem, 8vw, 96px)', letterSpacing: '-0.035em' }}
             >
-              <span className="block">SERVICIOS</span>
+              <span className={`block ${coverImageUrl ? 'text-white' : ''}`}>SERVICIOS</span>
               <span className="block text-primary ml-4 md:ml-8">Y EMERGENCIAS</span>
             </h1>
 
-            <p className="mt-4 max-w-lg text-base font-medium leading-relaxed">
+            <p className={`mt-4 max-w-lg text-base font-medium leading-relaxed ${coverImageUrl ? 'text-white/80' : ''}`}>
               Líneas de atención, centros de salud y servicios oficiales para los habitantes de{' '}
               <strong>{communityName}</strong>. Verificados por la comunidad.
             </p>

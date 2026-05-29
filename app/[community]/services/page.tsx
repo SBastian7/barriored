@@ -22,7 +22,7 @@ export default async function ServicesPage({
     const supabase = await createClient()
 
     const { data: community } = await supabase
-        .from('communities').select('id, name').eq('slug', slug).single<{ id: string; name: string }>()
+        .from('communities').select('id, name, cover_image_url').eq('slug', slug).single<{ id: string; name: string; cover_image_url: string | null }>()
     if (!community) notFound()
 
     const { data: servicesRes } = await supabase
@@ -42,6 +42,7 @@ export default async function ServicesPage({
                 services={services}
                 communityName={community.name}
                 communityId={community.id}
+                coverImageUrl={community.cover_image_url}
             />
         </div>
     )
