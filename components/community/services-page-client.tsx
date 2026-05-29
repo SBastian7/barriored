@@ -84,25 +84,34 @@ function ServiceCard({
 
           {/* Phone */}
           {service.phone && (
-            <a
-              href={`tel:${service.phone.replace(/[^\d+]/g, '')}`}
-              className="border-[2.5px] border-black shadow-[2px_2px_0px_black] overflow-hidden flex no-underline"
-            >
-              <div className="w-11 flex-shrink-0 bg-black flex items-center justify-center">
-                <Phone className="w-4 h-4 text-white" />
-              </div>
-              <div className="flex-1 bg-[#FFEFD9] px-3.5 py-2 flex items-center justify-between gap-2">
-                <span
-                  className="font-heading font-black italic leading-none"
-                  style={{ color: g.color, fontSize: isShortPhone ? '2.1rem' : '1.375rem', letterSpacing: '-0.02em' }}
-                >
-                  {service.phone}
-                </span>
-                <span className="font-mono text-[9px] uppercase tracking-widest opacity-50 text-right leading-snug">
-                  LLAMAR<br />AHORA
-                </span>
-              </div>
-            </a>
+            <div className="border-[2.5px] border-black shadow-[2px_2px_0px_black] overflow-hidden">
+              <a
+                href={`tel:${service.phone.replace(/[^\d+]/g, '')}`}
+                className="flex no-underline"
+              >
+                <div className="w-11 shrink-0 bg-black flex items-center justify-center">
+                  <Phone className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1 bg-[#FFEFD9] px-3.5 py-2 flex items-center justify-between gap-2">
+                  <span
+                    className="font-heading font-black italic leading-none"
+                    style={{ color: g.color, fontSize: isShortPhone ? '2.1rem' : '1.375rem', letterSpacing: '-0.02em' }}
+                  >
+                    {service.phone}
+                  </span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest opacity-50 text-right leading-snug">
+                    LLAMAR<br />AHORA
+                  </span>
+                </div>
+              </a>
+              <button
+                type="button"
+                onClick={() => downloadVcf([service], `${service.name.toLowerCase().replace(/\s+/g, '-')}.vcf`)}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 border-t-2 border-black bg-white hover:bg-black hover:text-white transition-colors font-mono text-[9px] uppercase tracking-widest font-bold"
+              >
+                <Bookmark className="w-2.5 h-2.5" /> GUARDAR CONTACTO
+              </button>
+            </div>
           )}
 
           {/* Address */}
@@ -141,13 +150,6 @@ export function ServicesPageClient({ services, communityName, communityId, cover
     ...DISPLAY_GROUPS.map(k => ({ key: k as ActiveFilter, label: GROUPS[k].short, color: GROUPS[k].color })),
   ]
 
-  const hasPhones = services.some(s => s.phone)
-
-  function handleDownloadVcf() {
-    if (!hasPhones) return
-    downloadVcf(services, `emergencias-${communityName.toLowerCase().replace(/\s+/g, '-')}.vcf`)
-  }
-
   return (
     <div>
       {/* ─── HERO ─── */}
@@ -167,7 +169,7 @@ export function ServicesPageClient({ services, communityName, communityId, cover
             <div className="flex gap-1.5 items-center flex-wrap">
               {['INICIO', communityName.toUpperCase(), 'SERVICIOS'].map((item, i, arr) => (
                 <span key={i} className="flex items-center gap-1.5">
-                  <span className={`inline-flex items-center border-2 border-black px-3 py-2 font-heading font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0px_black] ${i === arr.length - 1 ? 'bg-primary text-white' : coverImageUrl ? 'bg-white/20 text-white' : 'bg-white'}`}>
+                  <span className={`inline-flex items-center border-2 border-black px-3 py-2 font-heading font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0px_black] ${i === arr.length - 1 ? 'bg-primary text-white' : 'bg-white'}`}>
                     {item}
                   </span>
                   {i < arr.length - 1 && <span className={`text-sm ${coverImageUrl ? 'text-white/60' : 'text-black/50'}`}>›</span>}
@@ -198,16 +200,6 @@ export function ServicesPageClient({ services, communityName, communityId, cover
             </p>
 
             <div className="flex gap-2.5 mt-5 flex-wrap">
-              {/* GUARDAR NÚMEROS */}
-              <button
-                onClick={handleDownloadVcf}
-                disabled={!hasPhones}
-                className="inline-flex items-center gap-2 px-5 py-3 md:px-6 md:py-3.5 bg-black text-white border-2 border-black shadow-[4px_4px_0px_black] font-heading font-black text-sm uppercase tracking-widest hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_black] disabled:opacity-40 disabled:cursor-not-allowed active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-                type="button"
-              >
-                <Bookmark className="w-3.5 h-3.5" /> GUARDAR NÚMEROS
-              </button>
-
               {/* INFORMAR SERVICIO (hero) */}
               <ServiceSuggestionDialog communityId={communityId} communityName={communityName}>
                 <button
