@@ -340,6 +340,59 @@ export async function reactivateClassifiedAction(id: string): Promise<ActionResu
   return { success: true }
 }
 
+export async function reportClassifiedAction(
+  classifiedId: string,
+  reason: string
+): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'Debes iniciar sesión para reportar' }
+  }
+
+  const { data: classified } = await supabase
+    .from('classifieds')
+    .select('community_id, user_id')
+    .eq('id', classifiedId)
+    .maybeSingle()
+
+  if (!classified) {
+    return { success: false, error: 'Clasificado no encontrado' }
+  }
+
+  if (classified.user_id === user.id) {
+    return { success: false, error: 'No puedes reportar tu propio clasificado' }
+  }
+
+  const { data: existing } = await supabase
+    .from('community_reports')
+    .select('id')
+    .eq('reported_entity_id', classifiedId)
+    .eq('reporter_id', user.id)
+    .maybeSingle()
+
+  if (existing) {
+    return { success: false, error: 'Ya reportaste este clasificado' }
+  }
+
+  const { error } = await supabase.from('community_reports').insert({
+    community_id: classified.community_id,
+    reporter_id: user.id,
+    reported_entity_id: classifiedId,
+    reported_entity_type: 'classified',
+    reason,
+    status: 'pending',
+  })
+
+  if (error) {
+    console.error('Report error:', error)
+    return { success: false, error: 'Error al enviar el reporte' }
+  }
+
+  return { success: true }
+}
+
 export async function toggleFavoriteAction(
   classifiedId: string
 ): Promise<ActionResult<{ favorited: boolean }>> {

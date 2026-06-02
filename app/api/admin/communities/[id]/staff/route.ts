@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditAction } from '@/lib/utils/audit-logger'
 
 export async function POST(
@@ -40,8 +41,9 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   }
 
-  // Update user's profile
-  const { error } = await (supabase as any)
+  // Update user's profile (admin client bypasses RLS to modify another user's profile)
+  const adminSupabase = createAdminClient()
+  const { error } = await adminSupabase
     .from('profiles')
     .update({
       community_id: id,
@@ -109,8 +111,9 @@ export async function DELETE(
     .eq('id', userId)
     .single()
 
-  // Reset to regular user
-  const { error } = await (supabase as any)
+  // Reset to regular user (admin client bypasses RLS to modify another user's profile)
+  const adminSupabase = createAdminClient()
+  const { error } = await adminSupabase
     .from('profiles')
     .update({
       community_id: null,

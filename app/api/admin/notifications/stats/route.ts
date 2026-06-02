@@ -48,11 +48,29 @@ export async function GET(request: Request) {
     const deliveryRate = totalSent > 0 ? (totalSent - totalFailed) / totalSent : 0
     const avgPerDay = totalSent / days
 
-    // Get active subscribers count
-    const { count: subscriberCount } = await supabase
-      .from('push_subscriptions')
-      .select('*', { count: 'exact', head: true })
-      .not('endpoint', 'is', null)
+    // Get active subscribers count, scoped to the admin's community
+    let subscriberCount = 0
+    if (profile.is_super_admin) {
+      const { count } = await supabase
+        .from('push_subscriptions')
+        .select('*', { count: 'exact', head: true })
+        .not('endpoint', 'is', null)
+      subscriberCount = count ?? 0
+    } else if (profile.community_id) {
+      const { data: communityProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('community_id', profile.community_id)
+      const communityUserIds = (communityProfiles ?? []).map((p: any) => p.id)
+      if (communityUserIds.length > 0) {
+        const { count } = await supabase
+          .from('push_subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .in('user_id', communityUserIds)
+          .not('endpoint', 'is', null)
+        subscriberCount = count ?? 0
+      }
+    }
 
     // Group by type (from alert_id → community_alerts.type)
     // TODO: Join with community_alerts to get type breakdown
@@ -60,7 +78,7 @@ export async function GET(request: Request) {
     const overview = {
       total_sent: totalSent,
       delivery_rate: Math.round(deliveryRate * 100) / 100,
-      active_subscribers: subscriberCount || 0,
+      active_subscribers: subscriberCount,
       avg_per_day: Math.round(avgPerDay * 10) / 10,
       trend_vs_previous: 0 // TODO: Calculate vs previous period
     }

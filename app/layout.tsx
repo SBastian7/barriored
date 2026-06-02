@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Outfit } from 'next/font/google'
+import { Inter, Outfit, Space_Mono } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { ServiceWorkerRegister } from '@/components/service-worker-register'
 import { ErrorBoundary } from '@/components/shared/error-boundary'
@@ -18,6 +18,12 @@ const outfit = Outfit({
   variable: '--font-outfit',
 })
 
+const spaceMono = Space_Mono({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-mono',
+})
+
 export const metadata: Metadata = {
   title: 'BarrioRed - Tu barrio, conectado',
   description: 'Plataforma digital comunitaria para la visibilidad comercial y el fortalecimiento del tejido social.',
@@ -27,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="es" className={`${inter.variable} ${outfit.variable} ${spaceMono.variable}`}>
       <body className="font-sans antialiased">
         <OfflineBanner />
         <ErrorBoundary>

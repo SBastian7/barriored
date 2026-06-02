@@ -1,24 +1,55 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { PlusCircle } from 'lucide-react'
 
 export function RegisterCTA({ communitySlug }: { communitySlug: string }) {
+  const benefits = [
+    ['GRATIS', 'Sin costos, sin trámites'],
+    ['RÁPIDO', 'Tu perfil listo en 3 minutos'],
+    ['VECINOS', '+30K personas del barrio'],
+    ['RESEÑAS', 'Construye reputación local'],
+  ] as const
+
   return (
-    <section className="py-16 px-4 bg-primary">
-      <div className="container mx-auto max-w-3xl text-center">
-        <div className="bg-white border-4 border-black p-8 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <h2 className="text-3xl md:text-4xl font-heading font-black uppercase italic tracking-tight mb-4">
-            Tienes un <span className="text-primary underline decoration-4 underline-offset-4">negocio</span>?
-          </h2>
-          <p className="text-lg text-black/70 font-medium mb-8 max-w-lg mx-auto">
-            Registra tu negocio gratis y llega a todos los vecinos del barrio. Sin barreras, sin costos.
-          </p>
-          <Link href={`/${communitySlug}/register`}>
-            <Button size="lg" className="h-14 px-10 text-base border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all font-black uppercase tracking-tight">
-              <PlusCircle className="h-5 w-5 mr-2" />
-              Registrar mi negocio
-            </Button>
-          </Link>
+    <section className="px-6 md:px-8 pb-11">
+      <div className="max-w-350 mx-auto">
+        <div className="border-3 border-black shadow-[6px_6px_0_0_#0A0A0A] overflow-hidden grid md:grid-cols-[3fr_2fr]">
+          {/* Left — yellow CTA */}
+          <div className="bg-[#FBBF24] p-8 relative overflow-hidden">
+            <div
+              className="absolute inset-0 opacity-20 pointer-events-none"
+              style={{ backgroundImage: 'radial-gradient(circle, #0A0A0A 1.5px, transparent 1.6px)', backgroundSize: '14px 14px' }}
+            />
+            <div className="relative">
+              <span className="inline-block bg-black text-[#FBBF24] font-mono text-[10px] tracking-widest uppercase px-2 py-1 mb-4">
+                PARA NEGOCIOS
+              </span>
+              <h2 className="font-heading font-black italic uppercase text-[clamp(40px,6vw,72px)] leading-[0.88] tracking-tight">
+                ¿TIENES UN<br />
+                <span className="text-[#E11D48]">NEGOCIO?</span>
+              </h2>
+              <p className="mt-4 text-base leading-relaxed max-w-sm">
+                Regístralo gratis y llega a todos los vecinos del barrio.{' '}
+                <strong>Sin barreras, sin costos.</strong>
+              </p>
+              <Link
+                href={`/${communitySlug}/register`}
+                className="inline-flex items-center gap-2 mt-5 px-5 py-3 bg-[#E11D48] text-white border-2 border-black shadow-[4px_4px_0_0_#0A0A0A] font-heading font-black uppercase text-sm tracking-wide hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#0A0A0A] transition-all"
+              >
+                REGISTRAR MI NEGOCIO →
+              </Link>
+            </div>
+          </div>
+
+          {/* Right — dark benefits list */}
+          <div className="bg-[#0A0A0A] text-white p-8 flex flex-col justify-center gap-4">
+            {benefits.map(([title, desc]) => (
+              <div key={title} className="flex items-center gap-4">
+                <span className="font-heading font-black italic text-[#FBBF24] text-2xl w-28 shrink-0 leading-none">
+                  {title}
+                </span>
+                <span className="text-sm text-white/80">{desc}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

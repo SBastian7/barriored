@@ -9,16 +9,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { PhoneInput } from '@/components/ui/phone-input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createPostSchema, type CreatePostInput } from '@/lib/validations/community'
-import { ImageUploadField } from './image-upload-field'
+import { ImageUploadField } from '@/components/ui/image-upload-field'
 import { createClient } from '@/lib/supabase/client'
-import { Megaphone, Calendar, Briefcase, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 type Props = {
-    type: 'announcement' | 'event' | 'job'
+    type: 'announcement' | 'event'
     communityId: string
     communitySlug: string
 }
@@ -46,13 +45,12 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
             content: '',
             image_url: '',
             ...(type === 'event' ? { metadata: { organizer: '', date: '', location: '' } } : {}),
-            ...(type === 'job' ? { metadata: { category: '', contact_method: 'whatsapp', contact_value: '' } } : {}),
         } as any
     })
 
     useEffect(() => {
         async function fetchOwnedBusinesses() {
-            if (type !== 'event' && type !== 'job') return
+            if (type !== 'event') return
 
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
@@ -109,9 +107,6 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
         }
     }
 
-    const jobMetadata = watch('type') === 'job' ? (watch() as any).metadata : null
-    const eventMetadata = watch('type') === 'event' ? (watch() as any).metadata : null
-
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white border-4 border-black p-6 md:p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] mt-8">
             <div className="space-y-6">
@@ -120,7 +115,7 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                     <Label htmlFor="title" className="font-black uppercase tracking-widest text-xs">Título de la Publicación</Label>
                     <Input
                         id="title"
-                        placeholder={type === 'announcement' ? 'Ej: Se perdió un perrito' : type === 'event' ? 'Ej: Bingo Bailable Vecinal' : 'Ej: Se busca Panadero'}
+                        placeholder={type === 'announcement' ? 'Ej: Se perdió un perrito' : 'Ej: Bingo Bailable Vecinal'}
                         {...register('title')}
                         className={errors.title ? 'border-primary' : ''}
                     />
@@ -143,6 +138,9 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                     value={watch('image_url') || null}
                     onChange={(url) => setValue('image_url', url || '')}
                     label="Imagen (Opcional)"
+                    bucket="community-images"
+                    aspectRatio="16/9"
+                    maxWidth="100%"
                 />
 
                 {/* Type Specific Fields */}
@@ -198,107 +196,6 @@ export function PostForm({ type, communityId, communitySlug }: Props) {
                                 {linkToBusiness && (
                                     <div className="space-y-2">
                                         <Label htmlFor="business" className="font-black uppercase tracking-widest text-xs">Negocio</Label>
-                                        <Select value={selectedBusinessId} onValueChange={setSelectedBusinessId}>
-                                            <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
-                                                <SelectValue placeholder="Selecciona tu negocio" />
-                                            </SelectTrigger>
-                                            <SelectContent className="border-2 border-black rounded-none">
-                                                {ownedBusinesses.map((business) => (
-                                                    <SelectItem key={business.id} value={business.id}>
-                                                        {business.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {type === 'job' && (
-                    <div className="space-y-6 p-6 bg-secondary/5 border-2 border-black border-dashed">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="job-category" className="font-black uppercase tracking-widest text-xs">Categoría</Label>
-                                <Input
-                                    id="job-category"
-                                    placeholder="Ej: Ventas, Construcción, Cocina..."
-                                    {...register('metadata.category' as any)}
-                                />
-                                {(errors as any).metadata?.category && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.category.message}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="job-salary" className="font-black uppercase tracking-widest text-xs">Rango Salarial (Opcional)</Label>
-                                <Input
-                                    id="job-salary"
-                                    placeholder="Ej: $1.300.000 + Prestaciones"
-                                    {...register('metadata.salary_range' as any)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-black/10">
-                            <div className="space-y-2">
-                                <Label className="font-black uppercase tracking-widest text-xs">Método de Contacto</Label>
-                                <Select
-                                    onValueChange={(v) => setValue('metadata.contact_method' as any, v)}
-                                    defaultValue="whatsapp"
-                                >
-                                    <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
-                                        <SelectValue placeholder="Selecciona uno" />
-                                    </SelectTrigger>
-                                    <SelectContent className="border-2 border-black rounded-none">
-                                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                                        <SelectItem value="phone">Llamada Telefónica</SelectItem>
-                                        <SelectItem value="email">Correo Electrónico</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="job-contact-value" className="font-black uppercase tracking-widest text-xs">Dato de Contacto</Label>
-                                {jobMetadata?.contact_method === 'email' ? (
-                                    <Input
-                                        id="job-contact-value"
-                                        type="email"
-                                        placeholder="nombre@correo.com"
-                                        {...register('metadata.contact_value' as any)}
-                                    />
-                                ) : (
-                                    <PhoneInput
-                                        value={watch('metadata.contact_value' as any) || ''}
-                                        onChange={(val) => setValue('metadata.contact_value' as any, val)}
-                                        placeholder="312 345 6789"
-                                        error={(errors as any).metadata?.contact_value?.message}
-                                    />
-                                )}
-                                {jobMetadata?.contact_method === 'email' && (errors as any).metadata?.contact_value && (
-                                    <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.contact_value.message}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Business Linking */}
-                        {ownedBusinesses.length > 0 && (
-                            <div className="space-y-4 pt-6 border-t border-black/10">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="linkBusinessJob"
-                                        checked={linkToBusiness}
-                                        onCheckedChange={(checked) => {
-                                            setLinkToBusiness(checked as boolean)
-                                            if (!checked) setSelectedBusinessId('')
-                                        }}
-                                    />
-                                    <Label htmlFor="linkBusinessJob" className="cursor-pointer font-black uppercase tracking-widest text-xs">
-                                        ¿Este empleo es de un negocio registrado?
-                                    </Label>
-                                </div>
-
-                                {linkToBusiness && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor="businessJob" className="font-black uppercase tracking-widest text-xs">Negocio</Label>
                                         <Select value={selectedBusinessId} onValueChange={setSelectedBusinessId}>
                                             <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
                                                 <SelectValue placeholder="Selecciona tu negocio" />

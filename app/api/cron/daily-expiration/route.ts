@@ -251,7 +251,7 @@ export async function GET(request: Request) {
       const { data: deletedReminders } = await (adminClient as any)
         .from('cron_reminder_logs')
         .delete()
-        .lt('created_at', sixtyDaysAgo)
+        .lt('sent_at', sixtyDaysAgo)
         .select('id')
       reminderLogsDeleted = deletedReminders?.length ?? 0
     } catch (err) {

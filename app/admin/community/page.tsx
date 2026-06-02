@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Link from 'next/link'
-import { CheckCircle, XCircle, Clock, Eye, MessageSquare, Calendar, Briefcase, Filter, X, Pin } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Eye, MessageSquare, Calendar, Filter, X, Pin } from 'lucide-react'
 
 export default function AdminCommunityPage() {
   const supabase = createClient()
@@ -48,7 +48,6 @@ export default function AdminCommunityPage() {
   const typeIcons: any = {
     announcement: MessageSquare,
     event: Calendar,
-    job: Briefcase,
   }
 
   const handleClearFilters = () => {
@@ -89,7 +88,6 @@ export default function AdminCommunityPage() {
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="announcement">Anuncios</SelectItem>
               <SelectItem value="event">Eventos</SelectItem>
-              <SelectItem value="job">Empleos</SelectItem>
             </SelectContent>
           </Select>
         </div>

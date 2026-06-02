@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'community_id requerido' }, { status: 400 })
     }
 
-    const VALID_TYPES = ['announcement', 'event', 'job'] as const
+    const VALID_TYPES = ['announcement', 'event'] as const
     if (type && !VALID_TYPES.includes(type as typeof VALID_TYPES[number])) {
         return NextResponse.json({ error: 'Tipo inválido' }, { status: 400 })
     }

@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { ClassifiedDetailView } from '@/components/marketplace/classified-detail-view';
 import type { ClassifiedWithRelations } from '@/lib/types/database';
 import type { Metadata } from 'next';
@@ -28,9 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }>();
 
   if (!classified) {
-    return {
-      title: 'Clasificado no encontrado | Marketplace BarrioRed',
-    };
+    return { title: 'Clasificado no encontrado | Marketplace BarrioRed' };
   }
 
   return {
@@ -48,22 +45,14 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
   const { community: communitySlug, id } = await params;
   const supabase = await createClient();
 
-  // Get community
   const { data: community } = await supabase
     .from('communities')
     .select('id, name, slug')
     .eq('slug', communitySlug)
-    .maybeSingle<{
-      id: string;
-      name: string;
-      slug: string;
-    }>();
+    .maybeSingle<{ id: string; name: string; slug: string }>();
 
-  if (!community) {
-    notFound();
-  }
+  if (!community) notFound();
 
-  // Get classified with all relations
   const { data: classified } = await supabase
     .from('classifieds')
     .select(`
@@ -76,23 +65,12 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
     .eq('community_id', community.id)
     .maybeSingle<ClassifiedWithRelations>();
 
-  if (!classified) {
-    notFound();
-  }
+  if (!classified) notFound();
 
-  // Check if classified is active
   if (classified.status !== 'active') {
     return (
       <div className="min-h-screen bg-background pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-8">
-          <Breadcrumbs
-            items={[
-              { label: 'Inicio', href: `/${communitySlug}` },
-              { label: 'Marketplace', href: `/${communitySlug}/marketplace` },
-              { label: classified.title },
-            ]}
-          />
-
           <div className="mt-8 max-w-2xl mx-auto text-center">
             <div className="brutalist-card p-8">
               <h1 className="text-2xl font-outfit font-black uppercase tracking-tighter mb-4">
@@ -102,10 +80,7 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
                 Este clasificado ya no está activo o ha sido{' '}
                 {classified.status === 'sold' ? 'vendido' : 'eliminado'}
               </p>
-              <Link
-                href={`/${communitySlug}/marketplace`}
-                className="brutalist-button inline-block"
-              >
+              <Link href={`/${communitySlug}/marketplace`} className="brutalist-button inline-block">
                 Volver al Marketplace
               </Link>
             </div>
@@ -115,10 +90,22 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
     );
   }
 
-  // Type cast to ClassifiedWithRelations
-  const classifiedWithRelations = classified as ClassifiedWithRelations;
+  // Fetch similar classifieds (same category)
+  const { data: similarClassifieds } = await supabase
+    .from('classifieds')
+    .select(`
+      *,
+      profiles!classifieds_user_id_fkey(full_name, avatar_url),
+      marketplace_categories(name, slug, icon),
+      communities(name, slug)
+    `)
+    .eq('community_id', community.id)
+    .eq('category_id', classified.category_id)
+    .eq('status', 'active')
+    .neq('id', classified.id)
+    .order('created_at', { ascending: false })
+    .limit(4)
 
-  // Check if user has favorited
   const { data: { user } } = await supabase.auth.getUser()
   let isFavorited = false
 
@@ -135,25 +122,13 @@ export default async function ClassifiedDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <div className="container mx-auto px-4 py-8">
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', href: `/${communitySlug}` },
-            { label: 'Marketplace', href: `/${communitySlug}/marketplace` },
-            {
-              label: classifiedWithRelations.marketplace_categories?.name || 'Categoría',
-              href: `/${communitySlug}/marketplace?category=${classifiedWithRelations.marketplace_categories?.slug}`,
-            },
-            { label: classifiedWithRelations.title },
-          ]}
-        />
-
-        <ClassifiedDetailView
-          classified={classifiedWithRelations}
-          userId={user?.id}
-          isFavorited={isFavorited}
-        />
-      </div>
+      <ClassifiedDetailView
+        classified={classified as ClassifiedWithRelations}
+        communitySlug={communitySlug}
+        userId={user?.id}
+        isFavorited={isFavorited}
+        similarClassifieds={(similarClassifieds ?? []) as ClassifiedWithRelations[]}
+      />
     </div>
   );
 }

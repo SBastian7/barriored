@@ -1,110 +1,103 @@
 import Link from 'next/link'
-import { Store, Users, ShoppingBag, Info, ArrowRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-const sections = [
-  {
-    label: 'Directorio',
-    icon: Store,
-    description: 'Explora los negocios de tu barrio',
-    path: '/directory',
-    enabled: true,
-    color: 'bg-primary',
-    iconColor: 'text-primary-foreground',
-  },
-  {
-    label: 'Comunidad',
-    icon: Users,
-    description: 'Conecta con tus vecinos',
-    path: '/community',
-    enabled: true,
-    color: 'bg-accent',
-    iconColor: 'text-accent-foreground',
-  },
-  {
-    label: 'Marketplace',
-    icon: ShoppingBag,
-    description: 'Compra y vende en tu barrio',
-    path: '/marketplace',
-    enabled: true,
-    color: 'bg-secondary',
-    iconColor: 'text-secondary-foreground',
-  },
-  {
-    label: 'Servicios',
-    icon: Info,
-    description: 'Info util y emergencias',
-    path: '/services',
-    enabled: true,
-    color: 'bg-[oklch(0.5_0.15_150)]',
-    iconColor: 'text-white',
-  },
-]
+import Image from 'next/image'
 
 export function QuickNav({ communitySlug }: { communitySlug: string }) {
   return (
-    <section className="py-12 px-4">
-      <div className="container mx-auto max-w-5xl">
-        <h2 className="text-3xl font-heading font-black uppercase italic tracking-tight mb-8">
-          Tu <span className="text-primary underline decoration-4 underline-offset-4">Barrio</span>, todo en un lugar
+    <section className="px-6 md:px-8 py-11 bg-[#FFF7ED]">
+      <div className="max-w-350 mx-auto">
+        <h2 className="font-heading font-black italic uppercase text-[clamp(32px,6vw,64px)] leading-[0.9] tracking-tight mb-6">
+          ESCOGE TU<br />
+          <span className="text-[#E11D48]">CAMINO</span>
+          <span className="font-mono text-xs not-italic font-bold tracking-widest ml-3 align-middle opacity-60">04 SECCIONES</span>
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {sections.map((section) => {
-            const href = `/${communitySlug}${section.path}`
-            const Wrapper = section.enabled ? Link : 'div'
-            const wrapperProps = section.enabled ? { href } : {}
+        {/* Desktop mosaic grid */}
+        <div className="hidden md:grid grid-cols-6 grid-rows-[180px_180px] gap-4">
+          {/* Directorio — large anchor */}
+          <Link
+            href={`/${communitySlug}/directory`}
+            className="col-span-4 row-span-2 relative border-3 border-black bg-black text-white shadow-[6px_6px_0_0_#0A0A0A] overflow-hidden flex flex-col justify-between p-6 group hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[9px_9px_0_0_#0A0A0A] transition-all"
+          >
+            {/* Dark map background */}
+            <div className="absolute inset-0 overflow-hidden">
+              <Image src="/map_bg2.png" alt="" fill className="object-cover pointer-events-none" />
+            </div>
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-black/70 pointer-events-none" />
+            <div className="relative">
+              <p className="font-mono text-[11px] tracking-widest uppercase text-[#FBBF24] mb-2">SECCIÓN PRINCIPAL · 01</p>
+              <h3 className="font-heading font-black italic uppercase text-[clamp(48px,7vw,76px)] leading-[0.88] tracking-tight">DIRECTORIO</h3>
+              <p className="mt-3 text-sm leading-relaxed max-w-sm opacity-80">
+                Todos los negocios del barrio, filtrables por categoría, ubicación y reseñas. Contacta directo por WhatsApp.
+              </p>
+            </div>
+            <div className="relative flex justify-end" style={{ zIndex: 1 }}>
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#E11D48] text-white border-2 border-black shadow-[2px_2px_0_0_#0A0A0A] font-heading font-black uppercase text-xs tracking-wide">
+                ABRIR →
+              </span>
+            </div>
+          </Link>
 
-            return (
-              <Wrapper
-                key={section.path}
-                {...wrapperProps as any}
-                className={cn(
-                  'group relative border-4 p-5 md:p-6 flex flex-col transition-all',
-                  section.enabled
-                    ? 'border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer'
-                    : 'border-black/20 bg-white/60 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] cursor-default'
-                )}
-              >
-                {/* Icon */}
-                <div className={cn(
-                  'w-12 h-12 md:w-14 md:h-14 flex items-center justify-center border-2 mb-4 rotate-[-3deg] group-hover:rotate-0 transition-transform',
-                  section.enabled ? section.color : 'bg-muted',
-                  section.enabled ? 'border-black' : 'border-black/20'
-                )}>
-                  <section.icon className={cn(
-                    'h-6 w-6 md:h-7 md:w-7',
-                    section.enabled ? section.iconColor : 'text-muted-foreground'
-                  )} />
-                </div>
+          {/* Comunidad */}
+          <Link
+            href={`/${communitySlug}/community`}
+            className="col-span-2 relative border-3 min-h-20 border-black bg-[#2563EB] text-white shadow-[4px_4px_0_0_#0A0A0A] overflow-hidden flex flex-col justify-between p-4 group hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_#0A0A0A] transition-all"
+          >
+            <div>
+              <p className="font-mono text-[10px] tracking-widest opacity-75">02</p>
+              <h3 className="font-heading font-black italic uppercase text-3xl leading-none mt-1">COMUNIDAD</h3>
+            </div>
+            <div className="flex justify-between items-end">
+              <span className="font-heading font-black italic text-3xl">30K+</span>
+              <span className="text-xl">→</span>
+            </div>
+          </Link>
 
-                {/* Title */}
-                <h3 className={cn(
-                  'font-heading font-black text-lg md:text-xl uppercase tracking-tight mb-1',
-                  !section.enabled && 'text-black/30'
-                )}>
-                  {section.label}
-                </h3>
+          {/* Marketplace */}
+          <Link
+            href={`/${communitySlug}/marketplace`}
+            className="col-span-1 relative border-3 border-black bg-[#FBBF24] shadow-[4px_4px_0_0_#0A0A0A] overflow-hidden flex flex-col justify-between p-3 group hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_#0A0A0A] transition-all"
+          >
+            <div>
+              <p className="font-mono text-[10px] tracking-widest opacity-60">03</p>
+              <h3 className="font-heading font-black uppercase text-lg leading-none mt-1">MARKET</h3>
+            </div>
+            <p className="font-mono font-bold text-[10px] tracking-widest uppercase">COMPRA · VENDE</p>
+          </Link>
 
-                {/* Description */}
-                <p className={cn(
-                  'text-sm font-medium leading-snug',
-                  section.enabled ? 'text-black/60' : 'text-black/20'
-                )}>
-                  {section.description}
-                </p>
+          {/* Servicios */}
+          <Link
+            href={`/${communitySlug}/services`}
+            className="col-span-1 relative border-3 border-black bg-[#16A34A] text-white shadow-[4px_4px_0_0_#0A0A0A] overflow-hidden flex flex-col justify-between p-3 group hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_#0A0A0A] transition-all"
+          >
+            <div>
+              <p className="font-mono text-[10px] tracking-widest opacity-75">04</p>
+              <h3 className="font-heading font-black uppercase text-lg leading-none mt-1">SERVICIOS</h3>
+            </div>
+            <p className="font-mono font-bold text-[10px] tracking-widest uppercase text-white">ÚTIL · 24H</p>
+          </Link>
+        </div>
 
-                {/* Arrow or Coming Soon */}
-                {section.enabled ? (
-                  <ArrowRight className="h-5 w-5 mt-4 text-black/40 group-hover:text-black group-hover:translate-x-1 transition-all" />
-                ) : (
-                  <span className="mt-4 inline-block bg-secondary text-secondary-foreground text-[9px] font-black uppercase tracking-widest px-2 py-1 border border-black/20 w-fit">
-                    Proximamente
-                  </span>
-                )}
-              </Wrapper>
-            )
-          })}
+        {/* Mobile 2×2 grid */}
+        <div className="md:hidden grid grid-cols-2 gap-3">
+          {[
+            { label: 'DIRECTORIO', sub: 'Negocios del barrio', href: `/directory`, bg: 'bg-black', fg: 'text-white', num: '01' },
+            { label: 'COMUNIDAD', sub: '30K+ vecinos', href: `/community`, bg: 'bg-[#2563EB]', fg: 'text-white', num: '02' },
+            { label: 'MARKETPLACE', sub: 'Compra · Vende', href: `/marketplace`, bg: 'bg-[#FBBF24]', fg: 'text-black', num: '03' },
+            { label: 'SERVICIOS', sub: 'Info útil · 24h', href: `/services`, bg: 'bg-[#16A34A]', fg: 'text-white', num: '04' },
+          ].map((s) => (
+            <Link
+              key={s.label}
+              href={`/${communitySlug}${s.href}`}
+              className={`${s.bg} ${s.fg} border-3 border-black shadow-[4px_4px_0_0_#0A0A0A] p-4 flex flex-col gap-2 min-h-27.5 justify-between hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#0A0A0A] transition-all`}
+            >
+              <div>
+                <p className="font-mono text-[9px] tracking-widest opacity-60">{s.num}</p>
+                <h3 className="font-heading font-black italic uppercase text-xl leading-tight mt-0.5">{s.label}</h3>
+              </div>
+              <p className="font-mono text-[9px] tracking-widest uppercase font-bold opacity-75">{s.sub}</p>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

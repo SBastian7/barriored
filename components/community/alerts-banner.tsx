@@ -1,22 +1,21 @@
 import { AlertCard } from './alert-card'
-import { AlertCircle } from 'lucide-react'
 import type { CommunityAlert } from '@/lib/types'
 
 export function AlertsBanner({ alerts }: { alerts: CommunityAlert[] }) {
     if (alerts.length === 0) return null
 
     return (
-        <section className="space-y-4">
-            <div className="flex items-center gap-3">
-                <div className="bg-primary text-primary-foreground px-3 py-1 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-xs font-black uppercase tracking-widest">{alerts.length}</span>
-                </div>
-                <h2 className="text-xl font-heading font-black uppercase tracking-tight italic">
-                    Alertas del <span className="text-primary">Barrio</span>
+        <section className="px-4 md:px-8 py-8 bg-background border-b-4 border-black">
+            <div className="flex justify-between items-end mb-4 flex-wrap gap-3">
+                <h2 className="font-heading font-black italic uppercase tracking-tight leading-none flex items-baseline gap-3 text-[36px] md:text-[44px]">
+                    ALERTAS{' '}
+                    <span className="text-primary">DEL BARRIO</span>
+                    <span className="font-mono text-xs ml-2 align-middle not-italic font-bold opacity-60">
+                        {alerts.length} ACTIVAS
+                    </span>
                 </h2>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {alerts.map((alert) => (
                     <AlertCard key={alert.id} alert={alert} />
                 ))}

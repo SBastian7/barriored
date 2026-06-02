@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { createClient } from '@/lib/supabase/client'
 import { Search } from 'lucide-react'
 
 interface Props {
@@ -51,15 +50,9 @@ export function AssignStaffModal({
 
     setSearching(true)
     const timer = setTimeout(async () => {
-      const supabase = createClient()
-
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, role, community_id')
-        .or(`full_name.ilike.%${searchQuery}%,id.ilike.%${searchQuery}%`)
-        .limit(20)
-
-      setSearchResults(data || [])
+      const response = await fetch(`/api/admin/users/search?q=${encodeURIComponent(searchQuery)}`)
+      const json = await response.json()
+      setSearchResults(json.users || [])
       setSearching(false)
     }, 300)
 
@@ -132,7 +125,7 @@ export function AssignStaffModal({
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Nombre o ID del usuario..."
+                placeholder="Nombre del usuario..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="brutalist-input pl-10"

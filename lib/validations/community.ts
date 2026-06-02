@@ -29,24 +29,10 @@ export const createEventSchema = basePostSchema.extend({
     }),
 })
 
-// Job: requires category + contact
-export const createJobSchema = basePostSchema.extend({
-    type: z.literal('job'),
-    metadata: z.object({
-        category: z.string().min(1, 'Categoria requerida'),
-        salary_range: z.string().optional(),
-        contact_method: z.enum(['whatsapp', 'phone', 'email']),
-        contact_value: z.string().min(1, 'Contacto requerido'),
-        linked_business_id: z.string().optional(),
-        linked_business_name: z.string().optional(),
-    }),
-})
-
 // Discriminated union for all post types
 export const createPostSchema = z.discriminatedUnion('type', [
     createAnnouncementSchema,
     createEventSchema,
-    createJobSchema,
 ])
 
 export type CreatePostInput = z.infer<typeof createPostSchema>

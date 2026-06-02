@@ -146,13 +146,14 @@ export default async function EventDetailPage({
                             {/* Actions */}
                             <div className="flex flex-wrap gap-2 mt-6">
                                 <SharePostButton title={post.title} content={post.content} url={shareUrl} />
-                                <ReportButton entityType="post" entityId={post.id} variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:text-white" />
+                                <ReportButton entityType="post" entityId={post.id} variant="outline" className="bg-transparent text-white border-white/50 hover:bg-white/10 hover:text-white" />
                                 <PostEditActions
                                     postId={post.id}
                                     postType="event"
                                     communitySlug={slug}
                                     isAuthor={isAuthor}
                                     isAdmin={isAdmin}
+                                    onDark
                                 />
                             </div>
                         </div>

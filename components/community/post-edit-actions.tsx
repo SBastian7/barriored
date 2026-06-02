@@ -17,18 +17,17 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { JobFilledToggle } from './job-filled-toggle'
 
 type Props = {
   postId: string
-  postType: 'announcement' | 'event' | 'job'
+  postType: 'announcement' | 'event'
   communitySlug: string
   isAuthor: boolean
   isAdmin: boolean
-  isFilled?: boolean
+  onDark?: boolean
 }
 
-export function PostEditActions({ postId, postType, communitySlug, isAuthor, isAdmin, isFilled }: Props) {
+export function PostEditActions({ postId, postType, communitySlug, isAuthor, isAdmin, onDark = false }: Props) {
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 
@@ -40,13 +39,11 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
   const postTypePath = {
     announcement: 'announcements',
     event: 'events',
-    job: 'jobs',
   }[postType] ?? 'announcements'
 
   const postTypeEditPath = {
     announcement: 'anuncios',
     event: 'eventos',
-    job: 'empleos',
   }[postType] ?? 'anuncios'
 
   async function handleDelete() {
@@ -78,20 +75,12 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
         <Button
           variant="outline"
           size="sm"
-          className="border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-black uppercase tracking-widest text-xs"
+          className={`border-2 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all font-black uppercase tracking-widest text-xs ${onDark ? 'bg-white text-black border-white/70 hover:bg-white/90' : 'border-black'}`}
         >
           <Pencil className="mr-2 h-3.5 w-3.5" />
           Editar
         </Button>
       </Link>
-
-      {postType === 'job' && isAuthor && (
-        <JobFilledToggle
-          postId={postId}
-          isFilled={isFilled || false}
-          variant="compact"
-        />
-      )}
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
@@ -99,7 +88,7 @@ export function PostEditActions({ postId, postType, communitySlug, isAuthor, isA
             variant="destructive"
             size="sm"
             disabled={isDeleting}
-            className="border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-black uppercase tracking-widest text-xs"
+            className="border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all font-black uppercase tracking-widest text-xs"
           >
             {isDeleting ? (
               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />

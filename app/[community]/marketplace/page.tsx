@@ -1,10 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { MarketplaceHub } from '@/components/marketplace/marketplace-hub'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import type { ClassifiedWithRelations } from '@/lib/types/database'
 
 export async function generateMetadata({ params }: { params: Promise<{ community: string }> }) {
@@ -32,16 +28,14 @@ export default async function MarketplacePage({
   const { community: slug } = await params
   const supabase = await createClient()
 
-  // Fetch community
   const { data: community } = await supabase
     .from('communities')
-    .select('id, name, slug')
+    .select('id, name, slug, cover_image_url')
     .eq('slug', slug)
-    .single<{ id: string; name: string; slug: string }>()
+    .single<{ id: string; name: string; slug: string; cover_image_url: string | null }>()
 
   if (!community) notFound()
 
-  // Fetch active classifieds with relations
   const { data: classifieds } = await supabase
     .from('classifieds')
     .select(`
@@ -55,7 +49,6 @@ export default async function MarketplacePage({
     .order('created_at', { ascending: false })
     .limit(50)
 
-  // Check which classifieds user has favorited
   const { data: { user } } = await supabase.auth.getUser()
   let favoritedIds: string[] = []
 
@@ -69,40 +62,12 @@ export default async function MarketplacePage({
   }
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8 pb-24">
-      <Breadcrumbs
-        items={[
-          { label: community.name, href: `/${slug}` },
-          { label: 'Marketplace', active: true },
-        ]}
-      />
-
-      <header className="mb-12">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-4">
-          <div className="space-y-2">
-            <h1 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter italic">
-              Clasifi<span className="text-primary">cados</span>
-            </h1>
-            <p className="text-lg font-bold text-black/60 uppercase tracking-widest">
-              Compra, vende y arrienda en tu barrio
-            </p>
-          </div>
-
-          {/* Create Classified CTA - Only for authenticated users */}
-          {user && (
-            <Link href="/dashboard/marketplace/new" className="md:mt-4">
-              <Button className="brutalist-button bg-primary text-primary-foreground gap-2 w-full md:w-auto">
-                <Plus className="h-5 w-5" />
-                <span className="uppercase tracking-widest font-bold">Publicar Clasificado</span>
-              </Button>
-            </Link>
-          )}
-        </div>
-      </header>
-
+    <div className="pb-24 md:pb-0">
       <MarketplaceHub
         classifieds={(classifieds ?? []) as ClassifiedWithRelations[]}
         communitySlug={slug}
+        communityName={community.name}
+        coverImageUrl={community.cover_image_url}
         userId={user?.id}
         favoritedIds={favoritedIds}
       />

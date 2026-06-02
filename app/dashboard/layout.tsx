@@ -1,10 +1,12 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { CommunityProvider } from '@/components/community/community-provider'
+import { TopBar } from '@/components/layout/top-bar'
+import { BottomNav } from '@/components/layout/bottom-nav'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
-
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'
+import type { CommunityData } from '@/lib/types'
 
 export const metadata = { title: 'Mi Panel | BarrioRed' }
 
@@ -12,6 +14,37 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?returnUrl=/dashboard')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('community_id')
+    .eq('id', user.id)
+    .single() as { data: { community_id: string | null } | null }
+
+  let community: CommunityData | null = null
+  if (profile?.community_id) {
+    const { data } = await supabase
+      .from('communities')
+      .select('id, name, slug, municipality, department, description, logo_url, primary_color, cover_image_url')
+      .eq('id', profile.community_id)
+      .eq('is_active', true)
+      .single<CommunityData>()
+    community = data
+  }
+
+  if (community) {
+    return (
+      <CommunityProvider community={community}>
+        <div className="min-h-screen pb-16 md:pb-0">
+          <TopBar />
+          <main className="container mx-auto max-w-5xl px-4 py-8">
+            {children}
+          </main>
+          <BottomNav />
+        </div>
+      </CommunityProvider>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">

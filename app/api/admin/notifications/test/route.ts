@@ -84,11 +84,25 @@ export async function POST(request: Request) {
       }, { status: 429 })
     }
 
-    // Fetch subscriptions
+    // Get user IDs in this community, then fetch their subscriptions
+    const { data: communityProfiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('community_id', community_id)
+
+    const communityUserIds = (communityProfiles ?? []).map((p: any) => p.id)
+
+    if (communityUserIds.length === 0) {
+      await (supabase.from('push_notification_logs') as any).insert({
+        community_id, title, body: message, sent_count: 0, failed_count: 0, test_mode: true
+      })
+      return NextResponse.json({ success: true, sent_count: 0, failed_count: 0, message: 'No hay suscriptores' })
+    }
+
     let subscriptionsQuery = (supabase
       .from('push_subscriptions') as any)
       .select('*')
-      .eq('community_id', community_id)
+      .in('user_id', communityUserIds)
       .not('endpoint', 'is', null)
 
     // Filter for "Solo yo" mode
@@ -99,22 +113,10 @@ export async function POST(request: Request) {
     const { data: subscriptions } = await subscriptionsQuery
 
     if (!subscriptions || subscriptions.length === 0) {
-      // Still log as successful send with 0 count
       await (supabase.from('push_notification_logs') as any).insert({
-        community_id,
-        title,
-        body: message,
-        sent_count: 0,
-        failed_count: 0,
-        test_mode: true
+        community_id, title, body: message, sent_count: 0, failed_count: 0, test_mode: true
       })
-
-      return NextResponse.json({
-        success: true,
-        sent_count: 0,
-        failed_count: 0,
-        message: 'No hay suscriptores'
-      })
+      return NextResponse.json({ success: true, sent_count: 0, failed_count: 0, message: 'No hay suscriptores' })
     }
 
     // Send notifications

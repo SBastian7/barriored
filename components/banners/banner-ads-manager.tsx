@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ImageIcon, Eye, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { ImageIcon, Clock, CheckCircle, XCircle, PauseCircle } from 'lucide-react'
 import { BannerAdUpload } from './banner-ad-upload'
 import { Badge } from '@/components/ui/badge'
 
@@ -15,7 +15,7 @@ interface BannerAd {
   image_url: string
   placement: 'homepage' | 'directory'
   link_url: string | null
-  status: 'requested' | 'approved' | 'rejected'
+  status: 'requested' | 'active' | 'paused' | 'expired' | 'rejected'
   requested_at: string
   reviewed_at: string | null
   rejection_reason: string | null
@@ -28,11 +28,23 @@ const STATUS_CONFIG = {
     color: 'bg-secondary text-black',
     borderColor: 'border-secondary'
   },
-  approved: {
-    label: 'Aprobado',
+  active: {
+    label: 'Activo',
     icon: CheckCircle,
     color: 'bg-primary text-white',
     borderColor: 'border-primary'
+  },
+  paused: {
+    label: 'Pausado',
+    icon: PauseCircle,
+    color: 'bg-gray-400 text-white',
+    borderColor: 'border-gray-400'
+  },
+  expired: {
+    label: 'Expirado',
+    icon: Clock,
+    color: 'bg-gray-200 text-gray-600',
+    borderColor: 'border-gray-300'
   },
   rejected: {
     label: 'Rechazado',
@@ -188,7 +200,7 @@ export function BannerAdsManager({ businessId }: BannerAdsManagerProps) {
                       )}
 
                       {/* Approved Date */}
-                      {banner.status === 'approved' && banner.reviewed_at && (
+                      {banner.status === 'active' && banner.reviewed_at && (
                         <p className="text-xs text-green-700 font-bold mt-2">
                           ✅ Aprobado el{' '}
                           {new Date(banner.reviewed_at).toLocaleDateString('es-CO', {

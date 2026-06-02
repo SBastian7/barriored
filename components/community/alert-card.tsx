@@ -1,8 +1,7 @@
 import { AlertTriangle, Droplets, Zap, Shield, Construction, Info } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { CommunityAlert, AlertType } from '@/lib/types'
 
-const alertIcons = {
+const alertIcons: Record<AlertType, React.ElementType> = {
     water: Droplets,
     power: Zap,
     security: Shield,
@@ -11,65 +10,88 @@ const alertIcons = {
 }
 
 const alertTypeLabels: Record<AlertType, string> = {
-    water: 'Agua',
-    power: 'Energía',
-    security: 'Seguridad',
-    construction: 'Obras',
-    general: 'General',
+    water: 'AGUA',
+    power: 'ENERGÍA',
+    security: 'SEGURIDAD',
+    construction: 'OBRAS',
+    general: 'GENERAL',
 }
 
-const severityStyles = {
-    critical: 'bg-primary border-black text-primary-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
-    warning: 'bg-yellow-400 border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
-    info: 'bg-white border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
-}
-
-const iconStyles = {
-    critical: 'bg-white text-primary border-black',
-    warning: 'bg-black text-yellow-400 border-black',
-    info: 'bg-black text-white border-black',
+const severityConfig = {
+    critical: {
+        bg: 'bg-primary',
+        text: 'text-white',
+        urgency: 'URGENTE',
+    },
+    warning: {
+        bg: 'bg-secondary',
+        text: 'text-black',
+        urgency: 'PROGRAMADO',
+    },
+    info: {
+        bg: 'bg-accent',
+        text: 'text-white',
+        urgency: 'INFORMATIVO',
+    },
 }
 
 export function AlertCard({ alert }: { alert: CommunityAlert }) {
-    const Icon = alertIcons[alert.type] || Info
+    const Icon = alertIcons[alert.type] ?? Info
+    const cfg = severityConfig[alert.severity]
+    const typeLabel = alertTypeLabels[alert.type] ?? alert.type.toUpperCase()
+
+    const formatDate = (iso: string) =>
+        new Date(iso)
+            .toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+            .toUpperCase()
 
     return (
-        <div className={cn(
-            'flex items-start gap-4 p-5 border-2 transition-all',
-            severityStyles[alert.severity]
-        )}>
-            <div className={cn(
-                "shrink-0 w-10 h-10 border-2 flex items-center justify-center",
-                iconStyles[alert.severity]
-            )}>
-                <Icon className="h-6 w-6" />
+        <div className={`border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${cfg.bg} ${cfg.text} grid overflow-hidden`} style={{ gridTemplateColumns: 'auto 1fr' }}>
+            {/* Left column: icon + urgency label */}
+            <div className="border-r-[3px] border-black px-4.5 py-4.5 flex flex-col items-center justify-center gap-1.5 min-w-20 bg-black/10">
+                <Icon className="w-7 h-7" strokeWidth={2} />
+                <span className="font-mono text-[9px] tracking-[0.04em] uppercase font-bold text-center leading-tight">
+                    {cfg.urgency}
+                </span>
             </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
-                        Alerta de {alertTypeLabels[alert.type] ?? alert.type}
+
+            {/* Right column */}
+            <div className="p-4 flex flex-col gap-2">
+                {/* Header row: "ALERTA · TYPE" + optional urgency badge */}
+                <div className="flex justify-between items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[10px] tracking-widest uppercase font-bold opacity-85">
+                        ALERTA · {typeLabel}
                     </span>
                     {alert.severity === 'critical' && (
-                        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-white text-primary px-1 border border-black italic">
-                            <AlertTriangle className="h-3 w-3" /> Urgente
+                        <span className="font-mono text-[9px] tracking-widest uppercase bg-black text-secondary px-2 py-0.5 border border-black/40 font-bold flex items-center gap-1 shrink-0">
+                            <AlertTriangle className="w-2.5 h-2.5" /> URGENTE
                         </span>
                     )}
                 </div>
-                <h3 className="font-heading font-black uppercase tracking-tight text-lg italic leading-tight">{alert.title}</h3>
+
+                {/* Big italic title */}
+                <h3 className="font-heading font-black italic uppercase leading-none tracking-tight text-[26px]">
+                    {alert.title}
+                </h3>
+
                 {alert.description && (
-                    <p className="text-sm mt-2 font-medium opacity-90 line-clamp-3">{alert.description}</p>
+                    <p className="text-[13px] font-medium opacity-95 line-clamp-3 leading-snug">
+                        {alert.description}
+                    </p>
                 )}
+
+                {/* Footer: location / time */}
                 {(alert.starts_at || alert.ends_at) && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 pt-3 border-t border-black/10">
+                    <div className="flex justify-between items-center border-t-2 border-dashed border-current/40 mt-1 pt-2 gap-3 flex-wrap">
                         {alert.starts_at && (
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">
-                                Inicio: {new Date(alert.starts_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                            </p>
+                            <span className="font-mono text-[9px] tracking-widest uppercase font-bold">
+                                {formatDate(alert.starts_at)}
+                            </span>
                         )}
                         {alert.ends_at && (
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">
-                                Fin: {new Date(alert.ends_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                            </p>
+                            <span className="font-mono text-[9px] tracking-widest uppercase font-bold opacity-75">
+                                HASTA: {formatDate(alert.ends_at)}
+                            </span>
                         )}
                     </div>
                 )}

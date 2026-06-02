@@ -9,10 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { PhoneInput } from '@/components/ui/phone-input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createPostSchema, type CreatePostInput } from '@/lib/validations/community'
-import { ImageUploadField } from './image-upload-field'
+import { ImageUploadField } from '@/components/ui/image-upload-field'
 import { Loader2 } from 'lucide-react'
 import type { CommunityPost } from '@/lib/types'
 
@@ -62,7 +60,7 @@ export function PostEditForm({ post, communitySlug }: Props) {
                 description: 'Tu publicación ha sido actualizada correctamente.'
             })
 
-            const postTypePath = post.type === 'announcement' ? 'announcements' : post.type === 'event' ? 'events' : 'jobs'
+            const postTypePath = post.type === 'announcement' ? 'announcements' : 'events'
             router.push(`/${communitySlug}/community/${postTypePath}/${post.id}`)
             router.refresh()
         } catch (error: any) {
@@ -74,8 +72,6 @@ export function PostEditForm({ post, communitySlug }: Props) {
         }
     }
 
-    const jobMetadata = watch('type') === 'job' ? (watch() as any).metadata : null
-    const eventMetadata = watch('type') === 'event' ? (watch() as any).metadata : null
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white border-4 border-black p-6 md:p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] mt-8">
@@ -85,7 +81,7 @@ export function PostEditForm({ post, communitySlug }: Props) {
                     <Label htmlFor="title" className="font-black uppercase tracking-widest text-xs">Título de la Publicación</Label>
                     <Input
                         id="title"
-                        placeholder={post.type === 'announcement' ? 'Ej: Se perdió un perrito' : post.type === 'event' ? 'Ej: Bingo Bailable Vecinal' : 'Ej: Se busca Panadero'}
+                        placeholder={post.type === 'announcement' ? 'Ej: Se perdió un perrito' : 'Ej: Bingo Bailable Vecinal'}
                         {...register('title')}
                         className={errors.title ? 'border-primary' : ''}
                     />
@@ -108,6 +104,9 @@ export function PostEditForm({ post, communitySlug }: Props) {
                     value={watch('image_url') || null}
                     onChange={(url) => setValue('image_url', url || '')}
                     label="Imagen (Opcional)"
+                    bucket="community-images"
+                    aspectRatio="16/9"
+                    maxWidth="100%"
                 />
 
                 {/* Type Specific Fields */}
@@ -145,69 +144,6 @@ export function PostEditForm({ post, communitySlug }: Props) {
                     </div>
                 )}
 
-                {post.type === 'job' && (
-                    <div className="space-y-6 p-6 bg-secondary/5 border-2 border-black border-dashed">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="job-category" className="font-black uppercase tracking-widest text-xs">Categoría</Label>
-                                <Input
-                                    id="job-category"
-                                    placeholder="Ej: Ventas, Construcción, Cocina..."
-                                    {...register('metadata.category' as any)}
-                                />
-                                {(errors as any).metadata?.category && <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.category.message}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="job-salary" className="font-black uppercase tracking-widest text-xs">Rango Salarial (Opcional)</Label>
-                                <Input
-                                    id="job-salary"
-                                    placeholder="Ej: $1.300.000 + Prestaciones"
-                                    {...register('metadata.salary_range' as any)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-black/10">
-                            <div className="space-y-2">
-                                <Label className="font-black uppercase tracking-widest text-xs">Método de Contacto</Label>
-                                <Select
-                                    onValueChange={(v) => setValue('metadata.contact_method' as any, v)}
-                                    defaultValue={(post.metadata as any)?.contact_method || 'whatsapp'}
-                                >
-                                    <SelectTrigger className="border-2 border-black rounded-none h-11 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white">
-                                        <SelectValue placeholder="Selecciona uno" />
-                                    </SelectTrigger>
-                                    <SelectContent className="border-2 border-black rounded-none">
-                                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                                        <SelectItem value="phone">Llamada Telefónica</SelectItem>
-                                        <SelectItem value="email">Correo Electrónico</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="job-contact-value" className="font-black uppercase tracking-widest text-xs">Dato de Contacto</Label>
-                                {jobMetadata?.contact_method === 'email' ? (
-                                    <Input
-                                        id="job-contact-value"
-                                        type="email"
-                                        placeholder="nombre@correo.com"
-                                        {...register('metadata.contact_value' as any)}
-                                    />
-                                ) : (
-                                    <PhoneInput
-                                        value={watch('metadata.contact_value' as any) || ''}
-                                        onChange={(val) => setValue('metadata.contact_value' as any, val)}
-                                        placeholder="312 345 6789"
-                                        error={(errors as any).metadata?.contact_value?.message}
-                                    />
-                                )}
-                                {jobMetadata?.contact_method === 'email' && (errors as any).metadata?.contact_value && (
-                                    <p className="text-primary text-[10px] font-black uppercase tracking-widest">{(errors as any).metadata.contact_value.message}</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
 
             <div className="pt-6 border-t-4 border-black mt-8 flex gap-4">

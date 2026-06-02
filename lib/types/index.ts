@@ -23,7 +23,7 @@ export type BusinessStatus = 'pending' | 'approved' | 'rejected'
 export type UserRole = 'user' | 'moderator' | 'admin'
 
 // Phase 3: Community types
-export type PostType = 'announcement' | 'event' | 'job' | 'promotion'
+export type PostType = 'announcement' | 'event' | 'promotion'
 export type PostStatus = 'pending' | 'approved' | 'rejected'
 export type AlertType = 'water' | 'power' | 'security' | 'construction' | 'general'
 export type AlertSeverity = 'info' | 'warning' | 'critical'
@@ -35,16 +35,6 @@ export type EventMetadata = {
   location: string
   location_coords?: { lat: number; lng: number }
   organizer?: string
-  linked_business_id?: string
-  linked_business_name?: string
-}
-
-export type JobMetadata = {
-  category: string
-  salary_range?: string
-  contact_method: 'whatsapp' | 'phone' | 'email'
-  contact_value: string
-  is_filled?: boolean
   linked_business_id?: string
   linked_business_name?: string
 }
@@ -64,7 +54,7 @@ export type CommunityPost = {
   title: string
   content: string
   image_url: string | null
-  metadata: EventMetadata | JobMetadata | PromotionMetadata | Record<string, never>
+  metadata: EventMetadata | PromotionMetadata | Record<string, never>
   status: PostStatus
   is_pinned: boolean
   created_at: string

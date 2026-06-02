@@ -103,7 +103,7 @@ export async function PATCH(
     description,
     location,
     logo_url,
-    banner_url,
+    cover_image_url,
     is_active,
     primary_admin_id,
   } = body
@@ -114,7 +114,7 @@ export async function PATCH(
   if (description !== undefined) updateData.description = description
   if (location !== undefined) updateData.location = location
   if (logo_url !== undefined) updateData.logo_url = logo_url
-  if (banner_url !== undefined) updateData.banner_url = banner_url
+  if (cover_image_url !== undefined) updateData.cover_image_url = cover_image_url
   if (is_active !== undefined) updateData.is_active = is_active
   // Validate and set primary_admin_id if provided
   if (primary_admin_id !== undefined) {

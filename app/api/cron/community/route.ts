@@ -24,20 +24,7 @@ export async function GET(request: Request) {
     console.error('Error expiring events:', expiredEventsError)
   }
 
-  // ── Step 2: Archive filled jobs ─────────────────────────────────────────────
-  const { data: archivedJobs, error: archivedJobsError } = await (admin as any)
-    .from('community_posts')
-    .update({ status: 'archived', updated_at: now.toISOString() })
-    .eq('type', 'job')
-    .eq('status', 'approved')
-    .eq('metadata->>is_filled', 'true')
-    .select('id')
-
-  if (archivedJobsError) {
-    console.error('Error archiving filled jobs:', archivedJobsError)
-  }
-
-  // ── Step 3: 24h event reminders ─────────────────────────────────────────────
+  // ── Step 2: 24h event reminders ─────────────────────────────────────────────
   const from24h = new Date(now.getTime() + 23 * 60 * 60 * 1000)
   const to24h   = new Date(now.getTime() + 25 * 60 * 60 * 1000)
 
@@ -146,7 +133,6 @@ export async function GET(request: Request) {
   return NextResponse.json({
     success: true,
     eventsExpired: expiredEvents?.length ?? 0,
-    jobsArchived: archivedJobs?.length ?? 0,
     reminders24hSent,
     reminders1hSent,
     timestamp: now.toISOString(),

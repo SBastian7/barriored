@@ -41,21 +41,24 @@ export default async function AdminDashboard() {
     redirect('/auth/login')
   }
 
-  // Check admin role
+  // Check admin role — also fetch community_id for scoped community lookup
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, is_super_admin, community_id')
     .eq('id', user.id)
-    .single() as { data: { role: string } | null }
+    .single() as { data: { role: string; is_super_admin: boolean; community_id: string | null } | null }
 
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'moderator')) {
+  if (!profile || (!profile.is_super_admin && profile.role !== 'admin' && profile.role !== 'moderator')) {
     redirect('/')
   }
 
-  // Get community context (hardcoded for now, should come from context in multi-tenant)
-  const { data: community } = await supabase
-    .from('communities')
-    .select('id, name')
+  // Resolve community: use the user's assigned community, or fall back to the first active one for super admins
+  let communityQuery = supabase.from('communities').select('id, name').eq('is_active', true)
+  if (profile.community_id) {
+    communityQuery = communityQuery.eq('id', profile.community_id)
+  }
+  const { data: community } = await communityQuery
+    .limit(1)
     .single() as { data: { id: string; name: string } | null }
 
   if (!community) {

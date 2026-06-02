@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     // 4. Check if business exists and is approved
     const { data: business, error: businessError } = await supabase
       .from('businesses')
-      .select('id, owner_id, status')
+      .select('id, owner_id, status, name, community_id')
       .eq('id', business_id)
       .single();
 
@@ -113,27 +113,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Fire-and-forget: notify business owner of new review
-    try {
+    if (business.owner_id && business.owner_id !== user.id) {
       const adminClient = createAdminClient();
-      const { data: biz } = await (supabase as any)
-        .from('businesses')
-        .select('name, owner_id, community_id')
-        .eq('id', business_id)
-        .single();
-
-      if (biz?.owner_id) {
-        const [ownerResult, commResult] = await Promise.all([
-          adminClient.auth.admin.getUserById(biz.owner_id),
-          (adminClient as any).from('communities').select('slug').eq('id', biz.community_id).single(),
-        ]);
-        const ownerEmail = (ownerResult as any).data?.user?.email;
+      Promise.all([
+        adminClient.auth.admin.getUserById(business.owner_id),
+        adminClient.from('communities').select('slug').eq('id', business.community_id!).single(),
+      ]).then(([ownerResult, commResult]) => {
+        const ownerEmail = ownerResult.data?.user?.email;
         const communitySlug = (commResult.data as any)?.slug || '';
         if (ownerEmail) {
-          sendNewReviewEmail(ownerEmail, biz.name, rating, review_text || null, communitySlug).catch(console.error);
+          return sendNewReviewEmail(ownerEmail, business.name, rating, review_text || null, communitySlug);
         }
-      }
-    } catch (e) {
-      console.error('Failed to send review notification:', e);
+      }).catch((e) => console.error('Failed to send review notification:', e));
     }
 
     return NextResponse.json(

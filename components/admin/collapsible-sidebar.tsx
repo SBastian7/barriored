@@ -31,37 +31,38 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/admin', label: 'Panel', icon: BarChart3 },
-  { href: '/admin/businesses', label: 'Negocios', icon: Building2 },
-  { href: '/admin/users', label: 'Usuarios', icon: Users },
-  { href: '/admin/categories', label: 'Categorías', icon: FolderTree },
+  { href: '/admin/businesses', label: 'Negocios', icon: Building2, adminOnly: true },
+  { href: '/admin/users', label: 'Usuarios', icon: Users, adminOnly: true },
+  { href: '/admin/categories', label: 'Categorías', icon: FolderTree, adminOnly: true },
   { href: '/admin/community', label: 'Comunidad', icon: MessageSquare },
   { href: '/admin/alerts', label: 'Alertas', icon: Bell },
   { href: '/admin/reports', label: 'Reportes', icon: Flag },
-  { href: '/admin/services', label: 'Servicios', icon: Briefcase },
-  { href: '/admin/marketplace', label: 'Marketplace', icon: ShoppingBag },
-  { href: '/admin/subscriptions', label: 'Suscripciones', icon: Crown, divider: true, section: 'monetization' },
-  { href: '/admin/banners', label: 'Banners', icon: ImageIcon, section: 'monetization' },
-  { href: '/admin/payments', label: 'Pagos', icon: DollarSign, section: 'monetization' },
-  { href: '/admin/review-flags', label: 'Reseñas Reportadas', icon: AlertCircle, section: 'monetization' },
+  { href: '/admin/services', label: 'Servicios', icon: Briefcase, adminOnly: true },
+  { href: '/admin/marketplace', label: 'Marketplace', icon: ShoppingBag, adminOnly: true },
+  { href: '/admin/subscriptions', label: 'Suscripciones', icon: Crown, divider: true, section: 'monetization', adminOnly: true },
+  { href: '/admin/banners', label: 'Banners', icon: ImageIcon, section: 'monetization', adminOnly: true },
+  { href: '/admin/payments', label: 'Pagos', icon: DollarSign, section: 'monetization', adminOnly: true },
+  { href: '/admin/review-flags', label: 'Reseñas Reportadas', icon: AlertCircle, section: 'monetization', adminOnly: true },
   { href: '/admin/reviews', label: 'Reseñas', icon: Star, section: 'monetization' },
-  { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3, divider: true },
-  { href: '/admin/engagement', label: 'Engagement', icon: Activity },
+  { href: '/admin/statistics', label: 'Estadísticas', icon: BarChart3, divider: true, adminOnly: true },
+  { href: '/admin/engagement', label: 'Engagement', icon: Activity, adminOnly: true },
   { href: '/admin/communities', label: 'Comunidades', icon: Globe, roles: ['super_admin'], divider: true },
   { href: '/admin/platform/settings', label: 'Config. Plataforma', icon: Settings, roles: ['super_admin'], section: 'platform', divider: true },
   { href: '/admin/platform/policies', label: 'Políticas', icon: FileText, roles: ['super_admin'], section: 'platform' },
   { href: '/admin/platform/payments', label: 'Pasarelas Pago', icon: DollarSign, roles: ['super_admin'], section: 'platform' },
   { href: '/admin/platform/service-categories', label: 'Cat. Servicios', icon: Briefcase, roles: ['super_admin'], section: 'platform' },
   { href: '/admin/logs', label: 'Logs', icon: FileText },
-  { href: '/admin/tools', label: 'Herramientas', icon: Settings },
+  { href: '/admin/tools', label: 'Herramientas', icon: Settings, adminOnly: true },
 ]
 
 export function CollapsibleSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const pathname = usePathname()
 
   useEffect(() => {
-    async function checkSuperAdmin() {
+    async function checkRole() {
       const supabase = createClient()
       const {
         data: { user },
@@ -70,15 +71,16 @@ export function CollapsibleSidebar() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('is_super_admin')
+          .select('is_super_admin, role')
           .eq('id', user.id)
-          .single<{ is_super_admin: boolean }>()
+          .single<{ is_super_admin: boolean; role: string }>()
 
         setIsSuperAdmin(profile?.is_super_admin || false)
+        setUserRole(profile?.role || null)
       }
     }
 
-    checkSuperAdmin()
+    checkRole()
   }, [])
 
   const sectionLabels: Record<string, string> = {
@@ -86,10 +88,13 @@ export function CollapsibleSidebar() {
     platform: 'Plataforma',
   }
 
+  const isAdmin = isSuperAdmin || userRole === 'admin'
+
   // Filter nav items based on role
   const visibleNavItems = navItems.filter((item) => {
-    if (!item.roles) return true // No role restriction
-    return item.roles.includes('super_admin') && isSuperAdmin
+    if (item.roles?.includes('super_admin') && !isSuperAdmin) return false
+    if (item.adminOnly && !isAdmin) return false
+    return true
   })
 
   return (

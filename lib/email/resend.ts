@@ -140,7 +140,7 @@ export async function sendSubscriptionExpirationWarningEmail(
         <p>Hola,</p>
         <p>⚠️ Tu suscripción Premium para <strong>${businessName}</strong> vence el <strong>${expiryDate}</strong>.</p>
         <p>Si no se renueva antes de esa fecha, tu negocio dejará de aparecer como destacado en el directorio.</p>
-        <p>Contacta a tu administrador de comunidad para renovar tu suscripción a la brevedad.</p>
+        <p>Contacta a tu administrador de comunidad para renovar tu suscripción lo antes posible.</p>
         <p>
           <a href="https://barriored.co/dashboard" style="background: #c0392b; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; display: inline-block;">
             Ver mi Panel

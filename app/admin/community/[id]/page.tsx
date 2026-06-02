@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { CheckCircle, XCircle, ArrowLeft, User, Calendar, MapPin, Briefcase, DollarSign, MessageSquare, Phone, Mail, Pin, Megaphone, Loader2, Edit, Trash2 } from 'lucide-react'
+import { CheckCircle, XCircle, ArrowLeft, User, Calendar, MapPin, MessageSquare, Pin, Megaphone, Loader2, Edit, Trash2 } from 'lucide-react'
+import { ImageUploadField } from '@/components/ui/image-upload-field'
 import type { CommunityPost } from '@/lib/types'
 
 export default function AdminPostReviewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -167,7 +168,6 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
     const typeMeta: any = {
         announcement: { label: 'Anuncio', icon: Megaphone, color: 'bg-primary' },
         event: { label: 'Evento', icon: Calendar, color: 'bg-accent' },
-        job: { label: 'Empleo', icon: Briefcase, color: 'bg-secondary' },
     }
     const meta = typeMeta[post.type] || typeMeta.announcement
     const Icon = meta.icon
@@ -217,24 +217,6 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
                                 </div>
                             )}
 
-                            {post.type === 'job' && post.metadata && (
-                                <div className="p-4 bg-secondary/10 border-2 border-black border-dashed space-y-4">
-                                    <div className="grid grid-cols-2 gap-4 border-b border-black/10 pb-4">
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Categoría</p>
-                                            <p className="font-bold text-sm">{post.metadata.category}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Salario</p>
-                                            <p className="font-bold text-sm">{post.metadata.salary_range || 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Contacto ({post.metadata.contact_method})</p>
-                                        <p className="font-bold text-primary">{post.metadata.contact_value}</p>
-                                    </div>
-                                </div>
-                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -353,17 +335,14 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                                URL de Imagen (Opcional)
-                            </Label>
-                            <Input
-                                value={editFormData.image_url}
-                                onChange={(e) => setEditFormData({ ...editFormData, image_url: e.target.value })}
-                                className="brutalist-input"
-                                placeholder="https://..."
-                            />
-                        </div>
+                        <ImageUploadField
+                            label="Imagen (Opcional)"
+                            value={editFormData.image_url || null}
+                            onChange={(url) => setEditFormData({ ...editFormData, image_url: url || '' })}
+                            bucket="community-images"
+                            aspectRatio="16/9"
+                            maxWidth="100%"
+                        />
 
                         {post?.type === 'event' && (
                             <div className="grid grid-cols-2 gap-4 p-4 border-2 border-black bg-accent/5">
@@ -397,37 +376,6 @@ export default function AdminPostReviewPage({ params }: { params: Promise<{ id: 
                             </div>
                         )}
 
-                        {post?.type === 'job' && (
-                            <div className="space-y-4 p-4 border-2 border-black bg-secondary/5">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                                        Categoría
-                                    </Label>
-                                    <Input
-                                        value={editFormData.metadata?.category || ''}
-                                        onChange={(e) => setEditFormData({
-                                            ...editFormData,
-                                            metadata: { ...editFormData.metadata, category: e.target.value }
-                                        })}
-                                        className="brutalist-input"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                                        Rango Salarial
-                                    </Label>
-                                    <Input
-                                        value={editFormData.metadata?.salary_range || ''}
-                                        onChange={(e) => setEditFormData({
-                                            ...editFormData,
-                                            metadata: { ...editFormData.metadata, salary_range: e.target.value }
-                                        })}
-                                        className="brutalist-input"
-                                        placeholder="Ej: $1.300.000 - $1.500.000"
-                                    />
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     <DialogFooter className="gap-2">

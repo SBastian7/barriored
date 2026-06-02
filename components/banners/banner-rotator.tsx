@@ -68,14 +68,15 @@ export function BannerRotator({ placement, communityId }: BannerRotatorProps) {
         : {})}
       className="block border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer"
     >
-      <Image
-        src={banner.image_url}
-        alt={banner.title}
-        width={1200}
-        height={400}
-        className="w-full h-auto"
-        priority={placement === 'homepage'}
-      />
+      <div className="relative aspect-video w-full overflow-hidden">
+        <Image
+          src={banner.image_url}
+          alt={banner.title}
+          fill
+          className="object-cover"
+          priority={placement === 'homepage'}
+        />
+      </div>
     </BannerWrapper>
   )
 }

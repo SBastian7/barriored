@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Image from 'next/image'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Upload, X, ImagePlus } from 'lucide-react'
@@ -141,38 +140,34 @@ export function ImageUploadField({
       {value && (
         <div className="space-y-3">
           <div
-            className="relative brutalist-card overflow-hidden border-2 border-black"
+            className="brutalist-card overflow-hidden border-2 border-black"
             style={{ aspectRatio, maxWidth }}
           >
-            <Image
+            <img
               src={value}
               alt={label}
-              fill
-              className="object-cover"
+              className="w-full h-full object-cover"
             />
           </div>
 
           <div className="flex gap-2">
-            <label className="flex-1">
+            <div className="flex-1 relative">
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleUpload}
-                className="sr-only"
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full disabled:cursor-not-allowed"
                 disabled={uploading}
               />
               <Button
                 type="button"
                 variant="outline"
-                className="brutalist-button w-full"
+                className="brutalist-button w-full pointer-events-none"
                 disabled={uploading}
-                asChild
               >
-                <span>
-                  {uploading ? 'Subiendo...' : 'Cambiar'}
-                </span>
+                {uploading ? 'Subiendo...' : 'Cambiar'}
               </Button>
-            </label>
+            </div>
 
             <Button
               type="button"

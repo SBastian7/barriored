@@ -2,11 +2,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileView } from './profile-view'
 
-export const metadata = {
-  title: 'Mi Perfil | BarrioRed',
-  description: 'Administra tu perfil de usuario',
-}
-
 export default async function ProfilePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

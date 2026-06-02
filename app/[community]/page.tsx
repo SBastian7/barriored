@@ -1,8 +1,9 @@
 import { unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { HeroBanner } from '@/components/home/hero-banner'
+import { MarqueeStrip } from '@/components/home/marquee-strip'
 import { QuickNav } from '@/components/home/quick-nav'
-import { BusinessSection } from '@/components/home/featured-businesses'
+import { FeaturedSection, RecentSection } from '@/components/home/featured-businesses'
 import { RegisterCTA } from '@/components/home/register-cta'
 import { BannerRotator } from '@/components/banners/banner-rotator'
 
@@ -24,25 +25,25 @@ function getCommunityHomepageData(slug: string) {
           .eq('community_id', community.id).eq('status', 'approved'),
 
         (admin as any).from('businesses')
-          .select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
+          .select('id, name, slug, description, photos, whatsapp, address, created_at, is_featured, categories(name, slug)')
           .eq('community_id', community.id)
           .eq('status', 'approved')
           .eq('is_featured', true)
           .order('featured_order', { ascending: true, nullsFirst: false })
-          .limit(3),
+          .limit(4),
 
         (admin as any).from('businesses')
-          .select('id, name, slug, description, photos, whatsapp, address, is_featured, categories(name, slug)')
+          .select('id, name, slug, description, photos, whatsapp, address, created_at, is_featured, categories(name, slug)')
           .eq('community_id', community.id)
           .eq('status', 'approved')
           .order('created_at', { ascending: false })
-          .limit(10),
+          .limit(12),
       ])
 
       const featuredIds = (featuredRes.data ?? []).map((b: any) => b.id)
       const recentBusinesses = (recentRes.data ?? [])
         .filter((b: any) => !featuredIds.includes(b.id))
-        .slice(0, 3)
+        .slice(0, 6)
 
       return {
         community,
@@ -66,29 +67,20 @@ export default async function CommunityHomePage({ params }: { params: Promise<{ 
   return (
     <>
       <HeroBanner community={community} businessCount={businessCount} />
-      <div className="container mx-auto max-w-6xl px-4 py-8">
-        <BannerRotator placement="homepage" communityId={community.id} />
-      </div>
+      <MarqueeStrip />
       <QuickNav communitySlug={slug} />
 
-      {/* Featured businesses section */}
       {featuredBusinesses.length > 0 && (
-        <BusinessSection
-          businesses={featuredBusinesses}
-          communitySlug={slug}
-          title="Destacados"
-          showBadge={true}
-        />
+        <FeaturedSection businesses={featuredBusinesses} communitySlug={slug} />
       )}
 
-      {/* Recent businesses section */}
+      {/* Banner ads between sections */}
+      <div className="px-6 md:px-8 py-6 max-w-350 mx-auto">
+        <BannerRotator placement="homepage" communityId={community.id} />
+      </div>
+
       {recentBusinesses.length > 0 && (
-        <BusinessSection
-          businesses={recentBusinesses}
-          communitySlug={slug}
-          title="Recientes"
-          showBadge={false}
-        />
+        <RecentSection businesses={recentBusinesses} communitySlug={slug} />
       )}
 
       <RegisterCTA communitySlug={slug} />
