@@ -228,7 +228,7 @@ export function MyReviews({ userId }: MyReviewsProps) {
                         </Badge>
                       </div>
                       <p className="text-sm text-foreground/80">
-                        {review.response}
+                        {review.response.response_text}
                       </p>
                     </div>
                   )}

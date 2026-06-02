@@ -37,6 +37,13 @@ export type ReviewWithRelations = Review & {
     full_name: string | null
     avatar_url: string | null
   } | null
+  business?: {
+    id: string
+    name: string
+    slug: string
+    community_id: string
+    communities: { slug: string } | null
+  } | null
   response: ReviewResponse | null
 }
 

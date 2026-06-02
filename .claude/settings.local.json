@@ -84,7 +84,16 @@
       "Read(//c/Users/Sebastian/AppData/Local/Temp/barriored-design/barrio-red/**)",
       "Read(//c/Users/Sebastian/AppData/Local/Temp/barrio-design/barrio-red/project/**)",
       "Read(//c/Users/Sebastian/AppData/Local/Temp/barrio-design/**)",
-      "PowerShell(node --version; npm --version; \\(Get-Command pnpm -ErrorAction SilentlyContinue\\).Version; Test-Path package-lock.json; Test-Path pnpm-lock.yaml; Test-Path yarn.lock)"
+      "PowerShell(node --version; npm --version; \\(Get-Command pnpm -ErrorAction SilentlyContinue\\).Version; Test-Path package-lock.json; Test-Path pnpm-lock.yaml; Test-Path yarn.lock)",
+      "WebSearch",
+      "PowerShell(*)",
+      "PowerShell(foreach \\($p in 'next','uuid','resend','eslint-config-next','pnpm','@supabase/supabase-js'\\) { \"$p latest = $\\(npm view $p version 2>$null\\)\" }; \"--- corepack ---\"; \\(Get-Command corepack -ErrorAction SilentlyContinue\\).Source)",
+      "PowerShell(pnpm build 2>&1 | Tee-Object -Variable b | Out-Null; \"BUILD_EXIT=$LASTEXITCODE\"; \"===== last 50 lines =====\"; $b | Select-Object -Last 50)",
+      "PowerShell(\"react-avatar = $\\(npm view @radix-ui/react-avatar version 2>$null\\)\"; \"react-switch = $\\(npm view @radix-ui/react-switch version 2>$null\\)\"; \"serwist = $\\(npm view serwist version 2>$null\\)\")",
+      "WebFetch(domain:unpkg.com)",
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "mcp__plugin_supabase_supabase__get_advisors",
+      "WebFetch(domain:supabase.com)"
     ]
   }
 }

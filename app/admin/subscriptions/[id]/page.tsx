@@ -121,16 +121,16 @@ export default function AdminSubscriptionDetailPage() {
         }
       }
 
-      setSubscription(transformedSub)
+      setSubscription(transformedSub as any)
 
       // Fetch payments
       const { data: paymentsData } = await supabase
         .from('subscription_payments')
         .select('*')
         .eq('subscription_id', id)
-        .order('payment_date', { ascending: false })
+        .order('recorded_at', { ascending: false })
 
-      setPayments(paymentsData || [])
+      setPayments((paymentsData || []) as any)
     } catch (error) {
       console.error('Error fetching subscription:', error)
       toast.error('Error al cargar suscripción')

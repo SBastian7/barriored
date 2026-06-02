@@ -140,7 +140,7 @@ export function BannersTable({ communityId }: BannersTableProps) {
           )
         : transformedData
 
-      setBanners(filtered)
+      setBanners(filtered as any)
     } catch (error) {
       console.error('Error fetching banners:', error)
       toast.error('Error al cargar banners')

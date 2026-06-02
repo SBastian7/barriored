@@ -36,7 +36,7 @@ export async function PATCH(request: Request) {
 
   const { data: oldConfig } = await supabase.from('platform_config').select('*').eq('singleton', true).single()
 
-  const { data, error } = await supabase.from('platform_config').update(updates).eq('singleton', true).select().single()
+  const { data, error } = await supabase.from('platform_config').update(updates as any).eq('singleton', true).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await logAuditAction({ action: 'update_platform_config', entityType: 'platform_config', entityId: data.id, oldData: oldConfig, newData: data })

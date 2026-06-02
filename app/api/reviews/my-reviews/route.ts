@@ -50,7 +50,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      reviews: reviews as ReviewWithRelations[],
+      reviews: reviews as unknown as ReviewWithRelations[],
       total_count: reviews?.length || 0
     })
   } catch (error) {

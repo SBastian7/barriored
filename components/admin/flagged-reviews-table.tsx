@@ -70,7 +70,7 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
   // Stats
   const totalPending = flags.filter(f => f.status === 'pending').length
   const totalDismissed = flags.filter(f => f.status === 'dismissed').length
-  const totalRemoved = flags.filter(f => f.status === 'removed').length
+  const totalRemoved = flags.filter(f => (f.status as string) === 'removed').length
 
   async function fetchFlags() {
     setLoading(true)
@@ -134,7 +134,7 @@ export function FlaggedReviewsTable({ communityId }: FlaggedReviewsTableProps) {
           )
         : transformedData
 
-      setFlags(filtered)
+      setFlags(filtered as any)
     } catch (error) {
       console.error('Error fetching flags:', error)
       toast.error('Error al cargar reportes')

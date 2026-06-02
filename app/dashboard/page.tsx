@@ -112,7 +112,7 @@ async function BusinessTabContent({
     .order('created_at', { ascending: false }) as { data: any }
 
   // Find first approved business
-  const firstApprovedBusiness = businesses?.find(b => b.status === 'approved')
+  const firstApprovedBusiness = businesses?.find((b: any) => b.status === 'approved')
 
   // Check promotion eligibility
   let canPromote = false

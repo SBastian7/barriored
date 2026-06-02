@@ -104,8 +104,7 @@ export default function AdminPaymentsPage() {
           id,
           amount,
           payment_method,
-          transaction_id,
-          payment_date,
+          recorded_at,
           subscription_id,
           business_subscriptions!inner(
             business_id,
@@ -117,55 +116,57 @@ export default function AdminPaymentsPage() {
             )
           )
         `)
-        .order('payment_date', { ascending: false })
+        .order('recorded_at', { ascending: false })
       if (commId) subQuery = subQuery.eq('business_subscriptions.businesses.community_id', commId)
       const { data: subPayments } = await subQuery
 
-      // Fetch banner payments (from banner_ads approved records)
+      // Fetch banner payments (from the banner_payments ledger)
       let bannerQuery = supabase
-        .from('banner_ads')
+        .from('banner_payments')
         .select(`
           id,
-          amount_paid,
+          amount,
           payment_method,
-          approved_at,
-          business_id,
-          businesses!inner(
-            name,
-            community_id,
-            owner_id,
-            profiles!businesses_owner_id_profiles_fkey(full_name)
+          recorded_at,
+          banner_id,
+          banner_ads!inner(
+            business_id,
+            businesses!inner(
+              name,
+              community_id,
+              owner_id,
+              profiles!businesses_owner_id_profiles_fkey(full_name)
+            )
           )
         `)
-        .eq('status', 'approved')
-        .not('amount_paid', 'is', null)
-        .order('approved_at', { ascending: false })
-      if (commId) bannerQuery = bannerQuery.eq('businesses.community_id', commId)
+        .order('recorded_at', { ascending: false })
+      if (commId) bannerQuery = bannerQuery.eq('banner_ads.businesses.community_id', commId)
       const { data: bannerPayments } = await bannerQuery
 
-      // Transform and combine payments
-      const transformedSubPayments: Payment[] = (subPayments || []).map(p => ({
+      // Transform and combine payments. Manual payments (Nequi/transfer/cash)
+      // have no transaction id; payment_date maps to recorded_at.
+      const transformedSubPayments: Payment[] = (subPayments || []).map((p: any) => ({
         id: p.id,
         type: 'subscription' as const,
         amount: p.amount,
-        payment_method: p.payment_method,
-        transaction_id: p.transaction_id,
-        payment_date: p.payment_date,
-        business_name: (p.business_subscriptions as any)?.businesses?.name || 'Unknown',
-        owner_name: (p.business_subscriptions as any)?.businesses?.profiles?.full_name || null,
+        payment_method: p.payment_method || 'unknown',
+        transaction_id: null,
+        payment_date: p.recorded_at || new Date().toISOString(),
+        business_name: p.business_subscriptions?.businesses?.name || 'Unknown',
+        owner_name: p.business_subscriptions?.businesses?.profiles?.full_name || null,
         subscription_id: p.subscription_id
       }))
 
-      const transformedBannerPayments: Payment[] = (bannerPayments || []).map(b => ({
+      const transformedBannerPayments: Payment[] = (bannerPayments || []).map((b: any) => ({
         id: b.id,
         type: 'banner' as const,
-        amount: b.amount_paid || 0,
+        amount: b.amount || 0,
         payment_method: b.payment_method || 'unknown',
         transaction_id: null,
-        payment_date: b.approved_at || new Date().toISOString(),
-        business_name: (b.businesses as any)?.name || 'Unknown',
-        owner_name: (b.businesses as any)?.profiles?.full_name || null,
-        banner_id: b.id
+        payment_date: b.recorded_at || new Date().toISOString(),
+        business_name: b.banner_ads?.businesses?.name || 'Unknown',
+        owner_name: b.banner_ads?.businesses?.profiles?.full_name || null,
+        banner_id: b.banner_id
       }))
 
       const allPayments = [...transformedSubPayments, ...transformedBannerPayments]

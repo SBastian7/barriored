@@ -245,9 +245,9 @@ export default function AdminStatisticsPage() {
         return query
       }
 
-      let bannerPaymentsQuery = supabase.from('banner_ads').select('amount_paid').eq('status', 'approved').not('amount_paid', 'is', null)
+      let bannerPaymentsQuery = supabase.from('banner_payments').select('amount, banner_ads!inner(community_id)')
       if (effectiveCommunityId) {
-        bannerPaymentsQuery = bannerPaymentsQuery.eq('community_id', effectiveCommunityId)
+        bannerPaymentsQuery = bannerPaymentsQuery.eq('banner_ads.community_id', effectiveCommunityId)
       }
 
       const [activeSubscriptions, activeBanners, subPayments, bannerPayments] = await Promise.all([
@@ -258,28 +258,26 @@ export default function AdminStatisticsPage() {
       ])
 
       const totalSubRevenue = (subPayments.data || []).reduce((sum, p) => sum + (p.amount || 0), 0)
-      const totalBannerRevenue = (bannerPayments.data || []).reduce((sum, b) => sum + (b.amount_paid || 0), 0)
+      const totalBannerRevenue = (bannerPayments.data || []).reduce((sum, b: any) => sum + (b.amount || 0), 0)
       const totalRevenue = totalSubRevenue + totalBannerRevenue
 
       // Monthly revenue (this month only)
       const monthlySubPayments = await supabase
         .from('subscription_payments')
         .select('amount')
-        .gte('payment_date', firstDayOfMonth.toISOString())
+        .gte('recorded_at', firstDayOfMonth.toISOString())
 
       let monthlyBannersQuery = supabase
-        .from('banner_ads')
-        .select('amount_paid')
-        .eq('status', 'approved')
-        .not('amount_paid', 'is', null)
-        .gte('approved_at', firstDayOfMonth.toISOString())
+        .from('banner_payments')
+        .select('amount, banner_ads!inner(community_id)')
+        .gte('recorded_at', firstDayOfMonth.toISOString())
       if (effectiveCommunityId) {
-        monthlyBannersQuery = monthlyBannersQuery.eq('community_id', effectiveCommunityId)
+        monthlyBannersQuery = monthlyBannersQuery.eq('banner_ads.community_id', effectiveCommunityId)
       }
       const monthlyBanners = await monthlyBannersQuery
 
       const monthlySubRevenue = (monthlySubPayments.data || []).reduce((sum, p) => sum + (p.amount || 0), 0)
-      const monthlyBanRevenue = (monthlyBanners.data || []).reduce((sum, b) => sum + (b.amount_paid || 0), 0)
+      const monthlyBanRevenue = (monthlyBanners.data || []).reduce((sum, b: any) => sum + (b.amount || 0), 0)
       const monthlyRevenue = monthlySubRevenue + monthlyBanRevenue
 
       setStats({

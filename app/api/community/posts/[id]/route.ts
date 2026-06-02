@@ -61,7 +61,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
         .from('community_posts')
         .update({ ...parsed.data, updated_at: new Date().toISOString() })
         .eq('id', id)

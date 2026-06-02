@@ -24,6 +24,7 @@ export type AuditAction =
   | 'update_platform_config'
   | 'update_platform_policy'
   | 'update_payment_gateway'
+  | 'revoke_subscription'
 
 export type EntityType =
   | 'business'
@@ -36,6 +37,7 @@ export type EntityType =
   | 'platform_config'
   | 'platform_policies'
   | 'platform_payment_config'
+  | 'business_subscription'
 
 interface LogAuditParams {
   action: AuditAction

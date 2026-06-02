@@ -124,7 +124,7 @@ export default function AdminBannerDetailPage() {
         }
       }
 
-      setBanner(transformedBanner)
+      setBanner(transformedBanner as any)
     } catch (error) {
       console.error('Error fetching banner:', error)
       toast.error('Error al cargar banner')

@@ -40,7 +40,7 @@ export async function PATCH(
 
   const { data, error } = await supabase
     .from('platform_payment_config')
-    .update(updates)
+    .update(updates as any)
     .eq('gateway', gateway)
     .select()
     .single()

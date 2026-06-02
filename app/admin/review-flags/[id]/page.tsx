@@ -116,7 +116,7 @@ export default function AdminReviewFlagDetailPage() {
         profiles: data.profiles
       }
 
-      setFlag(transformedFlag)
+      setFlag(transformedFlag as any)
     } catch (error) {
       console.error('Error fetching flag:', error)
       toast.error('Error al cargar reporte')

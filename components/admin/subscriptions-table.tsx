@@ -111,7 +111,7 @@ export function SubscriptionsTable({ communityId }: SubscriptionsTableProps) {
           )
         : transformedData
 
-      setSubscriptions(filtered)
+      setSubscriptions(filtered as any)
     } catch (error) {
       console.error('Error fetching subscriptions:', error)
       toast.error('Error al cargar suscripciones')

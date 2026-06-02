@@ -70,7 +70,7 @@ export async function PATCH(
   }
 
   revalidatePath('/dashboard')
-  revalidateTag(`businesses-${data.community_id}`)
+  revalidateTag(`businesses-${data.community_id}`, 'default')
 
   return NextResponse.json(data)
 }
