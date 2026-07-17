@@ -57,5 +57,8 @@ next-env.d.ts
 # Supabase
 supabase/.temp/
 
+# DB backups (may contain real user data)
+/backups/
+
 # Plans/docs (internal)
 docs/plans/.claude/settings.local.json

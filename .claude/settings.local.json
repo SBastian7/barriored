@@ -95,7 +95,14 @@
       "mcp__plugin_supabase_supabase__get_advisors",
       "WebFetch(domain:supabase.com)",
       "mcp__plugin_playwright_playwright__browser_wait_for",
-      "mcp__plugin_playwright_playwright__browser_close"
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(supabase --version)",
+      "Bash(supabase projects *)",
+      "PowerShell(supabase --version)",
+      "PowerShell(supabase projects list 2>&1)",
+      "Bash(npx supabase *)",
+      "Bash(pg_dump --version)",
+      "Bash(docker version *)"
     ]
   }
 }

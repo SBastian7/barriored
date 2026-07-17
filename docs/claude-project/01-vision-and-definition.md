@@ -4,6 +4,7 @@
 
 **BarrioRed is community digital infrastructure that democratizes commercial visibility and strengthens the social fabric in popular-economy neighborhoods.**
 
+
 > *"Infraestructura digital comunitaria que democratiza la visibilidad comercial y fortalece el tejido social en barrios de economía popular."*
 
 It is **hyperlocal, multi-tenant, replicable, and low-cost** — designed to launch one neighborhood at a time and scale by copying the model, not by building bespoke systems each time.
