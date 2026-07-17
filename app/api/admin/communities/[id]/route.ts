@@ -106,6 +106,7 @@ export async function PATCH(
     cover_image_url,
     is_active,
     primary_admin_id,
+    boundary,
   } = body
 
   const updateData: Record<string, unknown> = {}
@@ -116,6 +117,41 @@ export async function PATCH(
   if (logo_url !== undefined) updateData.logo_url = logo_url
   if (cover_image_url !== undefined) updateData.cover_image_url = cover_image_url
   if (is_active !== undefined) updateData.is_active = is_active
+  // Convert GeoJSON polygon to WKT for the PostGIS `boundary` column
+  if (boundary !== undefined) {
+    if (boundary === null) {
+      updateData.boundary = null
+    } else {
+      const rings = boundary?.coordinates
+      if (
+        boundary?.type !== 'Polygon' ||
+        !Array.isArray(rings) ||
+        rings.length === 0 ||
+        !rings.every(
+          (ring: unknown) =>
+            Array.isArray(ring) &&
+            ring.length >= 4 &&
+            ring.every(
+              (pt: unknown) =>
+                Array.isArray(pt) &&
+                pt.length === 2 &&
+                typeof pt[0] === 'number' &&
+                typeof pt[1] === 'number'
+            )
+        )
+      ) {
+        return NextResponse.json(
+          { error: 'Invalid boundary: expected a GeoJSON Polygon' },
+          { status: 400 }
+        )
+      }
+      const wktRings = rings
+        .map((ring: number[][]) => ring.map(([lng, lat]) => `${lng} ${lat}`).join(', '))
+        .map((ring: string) => `(${ring})`)
+        .join(', ')
+      updateData.boundary = `POLYGON(${wktRings})`
+    }
+  }
   // Validate and set primary_admin_id if provided
   if (primary_admin_id !== undefined) {
     if (primary_admin_id === null) {

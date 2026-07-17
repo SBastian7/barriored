@@ -38,7 +38,9 @@ export default async function CommunityEditPage({
   // TypeScript workaround: explicit cast to handle Supabase type inference issue
   const { data: rawData, error } = await (supabase
     .from('communities')
-    .select('*')
+    .select(
+      'id, name, slug, municipality, department, description, logo_url, primary_color, is_active, created_at, cover_image_url, primary_admin_id, boundary:boundary::json'
+    )
     .eq('id', id)
     .single() as any)
 
