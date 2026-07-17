@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useCommunity } from '@/components/community/community-provider'
+import { Logo } from '@/components/layout/logo'
 import { Heart } from 'lucide-react'
 
 export function Footer() {
@@ -34,9 +35,8 @@ export function Footer() {
         <div className="grid grid-cols-4 gap-10">
           {/* Brand */}
           <div className="flex flex-col gap-4">
-            <Link href={`/${community.slug}`} className="font-heading font-black text-2xl uppercase tracking-tighter italic">
-              <span>BARRIO</span>
-              <span className="text-primary">RED</span>
+            <Link href={`/${community.slug}`} aria-label="BarrioRed · Inicio">
+              <Logo markSize={34} colorway="reverse" reversed textClassName="text-2xl" />
             </Link>
             <p className="text-sm text-white/60 leading-relaxed max-w-52">
               Hecho para el barrio, por el barrio. Conectamos vecinos, negocios y servicios en una sola red local.

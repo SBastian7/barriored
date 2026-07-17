@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCommunity } from '@/components/community/community-provider'
 import { UserMenu } from '@/components/layout/user-menu'
+import { Logo } from '@/components/layout/logo'
 import { Store, Users, ShoppingBag, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -21,14 +22,12 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-50 bg-background border-b-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
       <div className="container mx-auto px-4 h-16 flex items-center gap-4">
-        <Link href={`/${community.slug}`} className="group flex items-center gap-1 shrink-0">
-          <span className="font-heading font-black text-2xl uppercase tracking-tighter italic">
-            {community.name.split(' ').map((word, i) => (
-              <span key={i} className={i % 2 !== 0 ? 'text-primary' : undefined}>
-                {word}{' '}
-              </span>
-            ))}
-          </span>
+        <Link
+          href={`/${community.slug}`}
+          className="group flex items-center shrink-0 transition-transform hover:-translate-y-0.5"
+          aria-label="BarrioRed · Inicio"
+        >
+          <Logo markSize={30} shadow={2} textClassName="text-2xl" />
         </Link>
 
         {/* Desktop navigation sections */}

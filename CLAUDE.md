@@ -21,6 +21,7 @@ Community digital platform that democratizes commercial visibility and strengthe
 ## Brand Guidelines - Neo-Brutalist Tropical
 
 ### Visual Identity
+- **Logo:** Location-pin isotipo carrying the italic sigla **BR** + the **BARRIO**(ink)/**RED**(red) wordmark. Single source of truth: `components/layout/logo.tsx` (`BrandMark`, `Wordmark`, `Logo`). Favicon `app/icon.svg`; PWA/app icons under `public/icons/` + `app/apple-icon.png`. Full spec in `docs/branding/guia-de-estilo.md`. Never recolor/distort the pin or drop its black border.
 - **Style:** Neo-Brutalist with tropical Latin American warmth
 - **Borders:** 2-4px solid black, always present
 - **Shadows:** Hard offset shadows (e.g., `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`)

@@ -1,0 +1,10 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <title>BarrioRed</title>
+  <g transform="translate(16.8 6) scale(0.72)">
+    <path d="M60 6 C30 6 10 28 10 56 C10 92 60 144 60 144 C60 144 110 92 110 56 C110 28 90 6 60 6 Z"
+          fill="#DC2626" stroke="#0A0A0A" stroke-width="8" stroke-linejoin="round"/>
+    <text x="61" y="56" text-anchor="middle" dominant-baseline="central"
+          font-family="Outfit, Arial, sans-serif" font-weight="900" font-style="italic"
+          font-size="50" letter-spacing="-3" fill="#FFFFFF">BR</text>
+  </g>
+</svg>
