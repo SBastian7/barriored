@@ -23,13 +23,16 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SECRET_KEY!
   )
 
+  // Canonical storage format for profiles.phone is digits-only (57XXXXXXXXXX, no leading +),
+  // matching what PhoneInput emits and what the email-signup trigger stores.
   const e164 = normalizeColombianPhone(phone)
+  const storedPhone = e164.replace('+', '')
 
-  // Check if user exists with this phone (try both formats for compatibility)
+  // Check if user exists with this phone (try both formats for legacy rows)
   const { data: existingProfile } = await supabaseAdmin
     .from('profiles')
     .select('id')
-    .or(`phone.eq.${e164},phone.eq.${phone}`)
+    .or(`phone.eq.${storedPhone},phone.eq.${e164},phone.eq.${phone}`)
     .limit(1)
     .single()
 
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
     // Populate profile with signup metadata if provided
     const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
       id: userId,
-      phone: e164,
+      phone: storedPhone,
       full_name: full_name || null,
       community_id: community_id || null,
     }, { onConflict: 'id' })

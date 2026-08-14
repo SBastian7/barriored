@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 const updateProfileSchema = z.object({
   full_name: z.string().min(2).max(100).optional(),
-  phone: z.string().regex(/^\+57\d{10}$/, 'Formato inválido. Debe ser +57XXXXXXXXXX').optional(),
+  phone: z.string().regex(/^57\d{10}$/, 'Formato inválido. Debe ser 57XXXXXXXXXX').optional(),
   avatar_url: z.string().url().optional().or(z.literal('')).optional(),
   community_id: z.string().uuid().optional().or(z.literal('')).nullable().optional(),
 })

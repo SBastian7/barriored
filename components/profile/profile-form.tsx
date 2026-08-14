@@ -16,7 +16,7 @@ import { Loader2, Save, X } from 'lucide-react'
 const profileSchema = z.object({
   full_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
   phone: z.union([
-    z.string().regex(/^\+57\d{10}$/, 'Formato inválido. Debe ser +57XXXXXXXXXX'),
+    z.string().regex(/^57\d{10}$/, 'Formato inválido. Debe ser 57XXXXXXXXXX'),
     z.literal(''),
   ]).optional(),
   avatar_url: z.string().optional(),
