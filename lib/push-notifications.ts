@@ -28,7 +28,7 @@ export async function requestPermission(): Promise<NotificationPermission> {
   return permission
 }
 
-export async function subscribeToPush(): Promise<PushSubscription | null> {
+export async function subscribeToPush(communityId: string): Promise<PushSubscription | null> {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.warn('Push notifications not supported')
     return null
@@ -64,7 +64,7 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
     const response = await fetch('/api/notifications/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscription }),
+      body: JSON.stringify({ subscription, community_id: communityId }),
     })
 
     if (!response.ok) {

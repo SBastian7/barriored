@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { requestPermission, subscribeToPush } from '@/lib/push-notifications'
+import { useCommunity } from '@/components/community/community-provider'
 import { Button } from '@/components/ui/button'
 import { Bell, X } from 'lucide-react'
 
 export function PushNotificationPrompt() {
+  const community = useCommunity()
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [showPrompt, setShowPrompt] = useState(false)
 
@@ -24,7 +26,7 @@ export function PushNotificationPrompt() {
       const perm = await requestPermission()
       setPermission(perm)
       if (perm === 'granted') {
-        await subscribeToPush()
+        await subscribeToPush(community.id)
         setShowPrompt(false)
       }
     } catch (error) {

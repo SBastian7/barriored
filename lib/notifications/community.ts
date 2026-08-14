@@ -74,6 +74,42 @@ export async function sendPushToUsers(
   return { sent, failed }
 }
 
+async function sendPushToCommunity(
+  communityId: string,
+  payload: PushPayload
+): Promise<{ sent: number; failed: number }> {
+  const admin = createAdminClient()
+  const { data: subscriptions } = await (admin as any)
+    .from('push_subscriptions')
+    .select('endpoint, p256dh, auth')
+    .eq('community_id', communityId)
+
+  if (!subscriptions?.length) return { sent: 0, failed: 0 }
+
+  const body = JSON.stringify(payload)
+  let sent = 0
+  let failed = 0
+
+  await Promise.allSettled(
+    subscriptions.map(async (sub: any) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          body
+        )
+        sent++
+      } catch (err: any) {
+        failed++
+        if (err.statusCode === 410) {
+          await admin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+        }
+      }
+    })
+  )
+
+  return { sent, failed }
+}
+
 export function sendCommunityAlertNotifications(
   communityId: string,
   alert: {
@@ -106,8 +142,8 @@ export function sendCommunityAlertNotifications(
         if (i + BATCH < emails.length) await new Promise(r => setTimeout(r, 100))
       }
 
-      // Push
-      await sendPushToUsers(userIds, {
+      // Push — community-scoped so it reaches anonymous subscribers too, not just profiles
+      await sendPushToCommunity(communityId, {
         title: `⚠️ Alerta: ${alert.title}`,
         body: alert.description ?? alert.title,
         url: `https://barriored.co/${alert.communitySlug}/community`,

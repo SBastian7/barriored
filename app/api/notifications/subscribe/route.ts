@@ -5,11 +5,7 @@ export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
-  }
-
-  const { subscription } = await request.json()
+  const { subscription, community_id } = await request.json()
 
   if (!subscription || !subscription.endpoint) {
     return NextResponse.json(
@@ -18,17 +14,25 @@ export async function POST(request: Request) {
     )
   }
 
-  // Upsert subscription
+  if (!community_id) {
+    return NextResponse.json(
+      { error: 'Falta community_id' },
+      { status: 400 }
+    )
+  }
+
+  // Upsert subscription — anonymous visitors get user_id: null, scoped by community_id instead
   const { error } = await (supabase as any).from('push_subscriptions').upsert(
     {
-      user_id: user.id,
+      user_id: user?.id ?? null,
+      community_id,
       endpoint: subscription.endpoint,
       p256dh: subscription.keys.p256dh,
       auth: subscription.keys.auth,
       updated_at: new Date().toISOString(),
     },
     {
-      onConflict: 'user_id,endpoint',
+      onConflict: 'endpoint',
     }
   )
 

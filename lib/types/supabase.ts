@@ -1609,32 +1609,43 @@ export type Database = {
       push_subscriptions: {
         Row: {
           auth: string
+          community_id: string
           created_at: string | null
           endpoint: string
           id: string
           p256dh: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           auth: string
+          community_id: string
           created_at?: string | null
           endpoint: string
           id?: string
           p256dh: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           auth?: string
+          community_id?: string
           created_at?: string | null
           endpoint?: string
           id?: string
           p256dh?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_flags: {
         Row: {

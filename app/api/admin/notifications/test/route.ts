@@ -84,25 +84,11 @@ export async function POST(request: Request) {
       }, { status: 429 })
     }
 
-    // Get user IDs in this community, then fetch their subscriptions
-    const { data: communityProfiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('community_id', community_id)
-
-    const communityUserIds = (communityProfiles ?? []).map((p: any) => p.id)
-
-    if (communityUserIds.length === 0) {
-      await (supabase.from('push_notification_logs') as any).insert({
-        community_id, title, body: message, sent_count: 0, failed_count: 0, test_mode: true
-      })
-      return NextResponse.json({ success: true, sent_count: 0, failed_count: 0, message: 'No hay suscriptores' })
-    }
-
+    // Fetch subscriptions for this community (authenticated + anonymous)
     let subscriptionsQuery = (supabase
       .from('push_subscriptions') as any)
       .select('*')
-      .in('user_id', communityUserIds)
+      .eq('community_id', community_id)
       .not('endpoint', 'is', null)
 
     // Filter for "Solo yo" mode

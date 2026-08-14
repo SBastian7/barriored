@@ -1,4 +1,6 @@
-# BarrioRed - Project Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What is BarrioRed?
 
@@ -8,45 +10,34 @@ Community digital platform that democratizes commercial visibility and strengthe
 
 **Core value:** "Infraestructura digital comunitaria que democratiza la visibilidad comercial y fortalece el tejido social en barrios de economia popular"
 
+## Commands
+
+Package manager is **pnpm** (`packageManager: pnpm@11.5.0`, `pnpm-lock.yaml`) — do not use npm/yarn.
+
+```bash
+pnpm dev              # Start dev server (localhost:3000)
+pnpm build            # Compile service worker (scripts/build-sw.js) then next build — always run both, not `next build` alone
+pnpm build:sw         # Rebuild only the PWA service worker (app/sw.ts -> public/sw.js via esbuild)
+pnpm start            # Serve production build
+pnpm lint             # ESLint (flat config, eslint-config-next core-web-vitals + typescript)
+pnpm test             # Jest (all tests)
+pnpm exec jest __tests__/lib/twilio.test.ts   # Run a single test file
+pnpm audit:check      # pnpm audit at moderate severity
+```
+
+Tests live in `__tests__/**/*.test.ts` (Jest via `next/jest`, `testEnvironment: 'node'`, `@/*` alias mapped). Coverage is currently thin (moderation keyword filter, Twilio helper) — most correctness relies on manual QA, see `TESTING.md`.
+
+No database CLI scripts are wired up; Supabase migrations in `supabase/migrations/` are applied directly against the project (numbered/timestamped `.sql` files, chronological — read the latest few before altering schema to see current RLS conventions).
+
 ## Tech Stack
 
-- **Frontend:** Next.js 16 (App Router, PWA) + React 19 + Tailwind CSS
+- **Frontend:** Next.js 16 (App Router, PWA) + React 19 + Tailwind CSS 4
 - **Backend/DB:** Supabase (PostgreSQL, Auth, Storage, RLS)
-- **Maps:** Leaflet + React-Leaflet
-- **UI:** Radix UI primitives + custom components
-- **Auth:** Supabase Auth (email + WhatsApp OTP planned)
-- **Language:** TypeScript throughout
-- **Package Manager:** npm
-
-## Brand Guidelines - Neo-Brutalist Tropical
-
-### Visual Identity
-- **Logo:** Location-pin isotipo carrying the italic sigla **BR** + the **BARRIO**(ink)/**RED**(red) wordmark. Single source of truth: `components/layout/logo.tsx` (`BrandMark`, `Wordmark`, `Logo`). Favicon `app/icon.svg`; PWA/app icons under `public/icons/` + `app/apple-icon.png`. Full spec in `docs/branding/guia-de-estilo.md`. Never recolor/distort the pin or drop its black border.
-- **Style:** Neo-Brutalist with tropical Latin American warmth
-- **Borders:** 2-4px solid black, always present
-- **Shadows:** Hard offset shadows (e.g., `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`)
-- **Typography:** Outfit (headings, font-black, uppercase, tracking-tighter, italic) + Inter (body)
-- **Buttons:** `.brutalist-button` class - 2px black border, hard shadow, uppercase, bold
-- **Cards:** `.brutalist-card` class - 2px border, 4px shadow, hover lift effect
-- **Inputs:** `.brutalist-input` class - 2px black border, hard shadow, focus lift
-
-### Color Palette (oklch)
-- **Primary (Barrio Red):** `oklch(0.57 0.23 18)` - The signature red
-- **Secondary (Sun Yellow):** `oklch(0.85 0.17 85)` - Warm accents, badges, highlights
-- **Accent (Street Art Blue):** `oklch(0.5 0.2 260)` - Info elements, links
-- **Background:** `oklch(0.99 0.01 60)` - Warm paper white
-- **Foreground:** `oklch(0.15 0.02 240)` - Deep navy black
-- **Borders:** Pure black `oklch(0 0 0)` for brutalist borders
-- **Chart Green:** `oklch(0.5 0.15 150)` - Jungle Green
-- **Chart Warm:** `oklch(0.7 0.15 30)` - Terracotta
-
-### Design Patterns
-- Rotated badges: `rotate-[-2deg]` for playful elements
-- Uppercase + tracking-widest for labels and nav items
-- Active states: primary bg + lifted shadow
-- Disabled/coming-soon: reduced opacity + "Pronto" badge in secondary color
-- Stats strips: white bg, thick black border, divided sections
-- Mobile-first responsive, bottom nav on mobile, top nav on desktop
+- **Maps:** Leaflet + React-Leaflet (+ leaflet-draw for boundary editing, @turf/turf for geo math)
+- **UI:** Radix UI primitives + custom components (`components.json` = shadcn-style setup)
+- **Auth:** Supabase Auth (email + WhatsApp OTP via Twilio/getotp)
+- **PWA:** Serwist (service worker built separately, see Commands)
+- **Language:** TypeScript throughout, strict mode
 
 ## Architecture - Multi-Tenant
 
@@ -58,170 +49,75 @@ barriored.co/cuba              -> Future expansion
 barriored.co/villasantana      -> Future expansion
 ```
 
-Each community has isolated data via `community_id` foreign keys. Community context is provided via `CommunityProvider` component.
+Community resolution happens in `app/[community]/layout.tsx`: it looks up `communities` by `slug` (must be `is_active = true` or 404s), then wraps children in `CommunityProvider` (`components/community/community-provider.tsx`) so any client component can call `useCommunity()` instead of re-fetching. Each community-scoped table carries a `community_id` FK; isolation between tenants is enforced at the database layer via RLS, not just in application code.
+
+## Auth & Authorization
+
+Three layers, all must be kept in sync when changing access rules:
+
+1. **`proxy.ts`** (repo root) — Next.js 16's request-interception convention (replaces the old `middleware.ts`). Redirects logged-in users away from `/auth/*`, gates `/dashboard`, `/admin`, `/profile` behind auth, and additionally requires `admin`/`moderator`/super-admin role for `/admin/*`. Note `lib/supabase/middleware.ts` (`updateSession`) is a separate suspended-user check referenced from docs but not wired into `proxy.ts` — check both before assuming session/suspension handling is complete when touching auth flow.
+2. **`lib/auth/permissions.ts`** — `getPermissions(role, isSuperAdmin)` returns a `UserPermissions` capability object; `isStaff()` / `isAdmin()` helpers. This is the single source of truth for what each role can do — update here, not by scattering role checks.
+3. **`lib/auth/api-protection.ts`** — `requirePermission(permission, supabase)` for API routes; fetches the caller's profile, checks `is_suspended`, then checks the permission from layer 2. Use this instead of hand-rolling auth checks in new `app/api/**/route.ts` handlers.
+4. **RLS policies** (`supabase/migrations/*_rls_policies.sql`, `*_fix_multi_tenant_rls.sql`, etc.) — the last line of defense; community isolation and role checks are also enforced in Postgres, independent of the app-layer checks above.
 
 ## Role-Based Access Control
 
-### Super Admin
-- Platform-wide access across ALL communities
-- Can manage all data in all communities
-- Flag: `profiles.is_super_admin = true`
+- **Super Admin** (`profiles.is_super_admin = true`) — platform-wide, all communities.
+- **Community Admin** (`profiles.role = 'admin'`) — full access, scoped to own `community_id`.
+- **Community Moderator** (`profiles.role = 'moderator'`) — community posts/alerts/reports only; cannot manage businesses, users, or public services.
+- **Regular User** (`profiles.role = 'user'`) — views approved content, creates businesses/community posts, edits/deletes own content only.
 
-### Community Admin
-- Full access to their own community only
-- Can manage: businesses, users, posts, alerts, services, reports
-- Cannot access other communities' data
-- Flag: `profiles.role = 'admin'` AND `profiles.community_id = X`
-
-### Community Moderator
-- Limited to content moderation in their community only
-- Can manage: community posts, alerts, and reports
-- Cannot manage: businesses, users, or public services
-- Cannot access other communities' data
-- Flag: `profiles.role = 'moderator'` AND `profiles.community_id = X`
-
-### Regular User
-- Can view approved content
-- Can create businesses and community posts
-- Can edit/delete own content only
-- Flag: `profiles.role = 'user'`
-
-**RLS Security:** All database tables enforce community-level isolation via Row Level Security policies.
-Community admins/moderators can ONLY access data within their assigned community.
+Exact per-role booleans are defined in `lib/auth/permissions.ts` — treat that file as authoritative over this list.
 
 ## Project Structure
 
 ```
 app/
-  [community]/           # Multi-tenant community routes
+  [community]/           # Multi-tenant community routes (layout resolves slug -> CommunityProvider)
     page.tsx             # Community homepage (hero + categories + featured)
-    directory/           # Business directory listing
-      [category]/        # Category-filtered view
+    directory/[category] # Business directory, category-filtered
     business/[slug]/     # Individual business profile
     map/                 # Map view of all businesses
     register/            # Business registration form
-    community/           # [FUTURE] Neighborhood social board
-    marketplace/         # [FUTURE] Local buy/sell classifieds
-    services/            # [FUTURE] Public services directory
-  auth/                  # Login, signup, callback
-  admin/                 # Admin panel (business approval, categories)
-  dashboard/             # Merchant dashboard (edit business)
-  api/                   # API routes (businesses CRUD, auth, upload)
+    community/           # Neighborhood social board (announcements, alerts, events, jobs)
+    marketplace/         # Local buy/sell classifieds
+    services/            # Public services + emergency directory
+  auth/                  # Login, signup, callback, password reset
+  admin/                 # Admin panel (businesses, users, community, marketplace, reviews, statistics, platform...)
+  dashboard/              # Merchant dashboard (business, marketplace, reviews)
+  api/                    # Route handlers, one subfolder per resource (businesses, community, marketplace, notifications, upload, cron, ...)
+  actions/                # Server actions (e.g. classified-actions.ts)
 
-components/
-  home/                  # Homepage sections (hero, categories, featured)
-  layout/                # TopBar, BottomNav, UserMenu
-  business/              # Business profile components
-  directory/             # Directory listing components
-  registration/          # Multi-step registration form
-  community/             # Community context provider
-  shared/                # Reusable (search-bar, breadcrumbs, whatsapp-button)
-  ui/                    # Base UI primitives (button, card, input, etc.)
-
+components/               # One folder per domain (admin, business, community, marketplace, directory, registration, pwa, ui, ...)
 lib/
-  supabase/              # Supabase client (server, client, middleware)
-  types/                 # TypeScript types (database.ts, index.ts)
-  validations/           # Zod schemas (auth, business)
-  utils.ts               # cn() and utilities
+  supabase/               # client.ts (browser), server.ts (RSC), admin.ts (service role), middleware.ts (suspended-user check)
+  auth/                   # permissions.ts, api-protection.ts — see Auth & Authorization above
+  validations/            # Zod schemas (auth, business, community, service-feedback, common)
+  moderation/             # Keyword filters for community posts / marketplace listings
+  notifications/          # Push notification composition for community + marketplace events
+  types/                  # database.ts (generated Supabase types), supabase.ts, index.ts (app-level types)
+
+supabase/migrations/      # Chronological .sql migrations — schema, RLS, storage, and Postgres functions all live here
 ```
 
 ## Database (Supabase)
 
-Key tables:
-- `communities` - Multi-tenant community instances
-- `businesses` - Business listings (FK to community)
-- `categories` - Business categories with icons
-- `profiles` - User profiles linked to Supabase Auth
+Key tables: `communities`, `businesses` (FK to community), `categories`, `profiles` (linked to Supabase Auth), `classifieds`/`marketplace_categories` (Phase 4), community posts (announcements/alerts/events/jobs), `reviews`, `push_subscriptions`.
 
-Business statuses: `pending` -> `approved` / `rejected`
+Business statuses: `pending` -> `approved` / `rejected`.
 
-## Development Phases & Roadmap
+Schema changes go in a new timestamped file under `supabase/migrations/`; RLS policies for a new table should be added in the same migration, following the pattern in the most recent `*_rls*` / `*security_hardening*` migrations.
 
-### MVP (CURRENT - Complete)
-- [x] Community hub homepage (hero + quick nav pillars + featured businesses + register CTA)
-- [x] Business directory by categories with search
-- [x] Business profiles (name, description, photos, hours, map, WhatsApp button)
-- [x] Business registration form (multi-step with photo upload + map picker)
-- [x] Admin panel for business approval
-- [x] Merchant dashboard for editing business
-- [x] Supabase Auth (email)
-- [x] Multi-tenant architecture
-- [x] Neo-Brutalist Tropical brand design
-- [x] Mobile-responsive with bottom nav
-- [x] User profile system (view, edit, avatar upload)
-- [x] Logout state fix (immediate UI update)
+## Brand Guidelines - Neo-Brutalist Tropical
 
-### Phase 2: Monetization (Next)
-- [ ] Premium/featured business profiles (highlighted in listings)
-- [ ] Rotating banner ads on homepage
-- [ ] Business dashboard with view metrics/analytics
-- [ ] Reviews and ratings system
-- [ ] Payment integration (Nequi/manual transfer initially, then Wompi/MercadoPago)
+- **Logo:** Location-pin isotipo carrying the italic sigla **BR** + the **BARRIO**(ink)/**RED**(red) wordmark. Single source of truth: `components/layout/logo.tsx` (`BrandMark`, `Wordmark`, `Logo`). Favicon `app/icon.svg`; PWA/app icons under `public/icons/` + `app/apple-icon.png`. Full spec in `docs/branding/guia-de-estilo.md`. Never recolor/distort the pin or drop its black border.
+- **Style:** Neo-Brutalist with tropical Latin American warmth — 2-4px solid black borders always present, hard offset shadows (e.g. `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`).
+- **Typography:** Outfit (headings, font-black, uppercase, tracking-tighter, italic) + Inter (body).
+- **Utility classes:** `.brutalist-button`, `.brutalist-card`, `.brutalist-input` — 2px black border + hard shadow + hover/focus lift.
+- **Colors (oklch):** Primary/Barrio Red `oklch(0.57 0.23 18)`, Secondary/Sun Yellow `oklch(0.85 0.17 85)`, Accent/Street Art Blue `oklch(0.5 0.2 260)`, Background `oklch(0.99 0.01 60)`, Foreground `oklch(0.15 0.02 240)`, Borders pure black. Chart colors: Green `oklch(0.5 0.15 150)`, Warm/Terracotta `oklch(0.7 0.15 30)`.
+- **Patterns:** rotated badges (`rotate-[-2deg]`) for playful elements; uppercase + tracking-widest for labels/nav; active states = primary bg + lifted shadow; disabled/coming-soon = reduced opacity + "Pronto" badge in secondary color; mobile-first with bottom nav on mobile, top nav on desktop.
 
-### Phase 3: Community (Red Vecinal - COMPLETE)
-- [x] `/{community}/community` - Neighborhood announcement board
-- [x] Community alerts (water cuts, construction, security)
-- [x] Local events calendar
-- [x] Local job postings
-- [x] Public services and emergency directory
-- [x] Admin/Moderator panel for community content
-- [x] Image upload for community posts (announcements, events, jobs)
-- [x] Edit own community posts (announcements, events, jobs)
-- [x] Delete own community posts with confirmation dialog
-- [x] Browser push notifications for community alerts
-- [x] Push notification permission prompt
-- [x] Service worker for offline notification handling
-- [x] Admin push notification dispatch (automatic + manual)
-- [x] **Admin moderation panel with filtering** (type + status filters)
-- [x] **Full CRUD operations on community posts** (edit, delete, pin)
-- [x] **Pin/unpin announcements** with badge display
-- [x] **Edit alerts with expiration dates** (ends_at field)
-- [x] **Auto-deactivation of expired alerts** on page load
-- [x] **Enhanced navigation** with Community/Reports/Services links
-
-### Phase 4: Marketplace (Clasificados - PUBLIC VIEW COMPLETE)
-- [x] Database schema (marketplace_categories, classifieds, marketplace_user_bans)
-- [x] RLS policies for community isolation
-- [x] Admin API routes (list, detail, update, delete, flag, ban)
-- [x] Admin moderation panel (`/admin/marketplace`)
-- [x] Admin classified detail/edit page
-- [x] Filters (category, status)
-- [x] Stats dashboard (active, sold, flagged, banned)
-- [x] Flag/unflag classifieds
-- [x] Ban users from marketplace
-- [x] Audit logging for all admin actions
-- [x] Marketplace navigation in admin sidebar
-- [x] **Public marketplace hub** (`/{community}/marketplace`)
-- [x] **Browse active classifieds** with category filtering
-- [x] **Search classifieds** by title/description
-- [x] **Featured section** showing 3 newest items
-- [x] **Client-side filtering** for instant results
-- [x] **Classified detail page** with image gallery
-- [x] **WhatsApp contact button** with pre-filled message
-- [x] **Responsive design** (mobile & desktop)
-- [x] **Empty state** handling and placeholder icons
-- [ ] **Next:** User listing creation (authenticated users)
-- [ ] Featured classified listings (paid monetization)
-
-### Phase 5: Services Info (COMPLETE)
-- [x] `/{community}/services` - Emergency contacts, transport, government procedures
-- [x] Curated directory of public services
-
-## Navigation Structure
-
-**TopBar (Desktop):** Logo | Directorio | Comunidad | Marketplace | Servicios | UserMenu
-
-**BottomNav (Mobile):** Inicio | Directorio | Comunidad | Marketplace | Servicios
-
-**Homepage QuickNav:** 4 large cards for each platform pillar (Directorio, Comunidad, Marketplace, Servicios)
-
-All platform sections are now active and accessible. Navigation components can be disabled by setting `enabled: false` / `active: false`, which adds a "Pronto" badge.
-
-### Homepage Structure
-1. **HeroBanner** - Community name, location, description, stats (businesses, vecinos, 100% local)
-2. **QuickNav** - 4 platform pillar cards with icons and descriptions
-3. **FeaturedBusinesses** - 3 most recent businesses (preview, links to full directory)
-4. **RegisterCTA** - Bold CTA for merchants to register their business
+For any UI/UX design work, use the UIUX promax skill.
 
 ## Key Differentiators to Preserve
 
@@ -233,34 +129,21 @@ All platform sections are now active and accessible. Navigation components can b
 
 ## Language & Content
 
-- All user-facing content is in **Spanish (Colombia)**
-- Use "tu" (informal) for community members, warm and approachable tone
-- Technical/admin content can be in English
-- Business categories, descriptions, and labels are in Spanish
+- All user-facing content is in **Spanish (Colombia)**, informal "tu", warm/approachable tone.
+- Technical/admin content and code can be in English.
 
 ## Conventions
 
-- Use `'use client'` directive only when component needs hooks/interactivity
-- Server components by default for data fetching
-- Supabase server client for server components, browser client for client components
-- Follow Next.js App Router patterns (async server components, route handlers)
-- Use `cn()` utility for conditional Tailwind classes
-- Use lucide-react for all icons
-- Keep brutalist design consistent: black borders, hard shadows, uppercase labels
+- Use `'use client'` only when the component needs hooks/interactivity; server components by default for data fetching.
+- Supabase server client (`lib/supabase/server.ts`) in server components/route handlers, browser client (`lib/supabase/client.ts`) in client components, admin client (`lib/supabase/admin.ts`, service role) only where RLS must be intentionally bypassed.
+- Use `cn()` (`lib/utils.ts`) for conditional Tailwind classes; lucide-react for all icons.
+- New API routes: validate input with a Zod schema from `lib/validations/`, authorize with `requirePermission()` from `lib/auth/api-protection.ts`.
 
-## Metrics & Goals
+## Roadmap Status
 
-**MVP Phase (Months 1-2):** 50-100 businesses registered, 200-500 monthly users
-**Growth (Months 3-6):** 200-300 businesses, 1000-2000 users, first premium subscribers
-**Scale (Month 7+):** 500+ businesses, 5000+ users, $2M+ COP monthly revenue
+MVP, Phase 3 (Comunidad/Red Vecinal), and Phase 5 (Servicios) are complete. Phase 4 (Marketplace) has the public browsing/detail flow complete; user-created listings and paid featured listings are not yet built. Phase 2 (Monetization — premium profiles, banner ads, business analytics dashboard, reviews/ratings, payment integration) is the current focus after MVP.
 
-**Social Impact Metrics:**
-- Number of informal businesses getting their first digital presence
-- Reported sales increase by participating merchants
-- Neighbor connections facilitated
-- Local jobs connected through platform
-
-#Memory 
+#Memory
 For ui ux designs or implementations use the UIUX promax skill
 
-IMPORTANT: When writing down output messages, just write what it's strictally necessary. Avoid onlg explanations. Just perform required tasks. 
+IMPORTANT: When writing down output messages, just write what it's strictally necessary. Avoid onlg explanations. Just perform required tasks.

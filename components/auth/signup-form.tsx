@@ -42,9 +42,28 @@ export function SignupForm() {
 
 function EmailSignupForm({ communities }: { communities: Community[] }) {
   const supabase = createClient()
+  const router = useRouter()
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', community_id: '' })
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+
+  // Detect email verification completed elsewhere (e.g. link clicked in another tab)
+  // and sign the user in here too, without requiring a manual refresh.
+  useEffect(() => {
+    if (!emailSent) return
+
+    const interval = setInterval(async () => {
+      // Fresh client per tick so the cookie-backed session is re-read, not cached
+      const { data: { user } } = await createClient().auth.getUser()
+      if (user) {
+        clearInterval(interval)
+        router.push('/')
+        router.refresh()
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [emailSent, router])
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -54,6 +73,7 @@ function EmailSignupForm({ communities }: { communities: Community[] }) {
       password: form.password,
       options: {
         data: { full_name: form.full_name, phone: form.phone, community_id: form.community_id },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
     if (error) {

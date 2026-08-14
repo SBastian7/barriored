@@ -62,3 +62,5 @@ supabase/.temp/
 
 # Plans/docs (internal)
 docs/plans/.claude/settings.local.json
+.claude
+/.claude

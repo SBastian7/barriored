@@ -57,19 +57,12 @@ export async function GET(request: Request) {
         .not('endpoint', 'is', null)
       subscriberCount = count ?? 0
     } else if (profile.community_id) {
-      const { data: communityProfiles } = await supabase
-        .from('profiles')
-        .select('id')
+      const { count } = await supabase
+        .from('push_subscriptions')
+        .select('*', { count: 'exact', head: true })
         .eq('community_id', profile.community_id)
-      const communityUserIds = (communityProfiles ?? []).map((p: any) => p.id)
-      if (communityUserIds.length > 0) {
-        const { count } = await supabase
-          .from('push_subscriptions')
-          .select('*', { count: 'exact', head: true })
-          .in('user_id', communityUserIds)
-          .not('endpoint', 'is', null)
-        subscriberCount = count ?? 0
-      }
+        .not('endpoint', 'is', null)
+      subscriberCount = count ?? 0
     }
 
     // Group by type (from alert_id → community_alerts.type)
