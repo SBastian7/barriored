@@ -84,9 +84,13 @@ export function RoleAssignmentDialog({
       toast.success(`Rol actualizado a ${ROLE_DESCRIPTIONS[newRole].label}`)
       setOpen(false)
       onSuccess()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating role:', error)
-      toast.error('Error al actualizar rol')
+      if (error?.code === '23514' && error?.message?.includes('profiles_staff_requires_community')) {
+        toast.error('Este usuario no tiene una comunidad asignada. Asignale una comunidad antes de hacerlo moderador o administrador.')
+      } else {
+        toast.error('Error al actualizar rol')
+      }
     } finally {
       setLoading(false)
     }
