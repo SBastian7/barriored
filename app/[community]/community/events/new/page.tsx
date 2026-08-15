@@ -27,8 +27,7 @@ export default async function NewEventPage({ params }: { params: Promise<{ commu
 
     return (
         <div className="container mx-auto max-w-2xl px-4 py-8 pb-24">
-            <Breadcrumbs items={[
-                { label: community.name, href: `/${slug}` },
+            <Breadcrumbs homeHref={`/${slug}`} items={[
                 { label: 'Comunidad', href: `/${slug}/community` },
                 { label: 'Eventos', href: `/${slug}/community/events` },
                 { label: 'Nuevo Evento', active: true },

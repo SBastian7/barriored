@@ -18,6 +18,8 @@ export function AvatarUpload({ currentAvatar, onUploadComplete }: Props) {
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    // Reset so selecting the same file again still fires onChange
+    e.target.value = ''
     if (!file) return
 
     if (file.size > 2 * 1024 * 1024) {
@@ -48,7 +50,8 @@ export function AvatarUpload({ currentAvatar, onUploadComplete }: Props) {
         return
       }
 
-      setPreview(data.url)
+      // Cache-bust for local preview since the storage path (and thus URL) is stable per user
+      setPreview(`${data.url}?t=${Date.now()}`)
       onUploadComplete(data.url)
       toast.success('Avatar actualizado')
     } catch (error) {

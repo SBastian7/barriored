@@ -17,9 +17,17 @@ export default async function EditBusinessPage({ params }: { params: Promise<{ i
 
   if (!business) notFound()
 
+  const { data: community } = await supabase
+    .from('communities')
+    .select('slug')
+    .eq('id', business.community_id)
+    .single<{ slug: string }>()
+  const communitySlug = community?.slug || 'parqueindustrial'
+
   return (
     <div className="space-y-8">
       <Breadcrumbs
+        homeHref={`/${communitySlug}`}
         items={[
           { label: 'Panel de Control', href: '/dashboard' },
           { label: `Editar: ${business.name}`, active: true }

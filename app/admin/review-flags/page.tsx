@@ -66,6 +66,7 @@ export default function AdminReviewFlagsPage() {
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <Breadcrumbs
+        homeHref="/admin"
         items={[
           { label: 'Admin', href: '/admin' },
           { label: 'Reseñas Reportadas', active: true }

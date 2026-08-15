@@ -54,7 +54,7 @@ export default async function DashboardPage({
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
-      <Breadcrumbs items={[{ label: 'Panel de Control', active: true }]} />
+      <Breadcrumbs homeHref={`/${communitySlug}`} items={[{ label: 'Panel de Control', active: true }]} />
 
       <h1 className="text-4xl md:text-6xl font-heading font-black uppercase tracking-tighter italic border-b-4 border-black pb-4 mb-8">
         Panel de <span className="text-primary">Control</span>

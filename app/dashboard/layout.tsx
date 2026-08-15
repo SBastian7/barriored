@@ -35,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (community) {
     return (
       <CommunityProvider community={community}>
-        <div className="min-h-screen pb-16 md:pb-0">
+        <div className="min-h-screen pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           <TopBar />
           <main className="container mx-auto max-w-5xl px-4 py-8">
             {children}

@@ -19,7 +19,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t-4 border-black md:hidden z-50 p-1">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t-4 border-black md:hidden z-50 p-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
       <div className="flex justify-around items-center">
         {navItems.map((item) => {
           const href = `/${community.slug}${item.path}`

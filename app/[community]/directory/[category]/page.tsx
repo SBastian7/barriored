@@ -48,8 +48,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ commu
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
       <Breadcrumbs
+        homeHref={`/${slug}`}
         items={[
-          { label: communityRes.data.name, href: `/${slug}` },
           { label: 'Directorio', href: `/${slug}/directory` },
           { label: categoryRes.data.name, active: true }
         ]}

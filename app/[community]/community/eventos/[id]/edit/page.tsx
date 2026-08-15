@@ -63,8 +63,7 @@ export default async function EditEventPage({
 
     return (
         <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
-            <Breadcrumbs items={[
-                { label: community.name, href: `/${slug}` },
+            <Breadcrumbs homeHref={`/${slug}`} items={[
                 { label: 'Comunidad', href: `/${slug}/community` },
                 { label: 'Eventos', href: `/${slug}/community/events` },
                 { label: post.title, href: `/${slug}/community/eventos/${post.id}` },

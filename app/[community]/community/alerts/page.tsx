@@ -39,8 +39,7 @@ export default async function AlertsPage({ params }: { params: Promise<{ communi
 
     return (
         <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
-            <Breadcrumbs items={[
-                { label: community.name, href: `/${slug}` },
+            <Breadcrumbs homeHref={`/${slug}`} items={[
                 { label: 'Comunidad', href: `/${slug}/community` },
                 { label: 'Alertas', active: true },
             ]} />

@@ -12,8 +12,8 @@ export default async function RegisterPage({ params }: { params: Promise<{ commu
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
       <Breadcrumbs
+        homeHref={`/${slug}`}
         items={[
-          { label: community?.name ?? 'Barrio', href: `/${slug}` },
           { label: 'Registra tu negocio', active: true }
         ]}
       />

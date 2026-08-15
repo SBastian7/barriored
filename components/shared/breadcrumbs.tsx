@@ -13,17 +13,20 @@ type BreadcrumbItem = {
 type Props = {
     items: BreadcrumbItem[]
     className?: string
+    /** Where the "Inicio" pin links to — the home of the section the user is currently in, not necessarily the platform root. */
+    homeHref?: string
+    homeLabel?: string
 }
 
-export function Breadcrumbs({ items, className }: Props) {
+export function Breadcrumbs({ items, className, homeHref = '/', homeLabel = 'Inicio' }: Props) {
     return (
         <nav className={cn("flex items-center flex-wrap gap-2 mb-8", className)} aria-label="Breadcrumb">
             <Link
-                href="/"
+                href={homeHref}
                 className="flex items-center gap-1.5 px-3 py-1 bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all font-black uppercase text-[10px] tracking-tighter italic"
             >
                 <Home className="h-3 w-3" />
-                Inicio
+                {homeLabel}
             </Link>
 
             {items.map((item, index) => (

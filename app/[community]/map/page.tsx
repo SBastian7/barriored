@@ -27,8 +27,8 @@ export default function MapPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)]">
       <div className="px-4 py-3 bg-background border-b-4 border-black">
         <Breadcrumbs
+          homeHref={`/${community.slug}`}
           items={[
-            { label: community.name, href: `/${community.slug}` },
             { label: 'Mapa', active: true }
           ]}
           className="mb-0"

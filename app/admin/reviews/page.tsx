@@ -53,7 +53,7 @@ export default async function AdminReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin' }, { label: 'Reseñas', active: true }]} />
+      <Breadcrumbs homeHref="/admin" items={[{ label: 'Admin', href: '/admin' }, { label: 'Reseñas', active: true }]} />
 
       <h1 className="text-3xl font-black uppercase tracking-tighter italic">
         Reseñas <span className="text-primary">Plataforma</span>

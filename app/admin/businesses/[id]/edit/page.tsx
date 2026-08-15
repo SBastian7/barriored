@@ -142,6 +142,7 @@ export default function AdminBusinessEditPage() {
   return (
     <div className="space-y-8">
       <Breadcrumbs
+        homeHref="/admin"
         items={[
           { label: 'Administración', href: '/admin/businesses' },
           { label: 'Negocios', href: '/admin/businesses' },

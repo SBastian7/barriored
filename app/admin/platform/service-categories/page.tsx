@@ -156,7 +156,7 @@ export default function ServiceCategoriesPage() {
 
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-8">
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Cat. Servicios', active: true }]} />
+      <Breadcrumbs homeHref="/admin" items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Cat. Servicios', active: true }]} />
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-black uppercase tracking-tighter italic">Categorías de Servicios</h1>
         <Button className="brutalist-button" onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Nueva</Button>

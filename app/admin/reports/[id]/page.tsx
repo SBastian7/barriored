@@ -123,6 +123,7 @@ export default function AdminReportDetailPage() {
   return (
     <div className="space-y-8">
       <Breadcrumbs
+        homeHref="/admin"
         items={[
           { label: 'Administración', href: '/admin/businesses' },
           { label: 'Reportes', href: '/admin/reports' },

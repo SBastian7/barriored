@@ -41,9 +41,17 @@ export default async function EditClassifiedPage({
     .eq('is_active', true)
     .order('display_order')
 
+  const { data: community } = await supabase
+    .from('communities')
+    .select('slug')
+    .eq('id', classified.community_id)
+    .single<{ slug: string }>()
+  const communitySlug = community?.slug || 'parqueindustrial'
+
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
       <Breadcrumbs
+        homeHref={`/${communitySlug}`}
         items={[
           { label: 'Panel de Control', href: '/dashboard' },
           { label: 'Marketplace', href: '/dashboard?tab=marketplace' },

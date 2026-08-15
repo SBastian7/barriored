@@ -18,9 +18,10 @@ type Props = {
     role: string
   }
   communities: Array<{ id: string; name: string }>
+  communitySlug: string | null
 }
 
-export function ProfileView({ profile, communities }: Props) {
+export function ProfileView({ profile, communities, communitySlug }: Props) {
   const [isEditing, setIsEditing] = useState(false)
   const router = useRouter()
 
@@ -34,8 +35,8 @@ export function ProfileView({ profile, communities }: Props) {
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8 pb-24">
       <Breadcrumbs
+        homeHref={communitySlug ? `/${communitySlug}` : undefined}
         items={[
-          { label: 'BarrioRed', href: '/' },
           { label: 'Mi Perfil', active: true },
         ]}
       />

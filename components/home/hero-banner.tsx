@@ -52,7 +52,12 @@ export function HeroBanner({
           <h1 className={`font-heading font-black italic uppercase leading-[0.84] tracking-[-0.035em] text-[clamp(56px,10vw,120px)] ${hasCover ? 'text-white' : ''}`}>
             <span className="block">{firstWord}</span>
             {rest && (
-              <span className="block text-[#E11D48] ml-8">{rest}</span>
+              <span
+                className="block text-[#E11D48] ml-8"
+                style={{ textShadow: '-3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000' }}
+              >
+                {rest}
+              </span>
             )}
             <span className={`block font-heading font-black not-italic text-[clamp(16px,2vw,28px)] tracking-wide leading-normal mt-3 ${hasCover ? 'text-white/90' : 'text-black/90'}`}>
               {community.description ?? 'el barrio que se mueve.'}

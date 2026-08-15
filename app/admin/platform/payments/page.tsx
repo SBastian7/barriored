@@ -77,7 +77,7 @@ export default function PlatformPaymentsPage() {
 
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-8">
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Pagos', active: true }]} />
+      <Breadcrumbs homeHref="/admin" items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Pagos', active: true }]} />
       <h1 className="text-3xl font-black uppercase tracking-tighter italic">Pasarelas de Pago</h1>
 
       <div className="brutalist-card p-4 flex gap-3 border-yellow-500 bg-yellow-50">

@@ -18,8 +18,10 @@ export default async function ProfilePage() {
 
   const { data: communities } = await supabase
     .from('communities')
-    .select('id, name')
+    .select('id, name, slug')
     .order('name') as { data: any }
+
+  const communitySlug = communities?.find((c: any) => c.id === profile?.community_id)?.slug || null
 
   return (
     <ProfileView
@@ -32,6 +34,7 @@ export default async function ProfilePage() {
         role: profile?.role || 'user',
       }}
       communities={communities || []}
+      communitySlug={communitySlug}
     />
   )
 }

@@ -16,9 +16,17 @@ export default async function ReviewsPage() {
     redirect('/auth/login?redirect=/dashboard/reviews')
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('community_id, communities(slug)')
+    .eq('id', user.id)
+    .single()
+  const communitySlug = (profile?.communities as any)?.slug || 'parqueindustrial'
+
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 pb-24">
       <Breadcrumbs
+        homeHref={`/${communitySlug}`}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Mis Reseñas', active: true }

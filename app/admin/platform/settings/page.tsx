@@ -61,7 +61,7 @@ export default function PlatformSettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto space-y-8">
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Configuración', active: true }]} />
+      <Breadcrumbs homeHref="/admin" items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Configuración', active: true }]} />
       <h1 className="text-3xl font-black uppercase tracking-tighter italic">Configuración de la Plataforma</h1>
 
       <form onSubmit={handleSave} className="brutalist-card p-8 space-y-6">

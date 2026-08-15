@@ -123,6 +123,7 @@ export default function AdminUserDetailPage() {
   return (
     <div className="space-y-8">
       <Breadcrumbs
+        homeHref="/admin"
         items={[
           { label: 'Administración', href: '/admin/users' },
           { label: 'Usuarios', href: '/admin/users' },

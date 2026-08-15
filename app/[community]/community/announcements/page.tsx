@@ -38,8 +38,7 @@ export default async function AnnouncementsPage({ params }: { params: Promise<{ 
 
     return (
         <div className="container mx-auto max-w-5xl px-4 py-8 pb-24">
-            <Breadcrumbs items={[
-                { label: community.name, href: `/${slug}` },
+            <Breadcrumbs homeHref={`/${slug}`} items={[
                 { label: 'Comunidad', href: `/${slug}/community` },
                 { label: 'Anuncios', active: true },
             ]} />

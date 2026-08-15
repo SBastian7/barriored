@@ -17,6 +17,13 @@ export default async function NewClassifiedPage() {
     redirect('/auth/login?redirect=/dashboard/marketplace/new')
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('community_id, communities(slug)')
+    .eq('id', user.id)
+    .single()
+  const communitySlug = (profile?.communities as any)?.slug || 'parqueindustrial'
+
   // Check if banned
   const { data: ban } = await supabase
     .from('marketplace_user_bans')
@@ -29,6 +36,7 @@ export default async function NewClassifiedPage() {
     return (
       <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
         <Breadcrumbs
+          homeHref={`/${communitySlug}`}
           items={[
             { label: 'Panel de Control', href: '/dashboard' },
             { label: 'Marketplace', href: '/dashboard?tab=marketplace' },
@@ -67,6 +75,7 @@ export default async function NewClassifiedPage() {
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
       <Breadcrumbs
+        homeHref={`/${communitySlug}`}
         items={[
           { label: 'Panel de Control', href: '/dashboard' },
           { label: 'Marketplace', href: '/dashboard?tab=marketplace' },

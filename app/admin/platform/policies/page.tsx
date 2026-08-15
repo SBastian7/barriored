@@ -57,7 +57,7 @@ export default function PlatformPoliciesPage() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Políticas', active: true }]} />
+      <Breadcrumbs homeHref="/admin" items={[{ label: 'Admin', href: '/admin' }, { label: 'Plataforma' }, { label: 'Políticas', active: true }]} />
       <h1 className="text-3xl font-black uppercase tracking-tighter italic">Políticas de la Plataforma</h1>
 
       <Tabs defaultValue={policies[0]?.type}>

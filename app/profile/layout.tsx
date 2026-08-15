@@ -38,7 +38,7 @@ export default async function ProfileLayout({ children }: { children: React.Reac
   if (community) {
     return (
       <CommunityProvider community={community}>
-        <div className="min-h-screen pb-16 md:pb-0">
+        <div className="min-h-screen pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           <TopBar />
           <main>{children}</main>
           <BottomNav />

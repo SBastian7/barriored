@@ -235,6 +235,7 @@ export default function AdminSubscriptionDetailPage() {
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
       <Breadcrumbs
+        homeHref="/admin"
         items={[
           { label: 'Admin', href: '/admin' },
           { label: 'Suscripciones', href: '/admin/subscriptions' },
