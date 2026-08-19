@@ -68,7 +68,7 @@ function EmailSignupForm({ communities }: { communities: Community[] }) {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { data: { user: newUser }, error } = await supabase.auth.signUp({
+    const { data: { user: newUser, session }, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -87,7 +87,14 @@ function EmailSignupForm({ communities }: { communities: Community[] }) {
         }).eq('id', newUser.id)
       }
       setLoading(false)
-      setEmailSent(true)
+      if (session) {
+        // Email confirmation is disabled project-wide, so signUp already returns
+        // an active session — no confirmation email is sent.
+        router.push('/')
+        router.refresh()
+      } else {
+        setEmailSent(true)
+      }
     }
   }
 
