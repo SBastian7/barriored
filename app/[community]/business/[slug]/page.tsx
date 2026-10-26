@@ -115,11 +115,25 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const lat = business?.latitude as number | undefined
   const lng = business?.longitude as number | undefined
 
-  const hours: Array<[string, string]> = Array.isArray(business.hours)
-    ? business.hours
-    : business.hours
-      ? Object.entries(business.hours as Record<string, string>)
-      : []
+  const DAY_NAMES: Record<string, string> = {
+    mon: 'Lunes', tue: 'Martes', wed: 'Miercoles', thu: 'Jueves',
+    fri: 'Viernes', sat: 'Sabado', sun: 'Domingo',
+  }
+  const formatHours = (v: unknown): string =>
+    typeof v === 'string'
+      ? v
+      : v && typeof v === 'object' && 'open' in v && 'close' in v
+        ? `${(v as { open: string }).open} - ${(v as { close: string }).close}`
+        : ''
+
+  const rawHours = business.hours as unknown
+  const hours: Array<[string, string]> = (
+    Array.isArray(rawHours)
+      ? (rawHours as Array<[string, unknown]>)
+      : rawHours && typeof rawHours === 'object'
+        ? Object.entries(rawHours as Record<string, unknown>)
+        : []
+  ).map(([day, v]) => [DAY_NAMES[day] ?? day, formatHours(v)])
 
   const tags: string[] = [
     business.categories?.name,
